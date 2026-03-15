@@ -1,3 +1,7 @@
+use quote::quote;
+
+use crate::Options;
+
 use super::{Base, Field};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -13,4 +17,24 @@ pub struct Product {
 
     #[serde(default)]
     pub doc: Option<String>,
+}
+
+impl Product {
+    pub fn run(&self, options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+        let ident = &self.name;
+        let fields: Vec<_> = self.fields.iter().map(|f| f.run(options)).try_collect()?;
+        let base_fields: Vec<_> = self
+            .extends
+            .fields()
+            .iter()
+            .map(|f| f.run(options))
+            .try_collect()?;
+
+        Ok(quote! {
+            pub struct #ident {
+                #(#base_fields,)*
+                #(#fields,)*
+            }
+        })
+    }
 }
