@@ -1,0 +1,36 @@
+docs:
+- node
+- field
+derives:
+- Clone
+- Debug
+- PartialEq
+- Eq
+- Hash
+features:
+- visit
+- expand
+# api_kind: macro_facing_ast
+# runtime_model: non_runtime
+# token_leaf_strategy: dedicated_leaf_nodes
+# enum_style: tagged
+# tagged_enum_field: kind
+# rust:
+#   derives:
+#   - Clone
+#   - Debug
+#   - PartialEq
+#   - Eq
+#   - Hash
+#   box_large_variants: true
+#   use_pub: true
+#   default_span_ctor: call_site
+#   generate_docs: true
+# traversal:
+#   generate_visit: true
+#   generate_visit_mut: true
+#   generate_fold: true
+# parsing:
+#   generate_parse_trait: false
+#   generate_to_tokens_trait: false
+#   preserve_verbatim_tokens: true

@@ -1,0 +1,2098 @@
+name: rust_ast
+version: 0.0.0
+description: Generator-oriented Rust AST schema for public-facing, non-runtime macro APIs. The shape is syn-like and favors dedicated lexical/token leaf nodes (Ident, Lifetime, Lit*) over runtime-oriented scalar representations.
+nodes:
+  Abi:
+    kind: product
+    extends: node_base
+    fields:
+    - name: name
+      type: Option<String>
+  AssignOp:
+    kind: sum
+    variants:
+    - AddAssign
+    - SubAssign
+    - MulAssign
+    - DivAssign
+    - RemAssign
+    - BitXorAssign
+    - BitAndAssign
+    - BitOrAssign
+    - ShlAssign
+    - ShrAssign
+  Asyncness:
+    kind: sum
+    variants:
+    - Sync
+    - Async
+  AttrStyle:
+    kind: sum
+    variants:
+    - Outer
+    - Inner
+  BinOp:
+    kind: sum
+    variants:
+    - Add
+    - Sub
+    - Mul
+    - Div
+    - Rem
+    - And
+    - Or
+    - BitXor
+    - BitAnd
+    - BitOr
+    - Shl
+    - Shr
+    - Eq
+    - Lt
+    - Le
+    - Ne
+    - Ge
+    - Gt
+  BoundPolarity:
+    kind: sum
+    variants:
+    - Positive
+    - Negative
+  Constness:
+    kind: sum
+    variants:
+    - NoConst
+    - Const
+  Defaultness:
+    kind: sum
+    variants:
+    - Final
+    - Default
+  DelimiterKind:
+    kind: sum
+    variants:
+    - Paren
+    - Bracket
+    - Brace
+  Ident:
+    kind: product
+    doc: "An identifier token (e.g. a variable name, type name, or keyword-like ident)."
+    extends: node_base
+    fields:
+    - name: text
+      type: String
+    - name: raw
+      type: bool
+      default: false
+    meta:
+      public_leaf: true
+      macro_facing: true
+      notes: Generator should treat this as a dedicated identifier token type, not as a plain runtime string.
+  LifetimeName:
+    kind: product
+    extends: node_base
+    fields:
+    - name: text
+      type: String
+  LitBool:
+    kind: product
+    extends: node_base
+    fields:
+    - name: value
+      type: bool
+  LitByte:
+    kind: product
+    extends: node_base
+    fields:
+    - name: value
+      type: u8
+  LitByteStr:
+    kind: product
+    extends: node_base
+    fields:
+    - name: value
+      type: Vec<u8>
+  LitCStr:
+    kind: product
+    extends: node_base
+    fields:
+    - name: value
+      type: Vec<u8>
+  LitChar:
+    kind: product
+    extends: node_base
+    fields:
+    - name: value
+      type: String
+  LitStr:
+    kind: product
+    extends: node_base
+    fields:
+    - name: value
+      type: String
+  Movability:
+    kind: sum
+    variants:
+    - Movable
+    - Static
+  Mutability:
+    kind: sum
+    doc: "Whether a binding, reference, or pointer is mutable."
+    variants:
+    - Immutable
+    - Mutable
+  RangeLimits:
+    kind: sum
+    variants:
+    - HalfOpen
+    - Closed
+  TokenStream:
+    kind: opaque
+  TraitBoundModifier:
+    kind: sum
+    variants:
+    - None
+    - Maybe
+  UnOp:
+    kind: sum
+    variants:
+    - Deref
+    - Not
+    - Neg
+  Unsafety:
+    kind: sum
+    variants:
+    - Safe
+    - Unsafe
+  DocString:
+    kind: product
+    extends: node_base
+    fields:
+    - name: value
+      type: String
+    - name: style
+      type: AttrStyle
+  ItemMacroRules:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: rules
+      type: TokenStream
+  Lifetime:
+    kind: product
+    doc: "A named lifetime (e.g. `'a`, `'static`)."
+    extends: node_base
+    fields:
+    - name: apostrophe
+      type: Span
+    - name: ident
+      type: Ident
+  LitFloat:
+    kind: product
+    extends: node_base
+    fields:
+    - name: digits
+      type: String
+    - name: suffix
+      type: Option<Ident>
+  LitInt:
+    kind: product
+    extends: node_base
+    fields:
+    - name: digits
+      type: String
+    - name: suffix
+      type: Option<Ident>
+  Member:
+    kind: sum
+    variants:
+    - name: Named
+      fields:
+      - name: ident
+        type: Ident
+    - name: Unnamed
+      fields:
+      - name: index
+        type: u32
+  UseName:
+    kind: product
+    extends: node_base
+    fields:
+    - name: ident
+      type: Ident
+  UseRename:
+    kind: product
+    extends: node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: rename
+      type: Ident
+  Variadic:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: name
+      type: Option<Ident>
+  Label:
+    kind: product
+    extends: node_base
+    fields:
+    - name: name
+      type: Lifetime
+  LifetimeParam:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: lifetime
+      type: Lifetime
+    - name: bounds
+      type: Punctuated<Lifetime, '+'>
+  LifetimePredicate:
+    kind: product
+    extends: node_base
+    fields:
+    - name: lifetime
+      type: Lifetime
+    - name: bounds
+      type: Punctuated<Lifetime, '+'>
+  Receiver:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: reference
+      type: bool
+      default: false
+    - name: lifetime
+      type: Option<Lifetime>
+    - name: mutability
+      type: Mutability
+  UseBound:
+    kind: product
+    extends: node_base
+    fields:
+    - name: lifetimes
+      type: Punctuated<Lifetime, ','>
+  Lit:
+    kind: sum
+    doc: "A literal value in source code (string, integer, float, byte, char, or boolean)."
+    variants:
+    - name: Str
+      fields:
+      - name: value
+        type: LitStr
+    - name: ByteStr
+      fields:
+      - name: value
+        type: LitByteStr
+    - name: CStr
+      fields:
+      - name: value
+        type: LitCStr
+    - name: Byte
+      fields:
+      - name: value
+        type: LitByte
+    - name: Char
+      fields:
+      - name: value
+        type: LitChar
+    - name: Int
+      fields:
+      - name: value
+        type: LitInt
+    - name: Float
+      fields:
+      - name: value
+        type: LitFloat
+    - name: Bool
+      fields:
+      - name: value
+        type: LitBool
+    - name: Verbatim
+      fields:
+      - name: tokens
+        type: TokenStream
+  ExprContinue:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: label
+      type: Option<Label>
+  BoundLifetimes:
+    kind: product
+    extends: node_base
+    fields:
+    - name: params
+      type: Punctuated<LifetimeParam, ','>
+  ExprLit:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: lit
+      type: Lit
+  AngleArgs:
+    kind: product
+    extends: node_base
+    fields:
+    - name: args
+      type: Punctuated<GenericArgument, ','>
+  AssocConstArg:
+    kind: product
+    extends: node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Option<AngleArgs>
+    - name: expr
+      type: Expr
+  AssocTypeArg:
+    kind: product
+    extends: node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Option<AngleArgs>
+    - name: ty
+      type: Type
+  AttrArgs:
+    kind: sum
+    variants:
+    - name: Empty
+    - name: Delimited
+      fields:
+      - name: delim
+        type: DelimiterKind
+      - name: tokens
+        type: TokenStream
+    - name: Meta
+      fields:
+      - name: meta
+        type: Meta
+  Attribute:
+    kind: product
+    doc: "A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement."
+    extends: node_base
+    fields:
+    - name: style
+      type: AttrStyle
+    - name: path
+      type: Path
+    - name: args
+      type: AttrArgs
+  BareFnArg:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: name
+      type: Option<Ident>
+    - name: ty
+      type: Type
+  Block:
+    kind: product
+    doc: "A braced block of statements (`{ stmt; stmt; expr }`)."
+    extends: node_base
+    fields:
+    - name: stmts
+      type: Vec<Stmt>
+  ClosureParam:
+    kind: sum
+    variants:
+    - name: Typed
+      fields:
+      - name: pat
+        type: Pattern
+      - name: ty
+        type: Type
+    - name: Inferred
+      fields:
+      - name: pat
+        type: Pattern
+  ConstParam:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: ty
+      type: Type
+    - name: default
+      type: Option<Expr>
+  ConstraintArg:
+    kind: product
+    extends: node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Option<AngleArgs>
+    - name: bounds
+      type: Punctuated<TypeBound, '+'>
+  Crate:
+    kind: product
+    extends: node_base
+    fields:
+    - name: attrs
+      type: Vec<Attribute>
+    - name: items
+      type: Vec<Item>
+  Expr:
+    kind: sum
+    doc: "A Rust expression. The primary recursive node covering all expression forms."
+    variants:
+    - name: Lit
+      fields:
+      - name: value
+        type: ExprLit
+    - name: Path
+      fields:
+      - name: value
+        type: ExprPath
+    - name: Block
+      fields:
+      - name: value
+        type: ExprBlock
+    - name: Unsafe
+      fields:
+      - name: value
+        type: ExprUnsafe
+    - name: Const
+      fields:
+      - name: value
+        type: ExprConst
+    - name: If
+      fields:
+      - name: value
+        type: ExprIf
+    - name: While
+      fields:
+      - name: value
+        type: ExprWhile
+    - name: ForLoop
+      fields:
+      - name: value
+        type: ExprForLoop
+    - name: Loop
+      fields:
+      - name: value
+        type: ExprLoop
+    - name: Match
+      fields:
+      - name: value
+        type: ExprMatch
+    - name: Closure
+      fields:
+      - name: value
+        type: ExprClosure
+    - name: Async
+      fields:
+      - name: value
+        type: ExprAsync
+    - name: Await
+      fields:
+      - name: value
+        type: ExprAwait
+    - name: Try
+      fields:
+      - name: value
+        type: ExprTry
+    - name: TryBlock
+      fields:
+      - name: value
+        type: ExprTryBlock
+    - name: Yield
+      fields:
+      - name: value
+        type: ExprYield
+    - name: Return
+      fields:
+      - name: value
+        type: ExprReturn
+    - name: Break
+      fields:
+      - name: value
+        type: ExprBreak
+    - name: Continue
+      fields:
+      - name: value
+        type: ExprContinue
+    - name: Call
+      fields:
+      - name: value
+        type: ExprCall
+    - name: MethodCall
+      fields:
+      - name: value
+        type: ExprMethodCall
+    - name: Field
+      fields:
+      - name: value
+        type: ExprField
+    - name: Index
+      fields:
+      - name: value
+        type: ExprIndex
+    - name: Reference
+      fields:
+      - name: value
+        type: ExprReference
+    - name: Unary
+      fields:
+      - name: value
+        type: ExprUnary
+    - name: Binary
+      fields:
+      - name: value
+        type: ExprBinary
+    - name: Assign
+      fields:
+      - name: value
+        type: ExprAssign
+    - name: AssignOp
+      fields:
+      - name: value
+        type: ExprAssignOp
+    - name: Cast
+      fields:
+      - name: value
+        type: ExprCast
+    - name: Type
+      fields:
+      - name: value
+        type: ExprType
+    - name: Let
+      fields:
+      - name: value
+        type: ExprLet
+    - name: Struct
+      fields:
+      - name: value
+        type: ExprStruct
+    - name: Tuple
+      fields:
+      - name: value
+        type: ExprTuple
+    - name: Array
+      fields:
+      - name: value
+        type: ExprArray
+    - name: Repeat
+      fields:
+      - name: value
+        type: ExprRepeat
+    - name: Range
+      fields:
+      - name: value
+        type: ExprRange
+    - name: Macro
+      fields:
+      - name: value
+        type: MacroCall
+    - name: Group
+      fields:
+      - name: value
+        type: ExprGroup
+    - name: Paren
+      fields:
+      - name: value
+        type: ExprParen
+    - name: Infer
+    - name: Verbatim
+      fields:
+      - name: tokens
+        type: TokenStream
+  ExprArray:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: elems
+      type: Punctuated<Expr, ','>
+  ExprAssign:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: left
+      type: Box<Expr>
+    - name: right
+      type: Box<Expr>
+  ExprAssignOp:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: left
+      type: Box<Expr>
+    - name: op
+      type: AssignOp
+    - name: right
+      type: Box<Expr>
+  ExprAsync:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: capture
+      type: bool
+      default: false
+    - name: block
+      type: Block
+  ExprAwait:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: base
+      type: Box<Expr>
+  ExprBinary:
+    kind: product
+    doc: "A binary operation expression (e.g. `a + b`, `x == y`)."
+    extends: attributed_node_base
+    fields:
+    - name: left
+      type: Box<Expr>
+    - name: op
+      type: BinOp
+    - name: right
+      type: Box<Expr>
+  ExprBlock:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: label
+      type: Option<Label>
+    - name: block
+      type: Block
+  ExprBreak:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: label
+      type: Option<Label>
+    - name: expr
+      type: Option<Box<Expr>>
+  ExprCall:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: func
+      type: Box<Expr>
+    - name: args
+      type: Punctuated<Expr, ','>
+  ExprCast:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: expr
+      type: Box<Expr>
+    - name: ty
+      type: Box<Type>
+  ExprClosure:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: lifetimes
+      type: Option<BoundLifetimes>
+    - name: constness
+      type: Constness
+    - name: movability
+      type: Movability
+    - name: asyncness
+      type: Asyncness
+    - name: capture
+      type: bool
+      default: false
+    - name: inputs
+      type: Punctuated<ClosureParam, ','>
+    - name: output
+      type: ReturnType
+    - name: body
+      type: Box<Expr>
+  ExprConst:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: block
+      type: Block
+  ExprField:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: base
+      type: Box<Expr>
+    - name: member
+      type: Member
+  ExprForLoop:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: label
+      type: Option<Label>
+    - name: pat
+      type: Pattern
+    - name: expr
+      type: Box<Expr>
+    - name: body
+      type: Block
+  ExprGroup:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: expr
+      type: Box<Expr>
+  ExprIf:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: cond
+      type: Box<Expr>
+    - name: then_branch
+      type: Block
+    - name: else_branch
+      type: Option<Box<Expr>>
+  ExprIndex:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: base
+      type: Box<Expr>
+    - name: index
+      type: Box<Expr>
+  ExprLet:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: pat
+      type: Pattern
+    - name: expr
+      type: Box<Expr>
+  ExprLoop:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: label
+      type: Option<Label>
+    - name: body
+      type: Block
+  ExprMatch:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: expr
+      type: Box<Expr>
+    - name: arms
+      type: Vec<MatchArm>
+  ExprMethodCall:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: receiver
+      type: Box<Expr>
+    - name: method
+      type: Ident
+    - name: turbofish
+      type: Option<AngleArgs>
+    - name: args
+      type: Punctuated<Expr, ','>
+  ExprParen:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: expr
+      type: Box<Expr>
+  ExprPath:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: qself
+      type: Option<QSelf>
+    - name: path
+      type: Path
+  ExprRange:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: start
+      type: Option<Box<Expr>>
+    - name: limits
+      type: RangeLimits
+    - name: end
+      type: Option<Box<Expr>>
+  ExprReference:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: mutability
+      type: Mutability
+    - name: expr
+      type: Box<Expr>
+  ExprRepeat:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: elem
+      type: Box<Expr>
+    - name: len
+      type: Box<Expr>
+  ExprReturn:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: expr
+      type: Option<Box<Expr>>
+  ExprStruct:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: qself
+      type: Option<QSelf>
+    - name: path
+      type: Path
+    - name: fields
+      type: Punctuated<FieldValue, ','>
+    - name: rest
+      type: Option<Box<Expr>>
+  ExprTry:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: expr
+      type: Box<Expr>
+  ExprTryBlock:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: block
+      type: Block
+  ExprTuple:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: elems
+      type: Punctuated<Expr, ','>
+  ExprType:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: expr
+      type: Box<Expr>
+    - name: ty
+      type: Box<Type>
+  ExprUnary:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: op
+      type: UnOp
+    - name: expr
+      type: Box<Expr>
+  ExprUnsafe:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: block
+      type: Block
+  ExprWhile:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: label
+      type: Option<Label>
+    - name: cond
+      type: Box<Expr>
+    - name: body
+      type: Block
+  ExprYield:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: expr
+      type: Option<Box<Expr>>
+  FieldDef:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: mutability
+      type: Mutability
+    - name: ident
+      type: Option<Ident>
+    - name: ty
+      type: Type
+  FieldValue:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: member
+      type: Member
+    - name: expr
+      type: Expr
+    - name: shorthand
+      type: bool
+      default: false
+  Fields:
+    kind: sum
+    variants:
+    - name: Named
+      fields:
+      - name: value
+        type: FieldsNamed
+    - name: Unnamed
+      fields:
+      - name: value
+        type: FieldsUnnamed
+    - name: Unit
+  FieldsNamed:
+    kind: product
+    extends: node_base
+    fields:
+    - name: fields
+      type: Punctuated<FieldDef, ','>
+  FieldsUnnamed:
+    kind: product
+    extends: node_base
+    fields:
+    - name: fields
+      type: Punctuated<FieldDef, ','>
+  FnParam:
+    kind: sum
+    variants:
+    - name: Receiver
+      fields:
+      - name: value
+        type: Receiver
+    - name: Typed
+      fields:
+      - name: value
+        type: TypedParam
+  ForeignItem:
+    kind: sum
+    variants:
+    - name: Fn
+      fields:
+      - name: value
+        type: ForeignItemFn
+    - name: Static
+      fields:
+      - name: value
+        type: ForeignItemStatic
+    - name: Type
+      fields:
+      - name: value
+        type: ForeignItemType
+    - name: Macro
+      fields:
+      - name: value
+        type: ForeignItemMacro
+  ForeignItemFn:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: sig
+      type: Signature
+  ForeignItemMacro:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: mac
+      type: MacroCall
+    - name: semi
+      type: bool
+      default: false
+  ForeignItemStatic:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: mutability
+      type: Mutability
+    - name: ident
+      type: Ident
+    - name: ty
+      type: Type
+  ForeignItemType:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+  GenericArgument:
+    kind: sum
+    variants:
+    - name: Lifetime
+      fields:
+      - name: value
+        type: Lifetime
+    - name: Type
+      fields:
+      - name: value
+        type: Type
+    - name: Const
+      fields:
+      - name: value
+        type: Expr
+    - name: AssocType
+      fields:
+      - name: value
+        type: AssocTypeArg
+    - name: AssocConst
+      fields:
+      - name: value
+        type: AssocConstArg
+    - name: Constraint
+      fields:
+      - name: value
+        type: ConstraintArg
+  GenericParam:
+    kind: sum
+    variants:
+    - name: Lifetime
+      fields:
+      - name: value
+        type: LifetimeParam
+    - name: Type
+      fields:
+      - name: value
+        type: TypeParam
+    - name: Const
+      fields:
+      - name: value
+        type: ConstParam
+  Generics:
+    kind: product
+    extends: node_base
+    fields:
+    - name: params
+      type: Punctuated<GenericParam, ','>
+    - name: where_clause
+      type: Option<WhereClause>
+  ImplItem:
+    kind: sum
+    variants:
+    - name: Fn
+      fields:
+      - name: value
+        type: ImplItemFn
+    - name: Const
+      fields:
+      - name: value
+        type: ImplItemConst
+    - name: Type
+      fields:
+      - name: value
+        type: ImplItemType
+    - name: Macro
+      fields:
+      - name: value
+        type: ImplItemMacro
+  ImplItemConst:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: defaultness
+      type: Defaultness
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: ty
+      type: Type
+    - name: expr
+      type: Expr
+  ImplItemFn:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: defaultness
+      type: Defaultness
+    - name: sig
+      type: Signature
+    - name: body
+      type: Block
+  ImplItemMacro:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: mac
+      type: MacroCall
+    - name: semi
+      type: bool
+      default: false
+  ImplItemType:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: defaultness
+      type: Defaultness
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: ty
+      type: Type
+  Item:
+    kind: sum
+    variants:
+    - name: Use
+      fields:
+      - name: value
+        type: ItemUse
+    - name: ExternCrate
+      fields:
+      - name: value
+        type: ItemExternCrate
+    - name: Mod
+      fields:
+      - name: value
+        type: ItemMod
+    - name: Fn
+      fields:
+      - name: value
+        type: ItemFn
+    - name: Struct
+      fields:
+      - name: value
+        type: ItemStruct
+    - name: Enum
+      fields:
+      - name: value
+        type: ItemEnum
+    - name: Union
+      fields:
+      - name: value
+        type: ItemUnion
+    - name: Trait
+      fields:
+      - name: value
+        type: ItemTrait
+    - name: TraitAlias
+      fields:
+      - name: value
+        type: ItemTraitAlias
+    - name: Impl
+      fields:
+      - name: value
+        type: ItemImpl
+    - name: TypeAlias
+      fields:
+      - name: value
+        type: ItemTypeAlias
+    - name: Const
+      fields:
+      - name: value
+        type: ItemConst
+    - name: Static
+      fields:
+      - name: value
+        type: ItemStatic
+    - name: Macro
+      fields:
+      - name: value
+        type: ItemMacro
+    - name: Macro2
+      fields:
+      - name: value
+        type: ItemMacroRules
+    - name: ForeignMod
+      fields:
+      - name: value
+        type: ItemForeignMod
+    - name: ExternBlock
+      fields:
+      - name: value
+        type: ItemForeignMod
+  ItemConst:
+    kind: product
+    doc: "A top-level constant item (`const NAME: Type = value;`)."
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: ty
+      type: Type
+    - name: expr
+      type: Expr
+  ItemEnum:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: variants
+      type: Punctuated<Variant, ','>
+  ItemExternCrate:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: ident
+      type: Ident
+    - name: rename
+      type: Option<Ident>
+  ItemFn:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: defaultness
+      type: Defaultness
+    - name: sig
+      type: Signature
+    - name: body
+      type: Block
+  ItemForeignMod:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: unsafety
+      type: Unsafety
+    - name: abi
+      type: Abi
+    - name: items
+      type: Vec<ForeignItem>
+  ItemImpl:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: defaultness
+      type: Defaultness
+    - name: unsafety
+      type: Unsafety
+    - name: generics
+      type: Generics
+    - name: trait_ref
+      type: Option<TraitRef>
+    - name: self_ty
+      type: Type
+    - name: items
+      type: Vec<ImplItem>
+  ItemMacro:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: ident
+      type: Option<Ident>
+    - name: mac
+      type: MacroCall
+    - name: semi
+      type: bool
+      default: false
+  ItemMod:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: unsafety
+      type: Unsafety
+    - name: ident
+      type: Ident
+    - name: content
+      type: Option<Vec<Item>>
+  ItemStatic:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: mutability
+      type: Mutability
+    - name: ident
+      type: Ident
+    - name: ty
+      type: Type
+    - name: expr
+      type: Expr
+  ItemStruct:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: fields
+      type: Fields
+  ItemTrait:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: unsafety
+      type: Unsafety
+    - name: auto
+      type: bool
+      default: false
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: supertraits
+      type: Punctuated<TypeBound, '+'>
+    - name: items
+      type: Vec<TraitItem>
+  ItemTraitAlias:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: bounds
+      type: Punctuated<TypeBound, '+'>
+  ItemTypeAlias:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: ty
+      type: Type
+  ItemUnion:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: fields
+      type: FieldsNamed
+  ItemUse:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: vis
+      type: Visibility
+    - name: tree
+      type: UseTree
+  Local:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: pat
+      type: Pattern
+    - name: ty
+      type: Option<Type>
+    - name: init
+      type: Option<LocalInit>
+  LocalInit:
+    kind: product
+    extends: node_base
+    fields:
+    - name: expr
+      type: Expr
+    - name: diverge
+      type: Option<Box<Expr>>
+  MacroCall:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: path
+      type: Path
+    - name: delimiter
+      type: DelimiterKind
+    - name: tokens
+      type: TokenStream
+  MatchArm:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: pat
+      type: Pattern
+    - name: guard
+      type: Option<Box<Expr>>
+    - name: body
+      type: Expr
+  Meta:
+    kind: sum
+    variants:
+    - name: Path
+      fields:
+      - name: path
+        type: Path
+    - name: List
+      fields:
+      - name: value
+        type: MetaList
+    - name: NameValue
+      fields:
+      - name: value
+        type: MetaNameValue
+  MetaList:
+    kind: product
+    extends: node_base
+    fields:
+    - name: path
+      type: Path
+    - name: delimiter
+      type: DelimiterKind
+    - name: tokens
+      type: TokenStream
+  MetaNameValue:
+    kind: product
+    extends: node_base
+    fields:
+    - name: path
+      type: Path
+    - name: value
+      type: Expr
+  PatField:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: member
+      type: Member
+    - name: pat
+      type: Pattern
+    - name: shorthand
+      type: bool
+      default: false
+  PatGroup:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: pat
+      type: Box<Pattern>
+  PatIdent:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: by_ref
+      type: bool
+      default: false
+    - name: mutability
+      type: Mutability
+    - name: ident
+      type: Ident
+    - name: subpat
+      type: Option<Box<Pattern>>
+  PatLit:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: expr
+      type: Expr
+  PatOr:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: cases
+      type: Punctuated<Pattern, '|'>
+  PatParen:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: pat
+      type: Box<Pattern>
+  PatPath:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: qself
+      type: Option<QSelf>
+    - name: path
+      type: Path
+  PatRange:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: start
+      type: Option<Expr>
+    - name: limits
+      type: RangeLimits
+    - name: end
+      type: Option<Expr>
+  PatReference:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: mutability
+      type: Mutability
+    - name: pat
+      type: Box<Pattern>
+  PatSlice:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: elems
+      type: Punctuated<Pattern, ','>
+  PatStruct:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: qself
+      type: Option<QSelf>
+    - name: path
+      type: Path
+    - name: fields
+      type: Punctuated<PatField, ','>
+    - name: rest
+      type: bool
+      default: false
+  PatTuple:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: elems
+      type: Punctuated<Pattern, ','>
+  PatTupleStruct:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: qself
+      type: Option<QSelf>
+    - name: path
+      type: Path
+    - name: elems
+      type: Punctuated<Pattern, ','>
+  PatType:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: pat
+      type: Box<Pattern>
+    - name: ty
+      type: Box<Type>
+  Path:
+    kind: product
+    doc: "A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`)."
+    extends: node_base
+    fields:
+    - name: leading_colon
+      type: bool
+      default: false
+    - name: segments
+      type: Punctuated<PathSegment, '::'>
+  PathArguments:
+    kind: sum
+    variants:
+    - name: None
+    - name: AngleBracketed
+      fields:
+      - name: args
+        type: Punctuated<GenericArgument, ','>
+    - name: Parenthesized
+      fields:
+      - name: inputs
+        type: Punctuated<Type, ','>
+      - name: output
+        type: Option<Type>
+  PathSegment:
+    kind: product
+    extends: node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: args
+      type: PathArguments
+  Pattern:
+    kind: sum
+    variants:
+    - name: Wild
+    - name: Rest
+    - name: Ident
+      fields:
+      - name: value
+        type: PatIdent
+    - name: Path
+      fields:
+      - name: value
+        type: PatPath
+    - name: Tuple
+      fields:
+      - name: value
+        type: PatTuple
+    - name: TupleStruct
+      fields:
+      - name: value
+        type: PatTupleStruct
+    - name: Struct
+      fields:
+      - name: value
+        type: PatStruct
+    - name: Slice
+      fields:
+      - name: value
+        type: PatSlice
+    - name: Reference
+      fields:
+      - name: value
+        type: PatReference
+    - name: Or
+      fields:
+      - name: value
+        type: PatOr
+    - name: Lit
+      fields:
+      - name: value
+        type: PatLit
+    - name: Range
+      fields:
+      - name: value
+        type: PatRange
+    - name: Macro
+      fields:
+      - name: value
+        type: MacroCall
+    - name: Type
+      fields:
+      - name: value
+        type: PatType
+    - name: Group
+      fields:
+      - name: value
+        type: PatGroup
+    - name: Paren
+      fields:
+      - name: value
+        type: PatParen
+  QSelf:
+    kind: product
+    extends: node_base
+    fields:
+    - name: ty
+      type: Box<Type>
+    - name: position
+      type: usize
+  ReturnType:
+    kind: sum
+    variants:
+    - name: Default
+    - name: Type
+      fields:
+      - name: value
+        type: Box<Type>
+  Signature:
+    kind: product
+    extends: node_base
+    fields:
+    - name: constness
+      type: Constness
+    - name: asyncness
+      type: Asyncness
+    - name: unsafety
+      type: Unsafety
+    - name: abi
+      type: Option<Abi>
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: inputs
+      type: Punctuated<FnParam, ','>
+    - name: variadic
+      type: Option<Variadic>
+    - name: output
+      type: ReturnType
+  Stmt:
+    kind: sum
+    variants:
+    - name: Local
+      fields:
+      - name: value
+        type: Local
+    - name: Item
+      fields:
+      - name: value
+        type: Item
+    - name: Expr
+      fields:
+      - name: value
+        type: Expr
+    - name: Semi
+      fields:
+      - name: value
+        type: Expr
+    - name: Macro
+      fields:
+      - name: value
+        type: StmtMacro
+  StmtMacro:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: mac
+      type: MacroCall
+    - name: semi
+      type: bool
+      default: false
+  TraitBound:
+    kind: product
+    extends: node_base
+    fields:
+    - name: polarity
+      type: BoundPolarity
+    - name: lifetimes
+      type: Option<BoundLifetimes>
+    - name: modifier
+      type: TraitBoundModifier
+    - name: path
+      type: Path
+  TraitItem:
+    kind: sum
+    variants:
+    - name: Fn
+      fields:
+      - name: value
+        type: TraitItemFn
+    - name: Const
+      fields:
+      - name: value
+        type: TraitItemConst
+    - name: Type
+      fields:
+      - name: value
+        type: TraitItemType
+    - name: Macro
+      fields:
+      - name: value
+        type: TraitItemMacro
+  TraitItemConst:
+    kind: product
+    doc: "An associated constant declaration inside a trait or impl block (`const NAME: Type;` or `const NAME: Type = value;`)."
+    extends: attributed_node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: ty
+      type: Type
+    - name: default
+      type: Option<Expr>
+  TraitItemFn:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: sig
+      type: Signature
+    - name: default_body
+      type: Option<Block>
+  TraitItemMacro:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: mac
+      type: MacroCall
+    - name: semi
+      type: bool
+      default: false
+  TraitItemType:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: generics
+      type: Generics
+    - name: bounds
+      type: Punctuated<TypeBound, '+'>
+    - name: default
+      type: Option<Type>
+  TraitRef:
+    kind: product
+    extends: node_base
+    fields:
+    - name: polarity
+      type: BoundPolarity
+    - name: path
+      type: Path
+  Type:
+    kind: sum
+    doc: "A Rust type expression. Covers all positions where a type can appear in source code."
+    variants:
+    - name: Never
+    - name: Infer
+    - name: Path
+      fields:
+      - name: value
+        type: TypePath
+    - name: Tuple
+      fields:
+      - name: value
+        type: TypeTuple
+    - name: Array
+      fields:
+      - name: value
+        type: TypeArray
+    - name: Slice
+      fields:
+      - name: value
+        type: TypeSlice
+    - name: Reference
+      fields:
+      - name: value
+        type: TypeReference
+    - name: Pointer
+      fields:
+      - name: value
+        type: TypePointer
+    - name: BareFn
+      fields:
+      - name: value
+        type: TypeBareFn
+    - name: ImplTrait
+      fields:
+      - name: value
+        type: TypeImplTrait
+    - name: TraitObject
+      fields:
+      - name: value
+        type: TypeTraitObject
+    - name: Paren
+      fields:
+      - name: value
+        type: TypeParen
+    - name: Group
+      fields:
+      - name: value
+        type: TypeGroup
+    - name: Macro
+      fields:
+      - name: value
+        type: MacroCall
+  TypeArray:
+    kind: product
+    extends: node_base
+    fields:
+    - name: elem
+      type: Box<Type>
+    - name: len
+      type: Expr
+  TypeBareFn:
+    kind: product
+    extends: node_base
+    fields:
+    - name: lifetimes
+      type: Option<BoundLifetimes>
+    - name: unsafety
+      type: Unsafety
+    - name: abi
+      type: Option<Abi>
+    - name: inputs
+      type: Punctuated<BareFnArg, ','>
+    - name: variadic
+      type: Option<Variadic>
+    - name: output
+      type: ReturnType
+  TypeBound:
+    kind: sum
+    variants:
+    - name: Trait
+      fields:
+      - name: value
+        type: TraitBound
+    - name: Lifetime
+      fields:
+      - name: value
+        type: Lifetime
+    - name: Use
+      fields:
+      - name: value
+        type: UseBound
+  TypeGroup:
+    kind: product
+    extends: node_base
+    fields:
+    - name: elem
+      type: Box<Type>
+  TypeImplTrait:
+    kind: product
+    extends: node_base
+    fields:
+    - name: bounds
+      type: Punctuated<TypeBound, '+'>
+  TypeParam:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: bounds
+      type: Punctuated<TypeBound, '+'>
+    - name: default
+      type: Option<Type>
+  TypeParen:
+    kind: product
+    extends: node_base
+    fields:
+    - name: elem
+      type: Box<Type>
+  TypePath:
+    kind: product
+    extends: node_base
+    fields:
+    - name: qself
+      type: Option<QSelf>
+    - name: path
+      type: Path
+  TypePointer:
+    kind: product
+    extends: node_base
+    fields:
+    - name: mutability
+      type: Mutability
+    - name: elem
+      type: Box<Type>
+  TypePredicate:
+    kind: product
+    extends: node_base
+    fields:
+    - name: lifetimes
+      type: Option<BoundLifetimes>
+    - name: bounded_ty
+      type: Type
+    - name: bounds
+      type: Punctuated<TypeBound, '+'>
+  TypeReference:
+    kind: product
+    extends: node_base
+    fields:
+    - name: lifetime
+      type: Option<Lifetime>
+    - name: mutability
+      type: Mutability
+    - name: elem
+      type: Box<Type>
+  TypeSlice:
+    kind: product
+    extends: node_base
+    fields:
+    - name: elem
+      type: Box<Type>
+  TypeTraitObject:
+    kind: product
+    extends: node_base
+    fields:
+    - name: dyn_token
+      type: bool
+      default: false
+    - name: bounds
+      type: Punctuated<TypeBound, '+'>
+  TypeTuple:
+    kind: product
+    extends: node_base
+    fields:
+    - name: elems
+      type: Punctuated<Type, ','>
+  TypedParam:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: pat
+      type: Pattern
+    - name: ty
+      type: Type
+  UseGroup:
+    kind: product
+    extends: node_base
+    fields:
+    - name: items
+      type: Punctuated<UseTree, ','>
+  UsePath:
+    kind: product
+    extends: node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: tree
+      type: Box<UseTree>
+  UseTree:
+    kind: sum
+    variants:
+    - name: Path
+      fields:
+      - name: value
+        type: UsePath
+    - name: Name
+      fields:
+      - name: value
+        type: UseName
+    - name: Rename
+      fields:
+      - name: value
+        type: UseRename
+    - name: Glob
+    - name: Group
+      fields:
+      - name: value
+        type: UseGroup
+  Variant:
+    kind: product
+    extends: attributed_node_base
+    fields:
+    - name: ident
+      type: Ident
+    - name: fields
+      type: Fields
+    - name: discriminant
+      type: Option<Expr>
+  Visibility:
+    kind: sum
+    doc: "The visibility of an item — controls whether it is accessible outside its defining module."
+    variants:
+    - name: Inherited
+    - name: Public
+    - name: Crate
+    - name: SelfValue
+    - name: Super
+    - name: Restricted
+      fields:
+      - name: in_token
+        type: bool
+        default: false
+      - name: path
+        type: Path
+  WhereClause:
+    kind: product
+    extends: node_base
+    fields:
+    - name: predicates
+      type: Punctuated<WherePredicate, ','>
+  WherePredicate:
+    kind: sum
+    variants:
+    - name: Lifetime
+      fields:
+      - name: value
+        type: LifetimePredicate
+    - name: Type
+      fields:
+      - name: value
+        type: TypePredicate
