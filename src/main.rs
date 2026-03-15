@@ -2,17 +2,16 @@ pub mod options;
 pub mod schema;
 
 use std::fs;
+use clap::Parser;
 
 pub use options::*;
 pub use schema::*;
 
-use clap::Parser;
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let options = Options::parse();
-    let file = fs::read_to_string(options.path)?;
-    let schema: Schema = serde_yml::from_str(&file)?;
-    println!("{:#?}", &schema);
+    let file = fs::read_to_string(&options.path)?;
+    let _: Schema = serde_yml::from_str(&file)?;
+    println!("{:#?}", &options);
     Ok(())
 }
 
