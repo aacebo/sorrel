@@ -1,8 +1,8 @@
 pub mod options;
 pub mod schema;
 
-use std::fs;
 use clap::Parser;
+use std::fs;
 
 pub use options::*;
 pub use schema::*;
