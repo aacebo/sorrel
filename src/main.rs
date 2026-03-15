@@ -26,7 +26,7 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn should_parse_schema() {
+    fn parse_schema() {
         let file = fs::read_to_string("schema.yml").unwrap();
         let schema: Schema = serde_yml::from_str(&file).unwrap();
         println!("{:#?}", &schema);
