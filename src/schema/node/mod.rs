@@ -44,3 +44,23 @@ pub enum Node {
     Product(Product),
     Sum(Sum),
 }
+
+impl Node {
+    #[allow(unused)]
+    pub fn name(&self) -> &str {
+        match self {
+            Self::Opaque(v) => &v.name,
+            Self::Product(v) => &v.name,
+            Self::Sum(v) => &v.name,
+        }
+    }
+
+    #[allow(unused)]
+    pub fn doc(&self) -> Option<&str> {
+        match self {
+            Self::Opaque(_) => None,
+            Self::Product(v) => v.doc.as_deref(),
+            Self::Sum(v) => v.doc.as_deref(),
+        }
+    }
+}
