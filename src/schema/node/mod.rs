@@ -1,8 +1,6 @@
-mod opaque;
 mod product;
 mod sum;
 
-pub use opaque::*;
 pub use product::*;
 use quote::quote;
 pub use sum::*;
@@ -78,10 +76,18 @@ pub enum Variant {
     Sum(SumVariant),
 }
 
+impl Variant {
+    pub fn run(&self, options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+        Ok(match self {
+            Self::Enum(ident) => quote!(#ident),
+            Self::Sum(v) => v.run(options)?,
+        })
+    }
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Node {
-    Opaque(Opaque),
     Product(Product),
     Sum(Sum),
 }
@@ -90,7 +96,6 @@ impl Node {
     #[allow(unused)]
     pub fn name(&self) -> &str {
         match self {
-            Self::Opaque(v) => &v.name,
             Self::Product(v) => &v.name,
             Self::Sum(v) => &v.name,
         }
@@ -99,7 +104,6 @@ impl Node {
     #[allow(unused)]
     pub fn doc(&self) -> Option<&str> {
         match self {
-            Self::Opaque(_) => None,
             Self::Product(v) => v.doc.as_deref(),
             Self::Sum(v) => v.doc.as_deref(),
         }

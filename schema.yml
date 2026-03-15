@@ -145,8 +145,6 @@ nodes:
     variants:
     - HalfOpen
     - Closed
-  TokenStream:
-    kind: opaque
   TraitBoundModifier:
     kind: sum
     variants:

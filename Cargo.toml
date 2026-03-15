@@ -1,7 +1,8 @@
 [package]
 name = "sorrel"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2024"
+description = "cli for generating ast types from a given schema"
 
 [dependencies]
 clap = { version = "4.6", features = ["cargo", "string", "derive", "suggestions"] }

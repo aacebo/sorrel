@@ -1,13 +1,11 @@
 #![feature(iterator_try_collect)]
 
-pub mod error;
 pub mod options;
 pub mod schema;
 
 use clap::Parser;
 use std::fs;
 
-pub use error::*;
 pub use options::*;
 pub use schema::*;
 

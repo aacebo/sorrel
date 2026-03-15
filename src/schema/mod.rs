@@ -1,5 +1,7 @@
 use serde_with::{KeyValueMap, serde_as};
 
+use crate::Options;
+
 mod node;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -24,6 +26,18 @@ impl Schema {
 
     fn default_version() -> semver::Version {
         "0.0.0".parse().unwrap()
+    }
+}
+
+impl Schema {
+    pub fn run(&self, options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+        let mut tokens = proc_macro2::TokenStream::new();
+
+        for node in self.nodes.iter() {
+            tokens.extend(node.run(options)?);
+        }
+
+        Ok(tokens)
     }
 }
 

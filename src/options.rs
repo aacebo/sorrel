@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
 #[derive(clap::Parser, Debug, Default, Clone)]
-#[command(version, about, long_about = None)]
+#[command(version, about, long_about)]
 pub struct Options {
     #[arg(long, short, default_value = "schema.yml")]
     pub path: PathBuf,
 
-    #[arg(long, short, default_value = "output")]
+    #[arg(long, short, default_value = "output", value_name = "DIR", value_hint = clap::ValueHint::DirPath)]
     pub output: PathBuf,
 
     #[arg(long, short, value_enum, value_delimiter = ' ', num_args = 0..)]
