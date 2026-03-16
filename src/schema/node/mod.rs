@@ -2,10 +2,11 @@ mod product;
 mod sum;
 
 pub use product::*;
-use quote::{format_ident, quote};
 pub use sum::*;
 
-use crate::{Args, ClapErrorExt, ToClapError};
+use quote::{format_ident, quote};
+
+use crate::{Args, Error, ToError};
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Base {
@@ -59,18 +60,16 @@ impl Field {
         }
     }
 
-    pub fn run(&self, _args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, _args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         let ident = format_ident!("{}", &self.name);
         let kind: syn::Path = match syn::parse_str(&self.kind) {
             Err(err) => {
-                return Err(err.to_clap_error().with_context(
-                    clap::error::ContextKind::Custom,
-                    clap::error::ContextValue::Strings(vec![
-                        "field".to_string(),
-                        self.name.clone(),
-                        self.kind.clone(),
-                    ]),
-                ));
+                return err
+                    .to_error()
+                    .with("entity", "field")
+                    .with("name", &self.name)
+                    .with("type", &self.kind)
+                    .into();
             }
             Ok(v) => v,
         };
@@ -89,7 +88,7 @@ pub enum Variant {
 }
 
 impl Variant {
-    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         Ok(match self {
             Self::Enum(name) => {
                 let ident = format_ident!("{}", &name);
@@ -125,7 +124,7 @@ impl Node {
     }
 
     #[allow(unused)]
-    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         match self {
             Self::Product(v) => v.run(args),
             Self::Sum(v) => v.run(args),

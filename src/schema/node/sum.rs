@@ -1,6 +1,6 @@
 use quote::{format_ident, quote};
 
-use crate::Args;
+use crate::{Args, Error};
 
 use super::{Field, Variant};
 
@@ -14,7 +14,7 @@ pub struct SumVariant {
 }
 
 impl SumVariant {
-    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         let ident = format_ident!("{}", &self.name);
         let fields: Vec<_> = self.fields.iter().map(|f| f.run(args)).try_collect()?;
 
@@ -39,7 +39,7 @@ pub struct Sum {
 }
 
 impl Sum {
-    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         let ident = format_ident!("{}", &self.name);
         let variants: Vec<_> = self.variants.iter().map(|v| v.run(args)).try_collect()?;
 

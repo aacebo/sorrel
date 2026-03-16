@@ -1,6 +1,6 @@
 use quote::{format_ident, quote};
 
-use crate::Args;
+use crate::{Args, Error};
 
 use super::{Base, Field};
 
@@ -20,7 +20,7 @@ pub struct Product {
 }
 
 impl Product {
-    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         let ident = format_ident!("{}", &self.name);
         let fields: Vec<_> = self.fields.iter().map(|f| f.run(args)).try_collect()?;
         let base_fields: Vec<_> = self

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use serde_with::{KeyValueMap, serde_as};
 
-use crate::{Args, Source, SourceMap};
+use crate::{Args, Error, Source, SourceMap};
 
 mod node;
 
@@ -32,7 +32,7 @@ impl Schema {
 }
 
 impl Schema {
-    pub fn run(&self, args: &Args) -> Result<SourceMap, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<SourceMap, Error> {
         let mut map = SourceMap::new();
 
         for node in self.nodes.iter() {
