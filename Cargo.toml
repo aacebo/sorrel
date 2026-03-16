@@ -12,3 +12,4 @@ semver = { version = "1", features = ["serde"] }
 serde = { version = "1", features = ["std", "derive"] }
 serde_with = "3"
 serde_yml = "0.0.12"
+syn = { version = "2.0.117", features = ["derive", "full"] }

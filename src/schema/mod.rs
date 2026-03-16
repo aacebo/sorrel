@@ -1,6 +1,8 @@
+use std::path::PathBuf;
+
 use serde_with::{KeyValueMap, serde_as};
 
-use crate::Args;
+use crate::{Args, Source, SourceMap};
 
 mod node;
 
@@ -30,14 +32,22 @@ impl Schema {
 }
 
 impl Schema {
-    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
-        let mut tokens = proc_macro2::TokenStream::new();
+    pub fn run(&self, args: &Args) -> Result<SourceMap, clap::Error> {
+        let mut map = SourceMap::new();
 
         for node in self.nodes.iter() {
-            tokens.extend(node.run(args)?);
+            map.set(
+                node.name(),
+                Source {
+                    path: args
+                        .output
+                        .join(PathBuf::from(format!("{}.rs", node.name()))),
+                    content: node.run(args)?,
+                },
+            );
         }
 
-        Ok(tokens)
+        Ok(map)
     }
 }
 

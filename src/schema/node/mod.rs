@@ -2,10 +2,10 @@ mod product;
 mod sum;
 
 pub use product::*;
-use quote::quote;
+use quote::{format_ident, quote};
 pub use sum::*;
 
-use crate::Args;
+use crate::{Args, ClapErrorExt, ToClapError};
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Base {
@@ -60,8 +60,20 @@ impl Field {
     }
 
     pub fn run(&self, _args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
-        let ident = &self.name;
-        let kind = &self.kind;
+        let ident = format_ident!("{}", &self.name);
+        let kind: syn::Path = match syn::parse_str(&self.kind) {
+            Err(err) => {
+                return Err(err.to_clap_error().with_context(
+                    clap::error::ContextKind::Custom,
+                    clap::error::ContextValue::Strings(vec![
+                        "field".to_string(),
+                        self.name.clone(),
+                        self.kind.clone(),
+                    ]),
+                ));
+            }
+            Ok(v) => v,
+        };
 
         Ok(quote! {
             pub #ident: #kind,
@@ -79,7 +91,10 @@ pub enum Variant {
 impl Variant {
     pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
         Ok(match self {
-            Self::Enum(ident) => quote!(#ident),
+            Self::Enum(name) => {
+                let ident = format_ident!("{}", &name);
+                quote!(#ident)
+            }
             Self::Sum(v) => v.run(args)?,
         })
     }
