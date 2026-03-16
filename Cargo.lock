@@ -864,3 +864,6 @@ dependencies = [
 [[package]]
 name = "zyn-token"
 version = "0.5.3"
+dependencies = [
+ "proc-macro2",
+]

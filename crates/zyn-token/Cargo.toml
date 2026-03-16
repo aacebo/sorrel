@@ -10,4 +10,7 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
+[lib]
+
 [dependencies]
+proc-macro2 = { version = "1", features = ["span-locations"] }
