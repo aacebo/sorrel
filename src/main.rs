@@ -1,19 +1,20 @@
 #![feature(iterator_try_collect)]
 
-pub mod options;
-pub mod schema;
+mod args;
+mod schema;
 
 use clap::Parser;
 use std::fs;
 
-pub use options::*;
+pub use args::*;
 pub use schema::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let options = Options::parse();
-    let file = fs::read_to_string(&options.path)?;
-    let _: Schema = serde_yml::from_str(&file)?;
-    println!("{:#?}", &options);
+    let args = Args::parse();
+    let file = fs::read_to_string(&args.path)?;
+    let schema: Schema = serde_yml::from_str(&file)?;
+    let tokens = schema.run(&args)?;
+    println!("{:#?}", &tokens);
     Ok(())
 }
 

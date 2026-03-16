@@ -1,6 +1,6 @@
 use quote::quote;
 
-use crate::Options;
+use crate::Args;
 
 use super::{Base, Field};
 
@@ -20,14 +20,14 @@ pub struct Product {
 }
 
 impl Product {
-    pub fn run(&self, options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
         let ident = &self.name;
-        let fields: Vec<_> = self.fields.iter().map(|f| f.run(options)).try_collect()?;
+        let fields: Vec<_> = self.fields.iter().map(|f| f.run(args)).try_collect()?;
         let base_fields: Vec<_> = self
             .extends
             .fields()
             .iter()
-            .map(|f| f.run(options))
+            .map(|f| f.run(args))
             .try_collect()?;
 
         Ok(quote! {

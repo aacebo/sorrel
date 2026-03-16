@@ -5,7 +5,7 @@ pub use product::*;
 use quote::quote;
 pub use sum::*;
 
-use crate::Options;
+use crate::Args;
 
 #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Base {
@@ -59,7 +59,7 @@ impl Field {
         }
     }
 
-    pub fn run(&self, _options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, _args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
         let ident = &self.name;
         let kind = &self.kind;
 
@@ -77,10 +77,10 @@ pub enum Variant {
 }
 
 impl Variant {
-    pub fn run(&self, options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
         Ok(match self {
             Self::Enum(ident) => quote!(#ident),
-            Self::Sum(v) => v.run(options)?,
+            Self::Sum(v) => v.run(args)?,
         })
     }
 }
@@ -110,13 +110,10 @@ impl Node {
     }
 
     #[allow(unused)]
-    pub fn run(&self, options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
         match self {
-            Self::Product(v) => v.run(options),
-            _ => Err(clap::Error::raw(
-                clap::error::ErrorKind::UnknownArgument,
-                "unknown argument",
-            )),
+            Self::Product(v) => v.run(args),
+            Self::Sum(v) => v.run(args),
         }
     }
 }

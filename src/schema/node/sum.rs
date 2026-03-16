@@ -1,6 +1,6 @@
 use quote::quote;
 
-use crate::Options;
+use crate::Args;
 
 use super::{Field, Variant};
 
@@ -14,9 +14,9 @@ pub struct SumVariant {
 }
 
 impl SumVariant {
-    pub fn run(&self, options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
         let ident = &self.name;
-        let fields: Vec<_> = self.fields.iter().map(|f| f.run(options)).try_collect()?;
+        let fields: Vec<_> = self.fields.iter().map(|f| f.run(args)).try_collect()?;
 
         Ok(quote! {
             #ident {
@@ -39,9 +39,9 @@ pub struct Sum {
 }
 
 impl Sum {
-    pub fn run(&self, options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
         let ident = &self.name;
-        let variants: Vec<_> = self.variants.iter().map(|v| v.run(options)).try_collect()?;
+        let variants: Vec<_> = self.variants.iter().map(|v| v.run(args)).try_collect()?;
 
         Ok(quote! {
             pub enum #ident {

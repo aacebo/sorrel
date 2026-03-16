@@ -5,7 +5,7 @@ edition = "2024"
 description = "cli for generating ast types from a given schema"
 
 [dependencies]
-clap = { version = "4.6", features = ["cargo", "string", "derive", "suggestions"] }
+clap = { version = "4.6", features = ["cargo", "string", "derive", "help", "usage", "error-context", "suggestions"] }
 proc-macro2 = { version = "1", features = ["span-locations"] }
 quote = "1"
 semver = { version = "1", features = ["serde"] }

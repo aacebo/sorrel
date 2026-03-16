@@ -1,6 +1,6 @@
 use serde_with::{KeyValueMap, serde_as};
 
-use crate::Options;
+use crate::Args;
 
 mod node;
 
@@ -30,11 +30,11 @@ impl Schema {
 }
 
 impl Schema {
-    pub fn run(&self, options: &Options) -> Result<proc_macro2::TokenStream, clap::Error> {
+    pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, clap::Error> {
         let mut tokens = proc_macro2::TokenStream::new();
 
         for node in self.nodes.iter() {
-            tokens.extend(node.run(options)?);
+            tokens.extend(node.run(args)?);
         }
 
         Ok(tokens)
