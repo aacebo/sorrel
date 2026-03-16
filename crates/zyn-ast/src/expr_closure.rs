@@ -1,0 +1,1 @@
+pub struct ExprClosure { pub span : Span , pub attrs : Vec < Attribute > , pub lifetimes : Option < BoundLifetimes > , pub constness : Constness , pub movability : Movability , pub asyncness : Asyncness , pub capture : bool , pub inputs : Punctuated < ClosureParam , syn :: token :: Comma > , pub output : ReturnType , pub body : Box < Expr > , }

@@ -1,0 +1,1 @@
+pub enum ClosureParam { Typed { pub pat : Pattern , pub ty : Type , } , Inferred { pub pat : Pattern , } , }

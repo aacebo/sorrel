@@ -1,0 +1,1 @@
+pub struct PatStruct { pub span : Span , pub attrs : Vec < Attribute > , pub qself : Option < QSelf > , pub path : Path , pub fields : Punctuated < PatField , syn :: token :: Comma > , pub rest : bool , }

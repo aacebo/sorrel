@@ -1,0 +1,1 @@
+pub struct TypeReference { pub span : Span , pub lifetime : Option < Lifetime > , pub mutability : Mutability , pub elem : Box < Type > , }

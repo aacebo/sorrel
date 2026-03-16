@@ -54,7 +54,7 @@ impl SourceMap {
             ));
         }
 
-        std::fs::write(path, quote!(#(#root)*).to_string())
+        std::fs::write(path.join("lib.rs"), quote!(#(#root)*).to_string())
     }
 }
 

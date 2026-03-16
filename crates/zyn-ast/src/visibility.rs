@@ -1,0 +1,1 @@
+pub enum Visibility { Inherited { } , Public { } , Crate { } , SelfValue { } , Super { } , Restricted { pub in_token : bool , pub path : Path , } , }

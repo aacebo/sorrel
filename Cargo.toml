@@ -21,6 +21,7 @@ edition = "2024"
 description = "cli for generating ast types from a given schema"
 
 [dependencies]
+check_keyword = "0.4.1"
 clap = { version = "4.6", features = ["cargo", "string", "derive", "help", "usage", "error-context", "suggestions"] }
 convert_case = "0.11"
 proc-macro2 = { version = "1", features = ["span-locations"] }

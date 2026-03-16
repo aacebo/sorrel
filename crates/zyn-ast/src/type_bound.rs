@@ -1,0 +1,1 @@
+pub enum TypeBound { Trait { pub value : TraitBound , } , Lifetime { pub value : Lifetime , } , Use { pub value : UseBound , } , }

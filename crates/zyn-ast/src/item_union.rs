@@ -1,0 +1,1 @@
+pub struct ItemUnion { pub span : Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub ident : Ident , pub generics : Generics , pub fields : FieldsNamed , }

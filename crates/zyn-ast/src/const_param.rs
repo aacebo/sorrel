@@ -1,0 +1,1 @@
+pub struct ConstParam { pub span : Span , pub attrs : Vec < Attribute > , pub ident : Ident , pub ty : Type , pub default : Option < Expr > , }

@@ -1,0 +1,1 @@
+pub struct ItemExternCrate { pub span : Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub ident : Ident , pub rename : Option < Ident > , }

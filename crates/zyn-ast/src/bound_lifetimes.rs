@@ -1,0 +1,1 @@
+pub struct BoundLifetimes { pub span : Span , pub params : Punctuated < LifetimeParam , syn :: token :: Comma > , }

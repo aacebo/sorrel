@@ -1,0 +1,1 @@
+pub struct TypePointer { pub span : Span , pub mutability : Mutability , pub elem : Box < Type > , }

@@ -1,0 +1,1 @@
+pub struct LitInt { pub span : Span , pub digits : String , pub suffix : Option < Ident > , }

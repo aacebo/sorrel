@@ -1,0 +1,1 @@
+pub enum Member { Named { pub ident : Ident , } , Unnamed { pub index : u32 , } , }

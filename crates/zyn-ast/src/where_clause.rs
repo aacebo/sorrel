@@ -1,0 +1,1 @@
+pub struct WhereClause { pub span : Span , pub predicates : Punctuated < WherePredicate , syn :: token :: Comma > , }

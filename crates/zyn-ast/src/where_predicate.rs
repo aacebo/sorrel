@@ -1,0 +1,1 @@
+pub enum WherePredicate { Lifetime { pub value : LifetimePredicate , } , Type { pub value : TypePredicate , } , }

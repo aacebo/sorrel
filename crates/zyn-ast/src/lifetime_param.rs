@@ -1,0 +1,1 @@
+pub struct LifetimeParam { pub span : Span , pub attrs : Vec < Attribute > , pub lifetime : Lifetime , pub bounds : Punctuated < Lifetime , syn :: token :: Plus > , }

@@ -1,0 +1,1 @@
+pub struct TraitItemMacro { pub span : Span , pub attrs : Vec < Attribute > , pub mac : MacroCall , pub semi : bool , }

@@ -1,0 +1,1 @@
+pub struct Lifetime { pub span : Span , pub apostrophe : Span , pub ident : Ident , }

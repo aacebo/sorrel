@@ -1,0 +1,1 @@
+pub struct ConstraintArg { pub span : Span , pub ident : Ident , pub generics : Option < AngleArgs > , pub bounds : Punctuated < TypeBound , syn :: token :: Plus > , }

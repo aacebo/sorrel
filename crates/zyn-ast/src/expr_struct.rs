@@ -1,0 +1,1 @@
+pub struct ExprStruct { pub span : Span , pub attrs : Vec < Attribute > , pub qself : Option < QSelf > , pub path : Path , pub fields : Punctuated < FieldValue , syn :: token :: Comma > , pub rest : Option < Box < Expr > > , }

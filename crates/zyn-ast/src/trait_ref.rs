@@ -1,0 +1,1 @@
+pub struct TraitRef { pub span : Span , pub polarity : BoundPolarity , pub path : Path , }

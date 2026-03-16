@@ -1,5 +1,4 @@
-use std::path::PathBuf;
-
+use check_keyword::CheckKeyword;
 use serde_with::{KeyValueMap, serde_as};
 
 use crate::{Args, Error, Source, SourceMap};
@@ -36,12 +35,16 @@ impl Schema {
         let mut map = SourceMap::new();
 
         for node in self.nodes.iter() {
-            let module = convert_case::ccase!(snake, node.name());
+            let mut module = convert_case::ccase!(snake, node.name());
+
+            if module.is_keyword() {
+                module = format!("_{}", &module);
+            }
 
             map.set(
                 node.name(),
                 Source {
-                    file: args.output.join(PathBuf::from(format!("{}.rs", &module))),
+                    file: args.output.join(format!("{}.rs", &module)),
                     module,
                     content: node.run(args)?,
                 },

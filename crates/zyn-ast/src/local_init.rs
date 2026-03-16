@@ -1,0 +1,1 @@
+pub struct LocalInit { pub span : Span , pub expr : Expr , pub diverge : Option < Box < Expr > > , }

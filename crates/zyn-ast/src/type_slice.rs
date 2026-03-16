@@ -1,0 +1,1 @@
+pub struct TypeSlice { pub span : Span , pub elem : Box < Type > , }

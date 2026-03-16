@@ -1,0 +1,1 @@
+pub struct ItemForeignMod { pub span : Span , pub attrs : Vec < Attribute > , pub unsafety : Unsafety , pub abi : Abi , pub items : Vec < ForeignItem > , }

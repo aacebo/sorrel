@@ -1,0 +1,1 @@
+pub struct Receiver { pub span : Span , pub attrs : Vec < Attribute > , pub reference : bool , pub lifetime : Option < Lifetime > , pub mutability : Mutability , }

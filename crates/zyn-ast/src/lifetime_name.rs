@@ -1,0 +1,1 @@
+pub struct LifetimeName { pub span : Span , pub text : String , }

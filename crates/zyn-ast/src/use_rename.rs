@@ -1,0 +1,1 @@
+pub struct UseRename { pub span : Span , pub ident : Ident , pub rename : Ident , }

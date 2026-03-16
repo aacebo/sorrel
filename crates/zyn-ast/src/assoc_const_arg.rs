@@ -1,0 +1,1 @@
+pub struct AssocConstArg { pub span : Span , pub ident : Ident , pub generics : Option < AngleArgs > , pub expr : Expr , }

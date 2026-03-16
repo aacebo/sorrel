@@ -1,0 +1,1 @@
+pub struct LitChar { pub span : Span , pub value : String , }

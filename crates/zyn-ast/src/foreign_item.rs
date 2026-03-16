@@ -1,0 +1,1 @@
+pub enum ForeignItem { Fn { pub value : ForeignItemFn , } , Static { pub value : ForeignItemStatic , } , Type { pub value : ForeignItemType , } , Macro { pub value : ForeignItemMacro , } , }

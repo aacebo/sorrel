@@ -1,0 +1,1 @@
+pub struct ItemTrait { pub span : Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub unsafety : Unsafety , pub auto : bool , pub ident : Ident , pub generics : Generics , pub supertraits : Punctuated < TypeBound , syn :: token :: Plus > , pub items : Vec < TraitItem > , }

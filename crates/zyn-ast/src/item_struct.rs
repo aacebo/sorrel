@@ -1,0 +1,1 @@
+pub struct ItemStruct { pub span : Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub ident : Ident , pub generics : Generics , pub fields : Fields , }

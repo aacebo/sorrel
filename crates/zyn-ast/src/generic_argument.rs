@@ -1,0 +1,1 @@
+pub enum GenericArgument { Lifetime { pub value : Lifetime , } , Type { pub value : Type , } , Const { pub value : Expr , } , AssocType { pub value : AssocTypeArg , } , AssocConst { pub value : AssocConstArg , } , Constraint { pub value : ConstraintArg , } , }

@@ -1,0 +1,1 @@
+pub struct Attribute { pub span : Span , pub style : AttrStyle , pub path : Path , pub args : AttrArgs , }

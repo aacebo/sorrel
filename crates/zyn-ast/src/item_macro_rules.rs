@@ -1,0 +1,1 @@
+pub struct ItemMacroRules { pub span : Span , pub attrs : Vec < Attribute > , pub ident : Ident , pub rules : TokenStream , }

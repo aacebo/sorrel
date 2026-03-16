@@ -1,0 +1,1 @@
+pub enum Lit { Str { pub value : LitStr , } , ByteStr { pub value : LitByteStr , } , CStr { pub value : LitCStr , } , Byte { pub value : LitByte , } , Char { pub value : LitChar , } , Int { pub value : LitInt , } , Float { pub value : LitFloat , } , Bool { pub value : LitBool , } , Verbatim { pub tokens : TokenStream , } , }

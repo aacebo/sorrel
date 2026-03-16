@@ -1,0 +1,1 @@
+pub struct LitBool { pub span : Span , pub value : bool , }

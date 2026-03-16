@@ -1,0 +1,1 @@
+pub struct TraitBound { pub span : Span , pub polarity : BoundPolarity , pub lifetimes : Option < BoundLifetimes > , pub modifier : TraitBoundModifier , pub path : Path , }

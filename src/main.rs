@@ -23,7 +23,7 @@ fn main() -> Result<(), Error> {
     };
 
     if !args.dry_run {
-        sources.save(&args.path)?;
+        sources.save(&args.output)?;
     }
 
     Ok(())

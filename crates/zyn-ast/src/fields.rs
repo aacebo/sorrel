@@ -1,0 +1,1 @@
+pub enum Fields { Named { pub value : FieldsNamed , } , Unnamed { pub value : FieldsUnnamed , } , Unit { } , }
