@@ -13,4 +13,4 @@ categories.workspace = true
 [lib]
 
 [dependencies]
-proc-macro2 = { version = "1", features = ["span-locations"] }
+zyn-token = { path = "../zyn-token" }
