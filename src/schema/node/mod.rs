@@ -62,7 +62,7 @@ impl Field {
 
     pub fn run(&self, _args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         let ident = format_ident!("{}", &self.name);
-        let kind: syn::Path = match syn::parse_str(&self.kind) {
+        let kind: syn::Type = match syn::parse_str(&self.kind) {
             Err(err) => {
                 return err
                     .to_error()
@@ -75,7 +75,7 @@ impl Field {
         };
 
         Ok(quote! {
-            pub #ident: #kind,
+            pub #ident: #kind
         })
     }
 }
@@ -107,7 +107,13 @@ pub enum Node {
 }
 
 impl Node {
-    #[allow(unused)]
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Self::Product(_) => "product",
+            Self::Sum(_) => "sum",
+        }
+    }
+
     pub fn name(&self) -> &str {
         match self {
             Self::Product(v) => &v.name,
@@ -123,7 +129,6 @@ impl Node {
         }
     }
 
-    #[allow(unused)]
     pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         match self {
             Self::Product(v) => v.run(args),

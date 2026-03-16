@@ -11,6 +11,9 @@ pub struct Args {
 
     #[arg(long, short, value_enum, value_delimiter = ' ', num_args = 0..)]
     pub features: Vec<Feature>,
+
+    #[arg(long, default_value_t = false)]
+    pub dry_run: bool,
 }
 
 #[derive(clap::ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]

@@ -36,12 +36,13 @@ impl Schema {
         let mut map = SourceMap::new();
 
         for node in self.nodes.iter() {
+            let module = convert_case::ccase!(snake, node.name());
+
             map.set(
                 node.name(),
                 Source {
-                    path: args
-                        .output
-                        .join(PathBuf::from(format!("{}.rs", node.name()))),
+                    file: args.output.join(PathBuf::from(format!("{}.rs", &module))),
+                    module,
                     content: node.run(args)?,
                 },
             );

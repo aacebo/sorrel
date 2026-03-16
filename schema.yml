@@ -246,7 +246,7 @@ nodes:
     - name: lifetime
       type: Lifetime
     - name: bounds
-      type: Punctuated<Lifetime, '+'>
+      type: 'Punctuated<Lifetime, syn::token::Plus>'
   LifetimePredicate:
     kind: product
     extends: node_base
@@ -254,7 +254,7 @@ nodes:
     - name: lifetime
       type: Lifetime
     - name: bounds
-      type: Punctuated<Lifetime, '+'>
+      type: 'Punctuated<Lifetime, syn::token::Plus>'
   Receiver:
     kind: product
     extends: attributed_node_base
@@ -271,7 +271,7 @@ nodes:
     extends: node_base
     fields:
     - name: lifetimes
-      type: Punctuated<Lifetime, ','>
+      type: 'Punctuated<Lifetime, syn::token::Comma>'
   Lit:
     kind: sum
     doc: "A literal value in source code (string, integer, float, byte, char, or boolean)."
@@ -323,7 +323,7 @@ nodes:
     extends: node_base
     fields:
     - name: params
-      type: Punctuated<LifetimeParam, ','>
+      type: 'Punctuated<LifetimeParam, syn::token::Comma>'
   ExprLit:
     kind: product
     extends: attributed_node_base
@@ -335,7 +335,7 @@ nodes:
     extends: node_base
     fields:
     - name: args
-      type: Punctuated<GenericArgument, ','>
+      type: 'Punctuated<GenericArgument, syn::token::Comma>'
   AssocConstArg:
     kind: product
     extends: node_base
@@ -428,7 +428,7 @@ nodes:
     - name: generics
       type: Option<AngleArgs>
     - name: bounds
-      type: Punctuated<TypeBound, '+'>
+      type: 'Punctuated<TypeBound, syn::token::Plus>'
   Crate:
     kind: product
     extends: node_base
@@ -607,7 +607,7 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: elems
-      type: Punctuated<Expr, ','>
+      type: 'Punctuated<Expr, syn::token::Comma>'
   ExprAssign:
     kind: product
     extends: attributed_node_base
@@ -675,7 +675,7 @@ nodes:
     - name: func
       type: Box<Expr>
     - name: args
-      type: Punctuated<Expr, ','>
+      type: 'Punctuated<Expr, syn::token::Comma>'
   ExprCast:
     kind: product
     extends: attributed_node_base
@@ -700,7 +700,7 @@ nodes:
       type: bool
       default: false
     - name: inputs
-      type: Punctuated<ClosureParam, ','>
+      type: 'Punctuated<ClosureParam, syn::token::Comma>'
     - name: output
       type: ReturnType
     - name: body
@@ -790,7 +790,7 @@ nodes:
     - name: turbofish
       type: Option<AngleArgs>
     - name: args
-      type: Punctuated<Expr, ','>
+      type: 'Punctuated<Expr, syn::token::Comma>'
   ExprParen:
     kind: product
     extends: attributed_node_base
@@ -846,7 +846,7 @@ nodes:
     - name: path
       type: Path
     - name: fields
-      type: Punctuated<FieldValue, ','>
+      type: 'Punctuated<FieldValue, syn::token::Comma>'
     - name: rest
       type: Option<Box<Expr>>
   ExprTry:
@@ -866,7 +866,7 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: elems
-      type: Punctuated<Expr, ','>
+      type: 'Punctuated<Expr, syn::token::Comma>'
   ExprType:
     kind: product
     extends: attributed_node_base
@@ -945,13 +945,13 @@ nodes:
     extends: node_base
     fields:
     - name: fields
-      type: Punctuated<FieldDef, ','>
+      type: 'Punctuated<FieldDef, syn::token::Comma>'
   FieldsUnnamed:
     kind: product
     extends: node_base
     fields:
     - name: fields
-      type: Punctuated<FieldDef, ','>
+      type: 'Punctuated<FieldDef, syn::token::Comma>'
   FnParam:
     kind: sum
     variants:
@@ -1068,7 +1068,7 @@ nodes:
     extends: node_base
     fields:
     - name: params
-      type: Punctuated<GenericParam, ','>
+      type: 'Punctuated<GenericParam, syn::token::Comma>'
     - name: where_clause
       type: Option<WhereClause>
   ImplItem:
@@ -1238,7 +1238,7 @@ nodes:
     - name: generics
       type: Generics
     - name: variants
-      type: Punctuated<Variant, ','>
+      type: 'Punctuated<Variant, syn::token::Comma>'
   ItemExternCrate:
     kind: product
     extends: attributed_node_base
@@ -1352,7 +1352,7 @@ nodes:
     - name: generics
       type: Generics
     - name: supertraits
-      type: Punctuated<TypeBound, '+'>
+      type: 'Punctuated<TypeBound, syn::token::Plus>'
     - name: items
       type: Vec<TraitItem>
   ItemTraitAlias:
@@ -1366,7 +1366,7 @@ nodes:
     - name: generics
       type: Generics
     - name: bounds
-      type: Punctuated<TypeBound, '+'>
+      type: 'Punctuated<TypeBound, syn::token::Plus>'
   ItemTypeAlias:
     kind: product
     extends: attributed_node_base
@@ -1511,7 +1511,7 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: cases
-      type: Punctuated<Pattern, '|'>
+      type: 'Punctuated<Pattern, syn::token::Or>'
   PatParen:
     kind: product
     extends: attributed_node_base
@@ -1549,7 +1549,7 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: elems
-      type: Punctuated<Pattern, ','>
+      type: 'Punctuated<Pattern, syn::token::Comma>'
   PatStruct:
     kind: product
     extends: attributed_node_base
@@ -1559,7 +1559,7 @@ nodes:
     - name: path
       type: Path
     - name: fields
-      type: Punctuated<PatField, ','>
+      type: 'Punctuated<PatField, syn::token::Comma>'
     - name: rest
       type: bool
       default: false
@@ -1568,7 +1568,7 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: elems
-      type: Punctuated<Pattern, ','>
+      type: 'Punctuated<Pattern, syn::token::Comma>'
   PatTupleStruct:
     kind: product
     extends: attributed_node_base
@@ -1578,7 +1578,7 @@ nodes:
     - name: path
       type: Path
     - name: elems
-      type: Punctuated<Pattern, ','>
+      type: 'Punctuated<Pattern, syn::token::Comma>'
   PatType:
     kind: product
     extends: attributed_node_base
@@ -1596,7 +1596,7 @@ nodes:
       type: bool
       default: false
     - name: segments
-      type: Punctuated<PathSegment, '::'>
+      type: 'Punctuated<PathSegment, syn::token::PathSep>'
   PathArguments:
     kind: sum
     variants:
@@ -1604,11 +1604,11 @@ nodes:
     - name: AngleBracketed
       fields:
       - name: args
-        type: Punctuated<GenericArgument, ','>
+        type: 'Punctuated<GenericArgument, syn::token::Comma>'
     - name: Parenthesized
       fields:
       - name: inputs
-        type: Punctuated<Type, ','>
+        type: 'Punctuated<Type, syn::token::Comma>'
       - name: output
         type: Option<Type>
   PathSegment:
@@ -1713,7 +1713,7 @@ nodes:
     - name: generics
       type: Generics
     - name: inputs
-      type: Punctuated<FnParam, ','>
+      type: 'Punctuated<FnParam, syn::token::Comma>'
     - name: variadic
       type: Option<Variadic>
     - name: output
@@ -1820,7 +1820,7 @@ nodes:
     - name: generics
       type: Generics
     - name: bounds
-      type: Punctuated<TypeBound, '+'>
+      type: 'Punctuated<TypeBound, syn::token::Plus>'
     - name: default
       type: Option<Type>
   TraitRef:
@@ -1904,7 +1904,7 @@ nodes:
     - name: abi
       type: Option<Abi>
     - name: inputs
-      type: Punctuated<BareFnArg, ','>
+      type: 'Punctuated<BareFnArg, syn::token::Comma>'
     - name: variadic
       type: Option<Variadic>
     - name: output
@@ -1935,7 +1935,7 @@ nodes:
     extends: node_base
     fields:
     - name: bounds
-      type: Punctuated<TypeBound, '+'>
+      type: 'Punctuated<TypeBound, syn::token::Plus>'
   TypeParam:
     kind: product
     extends: attributed_node_base
@@ -1943,7 +1943,7 @@ nodes:
     - name: ident
       type: Ident
     - name: bounds
-      type: Punctuated<TypeBound, '+'>
+      type: 'Punctuated<TypeBound, syn::token::Plus>'
     - name: default
       type: Option<Type>
   TypeParen:
@@ -1977,7 +1977,7 @@ nodes:
     - name: bounded_ty
       type: Type
     - name: bounds
-      type: Punctuated<TypeBound, '+'>
+      type: 'Punctuated<TypeBound, syn::token::Plus>'
   TypeReference:
     kind: product
     extends: node_base
@@ -2002,13 +2002,13 @@ nodes:
       type: bool
       default: false
     - name: bounds
-      type: Punctuated<TypeBound, '+'>
+      type: 'Punctuated<TypeBound, syn::token::Plus>'
   TypeTuple:
     kind: product
     extends: node_base
     fields:
     - name: elems
-      type: Punctuated<Type, ','>
+      type: 'Punctuated<Type, syn::token::Comma>'
   TypedParam:
     kind: product
     extends: attributed_node_base
@@ -2022,7 +2022,7 @@ nodes:
     extends: node_base
     fields:
     - name: items
-      type: Punctuated<UseTree, ','>
+      type: 'Punctuated<UseTree, syn::token::Comma>'
   UsePath:
     kind: product
     extends: node_base
@@ -2082,7 +2082,7 @@ nodes:
     extends: node_base
     fields:
     - name: predicates
-      type: Punctuated<WherePredicate, ','>
+      type: 'Punctuated<WherePredicate, syn::token::Comma>'
   WherePredicate:
     kind: sum
     variants:

@@ -22,7 +22,10 @@ fn main() -> Result<(), Error> {
         Ok(v) => v,
     };
 
-    sources.save()?;
+    if !args.dry_run {
+        sources.save(&args.path)?;
+    }
+
     Ok(())
 }
 
