@@ -1,1 +1,0 @@
-pub struct ExprAsync { pub span : Span , pub attrs : Vec < Attribute > , pub capture : bool , pub block : Block , }

@@ -1,1 +1,0 @@
-pub struct BareFnArg { pub span : Span , pub attrs : Vec < Attribute > , pub name : Option < Ident > , pub ty : Type , }

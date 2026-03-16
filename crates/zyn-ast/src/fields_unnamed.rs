@@ -1,1 +1,0 @@
-pub struct FieldsUnnamed { pub span : Span , pub fields : Punctuated < FieldDef , syn :: token :: Comma > , }

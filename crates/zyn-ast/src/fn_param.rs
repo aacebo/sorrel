@@ -1,1 +1,0 @@
-pub enum FnParam { Receiver { pub value : Receiver , } , Typed { pub value : TypedParam , } , }

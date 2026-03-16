@@ -1,1 +1,0 @@
-pub struct ExprField { pub span : Span , pub attrs : Vec < Attribute > , pub base : Box < Expr > , pub member : Member , }

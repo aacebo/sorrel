@@ -1,1 +1,0 @@
-pub struct ItemFn { pub span : Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub defaultness : Defaultness , pub sig : Signature , pub body : Block , }

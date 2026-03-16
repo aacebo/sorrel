@@ -1,1 +1,0 @@
-pub struct PatLit { pub span : Span , pub attrs : Vec < Attribute > , pub expr : Expr , }

@@ -1,1 +1,0 @@
-pub struct ExprBinary { pub span : Span , pub attrs : Vec < Attribute > , pub left : Box < Expr > , pub op : BinOp , pub right : Box < Expr > , }

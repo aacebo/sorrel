@@ -1,1 +1,0 @@
-pub struct UseName { pub span : Span , pub ident : Ident , }

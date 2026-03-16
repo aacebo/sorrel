@@ -1,1 +1,0 @@
-pub struct ItemMacro { pub span : Span , pub attrs : Vec < Attribute > , pub ident : Option < Ident > , pub mac : MacroCall , pub semi : bool , }

@@ -1,1 +1,0 @@
-pub struct ItemImpl { pub span : Span , pub attrs : Vec < Attribute > , pub defaultness : Defaultness , pub unsafety : Unsafety , pub generics : Generics , pub trait_ref : Option < TraitRef > , pub self_ty : Type , pub items : Vec < ImplItem > , }

@@ -1,1 +1,0 @@
-pub struct FieldDef { pub span : Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub mutability : Mutability , pub ident : Option < Ident > , pub ty : Type , }

@@ -1,1 +1,0 @@
-pub struct QSelf { pub span : Span , pub ty : Box < Type > , pub position : usize , }

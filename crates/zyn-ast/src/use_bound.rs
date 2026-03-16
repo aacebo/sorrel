@@ -1,1 +1,0 @@
-pub struct UseBound { pub span : Span , pub lifetimes : Punctuated < Lifetime , syn :: token :: Comma > , }

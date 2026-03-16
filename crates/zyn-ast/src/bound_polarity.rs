@@ -1,1 +1,0 @@
-pub enum BoundPolarity { Positive , Negative , }

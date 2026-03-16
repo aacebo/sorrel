@@ -1,1 +1,0 @@
-pub struct AssocTypeArg { pub span : Span , pub ident : Ident , pub generics : Option < AngleArgs > , pub ty : Type , }

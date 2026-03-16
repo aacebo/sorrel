@@ -1,1 +1,0 @@
-pub struct PatTupleStruct { pub span : Span , pub attrs : Vec < Attribute > , pub qself : Option < QSelf > , pub path : Path , pub elems : Punctuated < Pattern , syn :: token :: Comma > , }

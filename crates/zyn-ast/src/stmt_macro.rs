@@ -1,1 +1,0 @@
-pub struct StmtMacro { pub span : Span , pub attrs : Vec < Attribute > , pub mac : MacroCall , pub semi : bool , }

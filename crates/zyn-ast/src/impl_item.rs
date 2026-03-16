@@ -1,1 +1,0 @@
-pub enum ImplItem { Fn { pub value : ImplItemFn , } , Const { pub value : ImplItemConst , } , Type { pub value : ImplItemType , } , Macro { pub value : ImplItemMacro , } , }

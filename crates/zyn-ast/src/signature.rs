@@ -1,1 +1,0 @@
-pub struct Signature { pub span : Span , pub constness : Constness , pub asyncness : Asyncness , pub unsafety : Unsafety , pub abi : Option < Abi > , pub ident : Ident , pub generics : Generics , pub inputs : Punctuated < FnParam , syn :: token :: Comma > , pub variadic : Option < Variadic > , pub output : ReturnType , }

@@ -1,1 +1,0 @@
-pub struct AngleArgs { pub span : Span , pub args : Punctuated < GenericArgument , syn :: token :: Comma > , }

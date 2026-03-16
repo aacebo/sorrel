@@ -1,1 +1,0 @@
-pub struct PatReference { pub span : Span , pub attrs : Vec < Attribute > , pub mutability : Mutability , pub pat : Box < Pattern > , }

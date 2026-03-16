@@ -1,1 +1,0 @@
-pub enum GenericParam { Lifetime { pub value : LifetimeParam , } , Type { pub value : TypeParam , } , Const { pub value : ConstParam , } , }

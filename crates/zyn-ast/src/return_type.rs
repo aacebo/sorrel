@@ -1,1 +1,0 @@
-pub enum ReturnType { Default { } , Type { pub value : Box < Type > , } , }

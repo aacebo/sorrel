@@ -1,1 +1,0 @@
-pub struct ItemEnum { pub span : Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub ident : Ident , pub generics : Generics , pub variants : Punctuated < Variant , syn :: token :: Comma > , }

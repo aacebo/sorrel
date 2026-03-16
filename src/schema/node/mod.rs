@@ -75,7 +75,7 @@ impl Field {
         };
 
         Ok(quote! {
-            pub #ident: #kind
+            #ident: #kind
         })
     }
 }

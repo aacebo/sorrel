@@ -1,1 +1,0 @@
-pub struct ExprForLoop { pub span : Span , pub attrs : Vec < Attribute > , pub label : Option < Label > , pub pat : Pattern , pub expr : Box < Expr > , pub body : Block , }

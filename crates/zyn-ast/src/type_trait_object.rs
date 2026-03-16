@@ -1,1 +1,0 @@
-pub struct TypeTraitObject { pub span : Span , pub dyn_token : bool , pub bounds : Punctuated < TypeBound , syn :: token :: Plus > , }

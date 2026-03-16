@@ -1,1 +1,0 @@
-pub struct MatchArm { pub span : Span , pub attrs : Vec < Attribute > , pub pat : Pattern , pub guard : Option < Box < Expr > > , pub body : Expr , }

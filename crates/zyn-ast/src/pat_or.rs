@@ -1,1 +1,0 @@
-pub struct PatOr { pub span : Span , pub attrs : Vec < Attribute > , pub cases : Punctuated < Pattern , syn :: token :: Or > , }

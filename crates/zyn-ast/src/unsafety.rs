@@ -1,1 +1,0 @@
-pub enum Unsafety { Safe , Unsafe , }

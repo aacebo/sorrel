@@ -1,1 +1,0 @@
-pub struct FieldValue { pub span : Span , pub attrs : Vec < Attribute > , pub member : Member , pub expr : Expr , pub shorthand : bool , }

@@ -1,1 +1,0 @@
-pub struct TypeArray { pub span : Span , pub elem : Box < Type > , pub len : Expr , }

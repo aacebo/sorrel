@@ -1,1 +1,0 @@
-pub struct TypeTuple { pub span : Span , pub elems : Punctuated < Type , syn :: token :: Comma > , }

@@ -1,1 +1,0 @@
-pub struct TypePredicate { pub span : Span , pub lifetimes : Option < BoundLifetimes > , pub bounded_ty : Type , pub bounds : Punctuated < TypeBound , syn :: token :: Plus > , }

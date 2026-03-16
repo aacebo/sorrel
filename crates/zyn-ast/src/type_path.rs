@@ -1,1 +1,0 @@
-pub struct TypePath { pub span : Span , pub qself : Option < QSelf > , pub path : Path , }

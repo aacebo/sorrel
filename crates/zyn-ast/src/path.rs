@@ -1,1 +1,0 @@
-pub struct Path { pub span : Span , pub leading_colon : bool , pub segments : Punctuated < PathSegment , syn :: token :: PathSep > , }

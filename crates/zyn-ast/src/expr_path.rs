@@ -1,1 +1,0 @@
-pub struct ExprPath { pub span : Span , pub attrs : Vec < Attribute > , pub qself : Option < QSelf > , pub path : Path , }

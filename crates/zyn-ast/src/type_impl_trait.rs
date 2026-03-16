@@ -1,1 +1,0 @@
-pub struct TypeImplTrait { pub span : Span , pub bounds : Punctuated < TypeBound , syn :: token :: Plus > , }

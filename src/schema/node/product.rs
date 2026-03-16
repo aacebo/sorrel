@@ -31,6 +31,8 @@ impl Product {
             .try_collect()?;
 
         Ok(quote! {
+            use crate::*;
+
             pub struct #ident {
                 #(#base_fields,)*
                 #(#fields,)*

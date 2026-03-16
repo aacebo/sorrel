@@ -1,1 +1,0 @@
-pub struct PathSegment { pub span : Span , pub ident : Ident , pub args : PathArguments , }

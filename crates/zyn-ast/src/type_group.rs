@@ -1,1 +1,0 @@
-pub struct TypeGroup { pub span : Span , pub elem : Box < Type > , }

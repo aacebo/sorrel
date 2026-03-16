@@ -1,1 +1,0 @@
-pub enum TraitItem { Fn { pub value : TraitItemFn , } , Const { pub value : TraitItemConst , } , Type { pub value : TraitItemType , } , Macro { pub value : TraitItemMacro , } , }

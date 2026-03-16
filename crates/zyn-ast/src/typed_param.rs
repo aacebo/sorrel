@@ -1,1 +1,0 @@
-pub struct TypedParam { pub span : Span , pub attrs : Vec < Attribute > , pub pat : Pattern , pub ty : Type , }

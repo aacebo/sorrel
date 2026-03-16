@@ -1,1 +1,0 @@
-pub struct TypeBareFn { pub span : Span , pub lifetimes : Option < BoundLifetimes > , pub unsafety : Unsafety , pub abi : Option < Abi > , pub inputs : Punctuated < BareFnArg , syn :: token :: Comma > , pub variadic : Option < Variadic > , pub output : ReturnType , }

@@ -1,1 +1,0 @@
-pub struct ItemTypeAlias { pub span : Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub ident : Ident , pub generics : Generics , pub ty : Type , }

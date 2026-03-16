@@ -1,1 +1,0 @@
-pub struct Variadic { pub span : Span , pub attrs : Vec < Attribute > , pub name : Option < Ident > , }

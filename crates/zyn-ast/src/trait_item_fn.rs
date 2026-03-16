@@ -1,1 +1,0 @@
-pub struct TraitItemFn { pub span : Span , pub attrs : Vec < Attribute > , pub sig : Signature , pub default_body : Option < Block > , }

@@ -1,1 +1,0 @@
-pub struct ExprIndex { pub span : Span , pub attrs : Vec < Attribute > , pub base : Box < Expr > , pub index : Box < Expr > , }

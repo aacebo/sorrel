@@ -1,1 +1,0 @@
-pub struct LifetimePredicate { pub span : Span , pub lifetime : Lifetime , pub bounds : Punctuated < Lifetime , syn :: token :: Plus > , }

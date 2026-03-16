@@ -1,1 +1,0 @@
-pub struct Generics { pub span : Span , pub params : Punctuated < GenericParam , syn :: token :: Comma > , pub where_clause : Option < WhereClause > , }

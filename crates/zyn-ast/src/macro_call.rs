@@ -1,1 +1,0 @@
-pub struct MacroCall { pub span : Span , pub attrs : Vec < Attribute > , pub path : Path , pub delimiter : DelimiterKind , pub tokens : TokenStream , }

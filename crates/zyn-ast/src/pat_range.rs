@@ -1,1 +1,0 @@
-pub struct PatRange { pub span : Span , pub attrs : Vec < Attribute > , pub start : Option < Expr > , pub limits : RangeLimits , pub end : Option < Expr > , }

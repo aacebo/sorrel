@@ -1,1 +1,0 @@
-pub struct PatType { pub span : Span , pub attrs : Vec < Attribute > , pub pat : Box < Pattern > , pub ty : Box < Type > , }

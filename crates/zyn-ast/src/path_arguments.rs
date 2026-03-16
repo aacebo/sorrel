@@ -1,1 +1,0 @@
-pub enum PathArguments { None { } , AngleBracketed { pub args : Punctuated < GenericArgument , syn :: token :: Comma > , } , Parenthesized { pub inputs : Punctuated < Type , syn :: token :: Comma > , pub output : Option < Type > , } , }
