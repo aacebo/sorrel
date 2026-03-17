@@ -1,16 +1,12 @@
 pub use proc_macro2::{Ident, Literal, Punct, Spacing};
 
-mod buffer;
 mod delim;
 mod error;
 mod group;
 mod iter;
-pub mod parse;
-pub use parse::*;
 mod span;
 mod stream;
 
-pub use buffer::*;
 pub use delim::*;
 pub use error::*;
 pub use group::*;
@@ -18,17 +14,27 @@ pub use iter::*;
 pub use span::*;
 pub use stream::*;
 
-pub trait TokenReader {
-    fn peek(&mut self) -> Option<&Token>;
-    fn next(&mut self) -> Option<Token>;
-    fn fork(&self) -> Self
-    where
-        Self: Sized;
-    fn seek(&mut self, other: &Self);
+pub trait Reader {
+    /// the remaining token count.
+    fn remaining(&self) -> usize;
+
+    /// peek at the next token without moving forward.
+    fn peek(&self) -> Option<&Token>;
+
+    /// move the iterator forward by n and return the tokens.
+    fn next_n(&mut self, n: usize) -> Option<&[Token]>;
+
+    /// move the iterator forward and return the token.
+    fn next(&mut self) -> Option<&Token> {
+        self.next_n(1)?.first()
+    }
 }
 
-pub trait TokenWriter {
-    fn write(&mut self, stream: impl Stream) -> Result<()>;
+pub trait Writer {
+    type Error: std::error::Error;
+
+    /// write tokens to a stream.
+    fn write(&mut self, tokens: impl IntoIterator<Item = Token>) -> Result<(), Self::Error>;
 }
 
 #[derive(Debug, Clone)]
@@ -107,8 +113,26 @@ impl std::fmt::Display for Token {
     }
 }
 
-impl Stream for Token {
-    fn stream(&self) -> TokenStream {
-        vec![self.clone()].into()
+impl ToStream for Token {
+    fn to_stream(self) -> Stream {
+        vec![self].into()
+    }
+}
+
+impl ToStream for proc_macro2::Ident {
+    fn to_stream(self) -> Stream {
+        Token::from(self).to_stream()
+    }
+}
+
+impl ToStream for proc_macro2::Punct {
+    fn to_stream(self) -> Stream {
+        Token::from(self).to_stream()
+    }
+}
+
+impl ToStream for proc_macro2::Literal {
+    fn to_stream(self) -> Stream {
+        Token::from(self).to_stream()
     }
 }

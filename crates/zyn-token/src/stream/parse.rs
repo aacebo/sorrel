@@ -1,17 +1,17 @@
-use crate::{Result, Span, Stream, Token, TokenBuffer, TokenReader, TokenStream, TokenWriter};
+use crate::{Span, Stream, ToStream, Token, Buffer, Reader, Writer};
 
 pub struct ParseStream {
-    pub(crate) buffer: TokenStream,
+    pub(crate) buffer: Stream,
     pub(crate) index: usize,
-    pub(crate) output: TokenBuffer,
+    pub(crate) output: Buffer,
 }
 
 impl ParseStream {
-    pub fn new(buffer: TokenStream) -> Self {
+    pub fn new(buffer: Stream) -> Self {
         Self {
             buffer,
             index: 0,
-            output: TokenBuffer::new(),
+            output: Buffer::new(),
         }
     }
 
@@ -30,36 +30,36 @@ impl ParseStream {
     }
 }
 
-impl TokenReader for ParseStream {
-    fn peek(&mut self) -> Option<&Token> {
-        self.buffer.get(self.index)
-    }
+// impl Reader for ParseStream {
+//     fn peek(&mut self) -> Option<&Token> {
+//         self.buffer.get(self.index)
+//     }
 
-    fn next(&mut self) -> Option<Token> {
-        let token = self.buffer.get(self.index)?.clone();
-        self.index += 1;
-        Some(token)
-    }
+//     fn next(&mut self) -> Option<Token> {
+//         let token = self.buffer.get(self.index)?.clone();
+//         self.index += 1;
+//         Some(token)
+//     }
 
-    fn fork(&self) -> Self {
-        Self {
-            buffer: self.buffer.clone(),
-            index: self.index,
-            output: TokenBuffer::new(),
-        }
-    }
+//     fn fork(&self) -> Self {
+//         Self {
+//             buffer: self.buffer.clone(),
+//             index: self.index,
+//             output: Buffer::new(),
+//         }
+//     }
 
-    fn seek(&mut self, other: &Self) {
-        self.index = other.index;
-    }
-}
+//     fn seek(&mut self, other: &Self) {
+//         self.index = other.index;
+//     }
+// }
 
-impl TokenWriter for ParseStream {
-    fn write(&mut self, value: impl Stream) -> Result<()> {
-        self.output.extend(value.stream());
-        Ok(())
-    }
-}
+// impl TokenWriter for ParseStream {
+//     fn write(&mut self, value: impl Stream) -> Result<()> {
+//         self.output.extend(value.stream());
+//         Ok(())
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -67,7 +67,7 @@ mod tests {
     use crate::*;
 
     fn parse(input: &str) -> ParseStream {
-        let stream: TokenStream = input
+        let stream: Stream = input
             .parse::<proc_macro2::TokenStream>()
             .unwrap()
             .into_iter()
@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn empty_stream() {
-        let stream = ParseStream::new(TokenStream::new());
+        let stream = ParseStream::new(Stream::new());
         assert!(stream.is_empty());
     }
 
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn write_appends() {
-        let mut stream = ParseStream::new(TokenStream::new());
+        let mut stream = ParseStream::new(Stream::new());
         let ident = Ident::new("x", proc_macro2::Span::call_site());
         stream.write(Token::Ident(ident)).unwrap();
         assert_eq!(stream.output.len(), 1);

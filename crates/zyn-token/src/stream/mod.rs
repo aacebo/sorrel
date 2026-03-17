@@ -1,15 +1,24 @@
+mod buffer;
+
+pub use buffer::*;
+
 use std::str::FromStr;
 
-use crate::{DelimSpan, Span, SpanError, Token, TokenBuffer};
+use crate::{DelimSpan, Span, SpanError, Token};
 
-pub trait Stream {
-    fn stream(&self) -> TokenStream;
+pub trait ToStream {
+    fn to_stream(self) -> Stream;
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct TokenStream(Vec<Token>);
+pub trait AsStream {
+    fn as_stream(&self) -> &Stream;
+}
 
-impl TokenStream {
+/// An immutable collection of tokens
+#[derive(Debug, Default, Clone)]
+pub struct Stream(Vec<Token>);
+
+impl Stream {
     pub fn new() -> Self {
         Self(vec![])
     }
@@ -50,26 +59,26 @@ impl TokenStream {
     }
 }
 
-impl From<TokenBuffer> for TokenStream {
-    fn from(value: TokenBuffer) -> Self {
+impl From<Buffer> for Stream {
+    fn from(value: Buffer) -> Self {
         Self(value.into_iter().collect())
     }
 }
 
-impl From<TokenStream> for TokenBuffer {
-    fn from(value: TokenStream) -> Self {
-        TokenBuffer::from(value.0)
+impl From<Stream> for Buffer {
+    fn from(value: Stream) -> Self {
+        Buffer::from(value.0)
     }
 }
 
-impl From<proc_macro2::TokenStream> for TokenStream {
+impl From<proc_macro2::TokenStream> for Stream {
     fn from(stream: proc_macro2::TokenStream) -> Self {
         Self(stream.into_iter().map(Token::from).collect())
     }
 }
 
-impl From<TokenStream> for proc_macro2::TokenStream {
-    fn from(stream: TokenStream) -> Self {
+impl From<Stream> for proc_macro2::TokenStream {
+    fn from(stream: Stream) -> Self {
         stream
             .into_iter()
             .map(proc_macro2::TokenTree::from)
@@ -77,31 +86,31 @@ impl From<TokenStream> for proc_macro2::TokenStream {
     }
 }
 
-impl From<&[Token]> for TokenStream {
+impl From<&[Token]> for Stream {
     fn from(value: &[Token]) -> Self {
         Self(value.to_vec())
     }
 }
 
-impl From<Vec<Token>> for TokenStream {
+impl From<Vec<Token>> for Stream {
     fn from(value: Vec<Token>) -> Self {
         Self(value)
     }
 }
 
-impl FromIterator<Token> for TokenStream {
+impl FromIterator<Token> for Stream {
     fn from_iter<T: IntoIterator<Item = Token>>(iter: T) -> Self {
         Self(iter.into_iter().collect())
     }
 }
 
-impl FromIterator<Self> for TokenStream {
+impl FromIterator<Self> for Stream {
     fn from_iter<T: IntoIterator<Item = Self>>(iter: T) -> Self {
         Self(iter.into_iter().flatten().collect())
     }
 }
 
-impl IntoIterator for TokenStream {
+impl IntoIterator for Stream {
     type Item = Token;
     type IntoIter = std::vec::IntoIter<Token>;
 
@@ -110,7 +119,7 @@ impl IntoIterator for TokenStream {
     }
 }
 
-impl FromStr for TokenStream {
+impl FromStr for Stream {
     type Err = SpanError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -119,7 +128,7 @@ impl FromStr for TokenStream {
     }
 }
 
-impl std::fmt::Display for TokenStream {
+impl std::fmt::Display for Stream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for token in self.0.iter() {
             write!(f, "{}", token)?;
@@ -128,20 +137,20 @@ impl std::fmt::Display for TokenStream {
     }
 }
 
-impl Stream for proc_macro2::TokenStream {
-    fn stream(&self) -> TokenStream {
-        self.clone().into()
+impl ToStream for proc_macro2::TokenStream {
+    fn to_stream(self) -> Stream {
+        self.into()
     }
 }
 
-impl Stream for TokenStream {
-    fn stream(&self) -> TokenStream {
-        self.clone()
+impl ToStream for Stream {
+    fn to_stream(self) -> Stream {
+        self
     }
 }
 
-impl Stream for &str {
-    fn stream(&self) -> TokenStream {
-        TokenStream::from_str(self).unwrap_or_default()
+impl ToStream for &str {
+    fn to_stream(self) -> Stream {
+        Stream::from_str(self).unwrap_or_default()
     }
 }

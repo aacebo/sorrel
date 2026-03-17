@@ -1,14 +1,14 @@
-use crate::{Delim, DelimSpan, Stream, TokenStream};
+use crate::{Delim, DelimSpan, Stream, ToStream};
 
 #[derive(Debug, Clone)]
 pub struct Group {
     delim: Delim,
     span: DelimSpan,
-    tokens: TokenStream,
+    tokens: Stream,
 }
 
 impl Group {
-    pub fn new(delim: Delim, stream: TokenStream) -> Self {
+    pub fn new(delim: Delim, stream: Stream) -> Self {
         Self {
             delim,
             span: stream.delim(),
@@ -37,13 +37,13 @@ impl From<proc_macro2::Group> for Group {
 
 impl From<Group> for proc_macro2::Group {
     fn from(value: Group) -> Self {
-        Self::new(value.delim().into(), value.stream().into())
+        Self::new(value.delim().into(), value.to_stream().into())
     }
 }
 
-impl Stream for Group {
-    fn stream(&self) -> TokenStream {
-        self.tokens.clone()
+impl ToStream for Group {
+    fn to_stream(self) -> Stream {
+        self.tokens
     }
 }
 

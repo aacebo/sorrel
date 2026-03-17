@@ -2,8 +2,6 @@ use std::fmt;
 
 use crate::Span;
 
-pub type Result<T> = std::result::Result<T, SpanError>;
-
 #[derive(Clone)]
 pub struct SpanError {
     messages: Vec<(Span, String)>,
