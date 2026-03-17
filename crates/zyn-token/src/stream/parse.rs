@@ -55,7 +55,7 @@ impl<'a> Reader for ParseStream<'a> {
 
         let start = self.index;
         self.index += n;
-        Some(&self.input.as_slice()[start..self.index])
+        Some(&self.input[start..self.index])
     }
 }
 
@@ -143,7 +143,7 @@ mod tests {
         let mut ps = ParseStream::new(&stream);
         let ident = Ident::new("x", Span::call_site());
         ps.write(Token::Ident(ident)).unwrap();
-        assert_eq!(ps.output.len(), 1);
+        assert_eq!(ps.output.freeze().len(), 1);
     }
 
     #[test]

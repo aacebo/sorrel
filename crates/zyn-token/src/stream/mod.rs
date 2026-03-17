@@ -41,10 +41,6 @@ impl Stream {
         self.0.iter()
     }
 
-    pub fn as_slice(&self) -> &[Token] {
-        &self.0
-    }
-
     pub fn first(&self) -> Span {
         self.0
             .first()
@@ -63,15 +59,13 @@ impl Stream {
     pub fn delim(&self) -> DelimSpan {
         DelimSpan::new(self.first(), self.last())
     }
-
-    pub(crate) fn write(&mut self, tokens: impl IntoIterator<Item = Token>) {
-        self.0.extend(tokens);
-    }
 }
 
-impl From<Buffer> for Stream {
-    fn from(value: Buffer) -> Self {
-        value.freeze()
+impl std::ops::Deref for Stream {
+    type Target = [Token];
+
+    fn deref(&self) -> &[Token] {
+        &self.0
     }
 }
 
