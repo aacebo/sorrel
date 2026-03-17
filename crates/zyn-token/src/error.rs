@@ -1,6 +1,6 @@
 use std::fmt;
 
-use proc_macro2::Span;
+use crate::Span;
 
 pub type Result<T> = std::result::Result<T, SpanError>;
 
@@ -32,7 +32,7 @@ impl SpanError {
 
 impl From<proc_macro2::LexError> for SpanError {
     fn from(e: proc_macro2::LexError) -> Self {
-        Self::new(e.span(), e)
+        Self::new(e.span().into(), e)
     }
 }
 
