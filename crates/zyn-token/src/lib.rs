@@ -18,10 +18,6 @@ pub use iter::*;
 pub use span::*;
 pub use stream::*;
 
-pub trait Syntax: Stream {
-    fn span(&self) -> Span;
-}
-
 pub trait TokenReader {
     fn peek(&mut self) -> Option<&Token>;
     fn next(&mut self) -> Option<Token>;
