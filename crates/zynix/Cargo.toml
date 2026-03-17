@@ -1,5 +1,5 @@
 [package]
-name = "zyn-core"
+name = "zynix"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -12,6 +12,9 @@ categories.workspace = true
 
 [lib]
 doctest = false
+
+[lints.clippy]
+collapsible-if = "allow"
 
 [features]
 ast = []
