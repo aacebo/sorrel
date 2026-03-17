@@ -1,4 +1,4 @@
-use crate::{DelimSpan, Iter, Span, Token};
+use crate::Token;
 
 #[derive(Debug, Default, Clone)]
 pub struct TokenBuffer(Vec<Token>);
@@ -16,27 +16,30 @@ impl TokenBuffer {
         self.0.len()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &Token> {
-        self.0.iter()
+    pub fn get(&self, index: usize) -> Option<&Token> {
+        self.0.get(index)
     }
 
-    pub fn first(&self) -> Span {
-        self.0
-            .first()
-            .map(|v| v.span())
-            .unwrap_or(Span::call_site())
+    pub fn push(&mut self, token: Token) {
+        self.0.push(token);
     }
+}
 
-    pub fn last(&self) -> Span {
-        self.0.last().map(|v| v.span()).unwrap_or(Span::call_site())
+impl From<Vec<Token>> for TokenBuffer {
+    fn from(value: Vec<Token>) -> Self {
+        Self(value)
     }
+}
 
-    pub fn span(&self) -> Span {
-        self.first().join(self.last()).unwrap_or(Span::call_site())
+impl From<&[Token]> for TokenBuffer {
+    fn from(value: &[Token]) -> Self {
+        Self(value.to_vec())
     }
+}
 
-    pub fn delim(&self) -> DelimSpan {
-        DelimSpan::new(self.first(), self.last())
+impl From<TokenBuffer> for Vec<Token> {
+    fn from(value: TokenBuffer) -> Self {
+        value.0
     }
 }
 
@@ -46,39 +49,23 @@ impl FromIterator<Token> for TokenBuffer {
     }
 }
 
-impl FromIterator<Self> for TokenBuffer {
-    fn from_iter<T: IntoIterator<Item = Self>>(iter: T) -> Self {
-        Self(iter.into_iter().flatten().collect())
-    }
-}
-
 impl IntoIterator for TokenBuffer {
-    type IntoIter = Iter;
     type Item = Token;
+    type IntoIter = std::vec::IntoIter<Token>;
 
     fn into_iter(self) -> Self::IntoIter {
-        Iter::from(self.0.into_iter())
-    }
-}
-
-impl std::fmt::Display for TokenBuffer {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for token in self.0.iter() {
-            write!(f, "{}", token)?;
-        }
-
-        Ok(())
+        self.0.into_iter()
     }
 }
 
 impl Extend<Token> for TokenBuffer {
     fn extend<T: IntoIterator<Item = Token>>(&mut self, iter: T) {
-        self.0.extend(iter)
+        self.0.extend(iter);
     }
 }
 
 impl<'a> Extend<&'a Token> for TokenBuffer {
     fn extend<T: IntoIterator<Item = &'a Token>>(&mut self, iter: T) {
-        self.0.extend(iter.into_iter().map(|v| v.clone()))
+        self.0.extend(iter.into_iter().cloned());
     }
 }

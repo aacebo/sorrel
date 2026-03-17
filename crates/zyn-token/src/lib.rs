@@ -5,7 +5,8 @@ mod delim;
 mod error;
 mod group;
 mod iter;
-// pub mod parse;
+pub mod parse;
+pub use parse::*;
 mod span;
 mod stream;
 
@@ -24,11 +25,14 @@ pub trait Syntax: Stream {
 pub trait TokenReader {
     fn peek(&mut self) -> Option<&Token>;
     fn next(&mut self) -> Option<Token>;
-    fn fork(&self) -> Self where Self: Sized;
+    fn fork(&self) -> Self
+    where
+        Self: Sized;
+    fn seek(&mut self, other: &Self);
 }
 
 pub trait TokenWriter {
-    fn write(&mut self, token: Token) -> Result<()>;
+    fn write(&mut self, value: impl Stream) -> Result<()>;
 }
 
 #[derive(Debug, Clone)]
@@ -104,5 +108,11 @@ impl std::fmt::Display for Token {
             Self::Literal(v) => write!(f, "{}", v),
             Self::Group(v) => write!(f, "{}", v),
         }
+    }
+}
+
+impl Stream for Token {
+    fn stream(&self) -> TokenStream {
+        vec![self.clone()].into()
     }
 }
