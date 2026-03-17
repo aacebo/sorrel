@@ -55,7 +55,7 @@ impl SourceMap {
         }
 
         std::fs::write(
-            path.join("lib.rs"),
+            path.join("annotate").join("mod.rs"),
             quote!(#(#root)*).to_string(),
         )
     }
