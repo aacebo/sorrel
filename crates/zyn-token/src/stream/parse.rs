@@ -1,9 +1,9 @@
 use crate::{Buffer, Reader, Span, SpanError, Stream, Token, Writer};
 
 pub struct ParseStream<'a> {
-    pub(crate) input: &'a Stream,
-    pub(crate) index: usize,
-    pub(crate) output: Buffer,
+    input: &'a Stream,
+    index: usize,
+    output: Buffer,
 }
 
 impl<'a> ParseStream<'a> {
