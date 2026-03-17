@@ -859,4 +859,5 @@ name = "zyn-core"
 version = "0.5.3"
 dependencies = [
  "proc-macro2",
+ "version_check",
 ]

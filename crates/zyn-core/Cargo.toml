@@ -11,6 +11,14 @@ keywords.workspace = true
 categories.workspace = true
 
 [lib]
+doctest = false
+
+[features]
+ast = []
+report = []
+
+[build-dependencies]
+version_check = "0.9"
 
 [dependencies]
 proc-macro2 = { version = "1", features = ["span-locations"] }

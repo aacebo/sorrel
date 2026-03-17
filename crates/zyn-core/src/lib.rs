@@ -1,3 +1,8 @@
+#![cfg_attr(nightly, feature(proc_macro_diagnostic, proc_macro_span))]
+
+#[cfg(nightly)]
+extern crate proc_macro;
+
 mod delim;
 mod error;
 mod group;
@@ -8,6 +13,12 @@ mod punct;
 mod spacing;
 mod span;
 mod stream;
+
+#[cfg(feature = "report")]
+pub mod report;
+
+#[cfg(feature = "ast")]
+pub mod ast;
 
 pub use delim::*;
 pub use error::*;
