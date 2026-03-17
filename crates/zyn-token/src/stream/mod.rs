@@ -1,7 +1,9 @@
 mod buffer;
-pub mod parse;
+mod limit;
+mod parse;
 
 pub use buffer::*;
+pub use limit::*;
 pub use parse::*;
 
 use std::str::FromStr;
@@ -58,6 +60,10 @@ impl Stream {
 
     pub fn delim(&self) -> DelimSpan {
         DelimSpan::new(self.first(), self.last())
+    }
+
+    pub fn parse(&self) -> ParseStream<'_> {
+        ParseStream::new(self)
     }
 }
 
@@ -137,6 +143,7 @@ impl std::fmt::Display for Stream {
         for token in self.0.iter() {
             write!(f, "{}", token)?;
         }
+
         Ok(())
     }
 }

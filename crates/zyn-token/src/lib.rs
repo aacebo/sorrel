@@ -37,7 +37,7 @@ pub trait Reader {
 }
 
 pub trait Writer {
-    type Error: std::error::Error;
+    type Error: Into<SpanError>;
 
     /// write tokens to a stream.
     fn write(&mut self, tokens: impl IntoIterator<Item = Token>) -> Result<(), Self::Error>;

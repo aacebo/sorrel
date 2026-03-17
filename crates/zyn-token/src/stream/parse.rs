@@ -1,4 +1,4 @@
-use crate::{Buffer, Reader, Span, SpanError, Stream, Token, Writer};
+use crate::{AsStream, Buffer, Reader, Span, SpanError, Stream, ToStream, Token, Writer};
 
 pub struct ParseStream<'a> {
     input: &'a Stream,
@@ -39,6 +39,12 @@ impl<'a> ParseStream<'a> {
     }
 }
 
+impl<'a> From<&'a Stream> for ParseStream<'a> {
+    fn from(value: &'a Stream) -> Self {
+        Self::new(value)
+    }
+}
+
 impl<'a> Reader for ParseStream<'a> {
     fn remaining(&self) -> usize {
         self.input.len().saturating_sub(self.index)
@@ -65,6 +71,18 @@ impl<'a> Writer for ParseStream<'a> {
     fn write(&mut self, tokens: impl IntoIterator<Item = Token>) -> Result<(), Self::Error> {
         self.output.extend(tokens);
         Ok(())
+    }
+}
+
+impl<'a> AsStream for ParseStream<'a> {
+    fn as_stream(&self) -> &Stream {
+        self.input
+    }
+}
+
+impl<'a> ToStream for ParseStream<'a> {
+    fn to_stream(self) -> Stream {
+        self.output.to_stream()
     }
 }
 

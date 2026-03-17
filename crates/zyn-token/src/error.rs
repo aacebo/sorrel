@@ -26,6 +26,11 @@ impl SpanError {
         self.messages.extend(other.messages);
         self
     }
+
+    pub fn add(mut self, span: Span, message: impl Into<String>) -> Self {
+        self.messages.push((span, message.into()));
+        self
+    }
 }
 
 impl From<proc_macro2::LexError> for SpanError {
