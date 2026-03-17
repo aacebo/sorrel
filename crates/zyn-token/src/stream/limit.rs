@@ -11,6 +11,10 @@ impl<T> Limit<T> {
         Self { inner, limit }
     }
 
+    pub fn into_inner(self) -> T {
+        self.inner
+    }
+
     pub fn limit(&self) -> usize {
         self.limit
     }
