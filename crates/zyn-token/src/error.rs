@@ -27,8 +27,8 @@ impl SpanError {
         self
     }
 
-    pub fn add(mut self, span: Span, message: impl Into<String>) -> Self {
-        self.messages.push((span, message.into()));
+    pub fn add(mut self, span: Span, message: impl fmt::Display) -> Self {
+        self.messages.push((span, message.to_string()));
         self
     }
 }
