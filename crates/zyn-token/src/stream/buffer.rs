@@ -22,7 +22,7 @@ impl Buffer {
 
 impl From<Stream> for Buffer {
     fn from(value: Stream) -> Self {
-        Self(value.into_iter().collect())
+        Self(value.into())
     }
 }
 

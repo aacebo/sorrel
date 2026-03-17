@@ -96,6 +96,12 @@ impl From<Vec<Token>> for Stream {
     }
 }
 
+impl From<Stream> for Vec<Token> {
+    fn from(value: Stream) -> Self {
+        value.0
+    }
+}
+
 impl FromIterator<Token> for Stream {
     fn from_iter<T: IntoIterator<Item = Token>>(iter: T) -> Self {
         Self(iter.into_iter().collect())

@@ -1,51 +1,61 @@
 use crate::Span;
 
 #[derive(Debug, Clone)]
-pub struct Ident {
-    name: String,
-    span: Span,
+pub enum Ident {
+    External(proc_macro2::Ident),
+    Internal { name: Box<str>, span: Span },
 }
 
 impl Ident {
     pub fn new(name: &str, span: Span) -> Self {
-        Self {
-            name: name.to_string(),
+        Self::Internal {
+            name: name.into(),
             span,
         }
     }
 
-    pub fn name(&self) -> &str {
-        &self.name
+    pub fn name(&self) -> String {
+        match self {
+            Self::External(v) => v.to_string(),
+            Self::Internal { name, .. } => name.to_string(),
+        }
     }
 
     pub fn span(&self) -> Span {
-        self.span
+        match self {
+            Self::External(v) => v.span().into(),
+            Self::Internal { span, .. } => *span,
+        }
     }
 
     pub fn set_span(&mut self, span: Span) {
-        self.span = span;
+        match self {
+            Self::External(v) => v.set_span(span.into()),
+            Self::Internal { span: s, .. } => *s = span,
+        }
     }
 }
 
 impl From<proc_macro2::Ident> for Ident {
     fn from(value: proc_macro2::Ident) -> Self {
-        Self {
-            name: value.to_string(),
-            span: value.span().into(),
-        }
+        Self::External(value)
     }
 }
 
 impl From<Ident> for proc_macro2::Ident {
     fn from(value: Ident) -> Self {
-        let mut ident = proc_macro2::Ident::new(&value.name, value.span.into());
-        ident.set_span(value.span.into());
-        ident
+        match value {
+            Ident::External(v) => v,
+            Ident::Internal { name, span } => proc_macro2::Ident::new(&name, span.into()),
+        }
     }
 }
 
 impl std::fmt::Display for Ident {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+        match self {
+            Self::External(v) => write!(f, "{}", v),
+            Self::Internal { name, .. } => write!(f, "{}", name),
+        }
     }
 }
