@@ -56,11 +56,7 @@ impl SourceMap {
 
         std::fs::write(
             path.join("lib.rs"),
-            quote! {
-                pub use zyn_token::*;
-                #(#root)*
-            }
-            .to_string(),
+            quote!(#(#root)*).to_string(),
         )
     }
 }
