@@ -1,4 +1,4 @@
-use crate::{Delim, DelimSpan, Stream, ToStream};
+use crate::{AsStream, Delim, DelimSpan, Stream, ToStream};
 
 #[derive(Debug, Clone)]
 pub struct Group {
@@ -44,6 +44,12 @@ impl From<Group> for proc_macro2::Group {
 impl ToStream for Group {
     fn to_stream(self) -> Stream {
         self.tokens
+    }
+}
+
+impl AsStream for Group {
+    fn as_stream(&self) -> &Stream {
+        &self.tokens
     }
 }
 

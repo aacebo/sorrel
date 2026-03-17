@@ -1,52 +1,62 @@
-use crate::Token;
+use std::ops::{Deref, DerefMut};
+
+use crate::{AsStream, ToStream, Token};
+
+use super::Stream;
 
 /// A mutable collection of tokens
 #[derive(Debug, Default, Clone)]
-pub struct Buffer(Vec<Token>);
+pub struct Buffer(Stream);
 
 impl Buffer {
     pub fn new() -> Self {
-        Self(vec![])
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    pub fn get(&self, index: usize) -> Option<&Token> {
-        self.0.get(index)
+        Self(Stream::new())
     }
 
     pub fn push(&mut self, token: Token) {
-        self.0.push(token);
+        self.0.write(std::iter::once(token));
+    }
+
+    pub fn freeze(self) -> Stream {
+        self.0
+    }
+}
+
+impl Deref for Buffer {
+    type Target = Stream;
+
+    fn deref(&self) -> &Stream {
+        &self.0
+    }
+}
+
+impl DerefMut for Buffer {
+    fn deref_mut(&mut self) -> &mut Stream {
+        &mut self.0
     }
 }
 
 impl From<Vec<Token>> for Buffer {
     fn from(value: Vec<Token>) -> Self {
-        Self(value)
+        Self(Stream::from(value))
     }
 }
 
 impl From<&[Token]> for Buffer {
     fn from(value: &[Token]) -> Self {
-        Self(value.to_vec())
+        Self(Stream::from(value))
     }
 }
 
 impl From<Buffer> for Vec<Token> {
     fn from(value: Buffer) -> Self {
-        value.0
+        value.freeze().into_iter().collect()
     }
 }
 
 impl FromIterator<Token> for Buffer {
     fn from_iter<T: IntoIterator<Item = Token>>(iter: T) -> Self {
-        Self(iter.into_iter().collect())
+        Self(Stream::from_iter(iter))
     }
 }
 
@@ -61,12 +71,24 @@ impl IntoIterator for Buffer {
 
 impl Extend<Token> for Buffer {
     fn extend<T: IntoIterator<Item = Token>>(&mut self, iter: T) {
-        self.0.extend(iter);
+        self.0.write(iter);
     }
 }
 
 impl<'a> Extend<&'a Token> for Buffer {
     fn extend<T: IntoIterator<Item = &'a Token>>(&mut self, iter: T) {
-        self.0.extend(iter.into_iter().cloned());
+        self.0.write(iter.into_iter().cloned());
+    }
+}
+
+impl ToStream for Buffer {
+    fn to_stream(self) -> Stream {
+        self.0
+    }
+}
+
+impl AsStream for Buffer {
+    fn as_stream(&self) -> &Stream {
+        &self.0
     }
 }

@@ -1,6 +1,8 @@
 mod buffer;
+pub mod parse;
 
 pub use buffer::*;
+pub use parse::*;
 
 use std::str::FromStr;
 
@@ -39,6 +41,10 @@ impl Stream {
         self.0.iter()
     }
 
+    pub fn as_slice(&self) -> &[Token] {
+        &self.0
+    }
+
     pub fn first(&self) -> Span {
         self.0
             .first()
@@ -57,17 +63,15 @@ impl Stream {
     pub fn delim(&self) -> DelimSpan {
         DelimSpan::new(self.first(), self.last())
     }
+
+    pub(crate) fn write(&mut self, tokens: impl IntoIterator<Item = Token>) {
+        self.0.extend(tokens);
+    }
 }
 
 impl From<Buffer> for Stream {
     fn from(value: Buffer) -> Self {
-        Self(value.into_iter().collect())
-    }
-}
-
-impl From<Stream> for Buffer {
-    fn from(value: Stream) -> Self {
-        Buffer::from(value.0)
+        value.freeze()
     }
 }
 
@@ -137,15 +141,21 @@ impl std::fmt::Display for Stream {
     }
 }
 
-impl ToStream for proc_macro2::TokenStream {
-    fn to_stream(self) -> Stream {
-        self.into()
-    }
-}
-
 impl ToStream for Stream {
     fn to_stream(self) -> Stream {
         self
+    }
+}
+
+impl AsStream for Stream {
+    fn as_stream(&self) -> &Stream {
+        self
+    }
+}
+
+impl ToStream for proc_macro2::TokenStream {
+    fn to_stream(self) -> Stream {
+        self.into()
     }
 }
 

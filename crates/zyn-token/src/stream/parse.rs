@@ -1,146 +1,161 @@
-use crate::{Span, Stream, ToStream, Token, Buffer, Reader, Writer};
+use crate::{Buffer, Reader, Span, SpanError, Stream, Token, Writer};
 
-pub struct ParseStream {
-    pub(crate) buffer: Stream,
+pub struct ParseStream<'a> {
+    pub(crate) input: &'a Stream,
     pub(crate) index: usize,
     pub(crate) output: Buffer,
 }
 
-impl ParseStream {
-    pub fn new(buffer: Stream) -> Self {
+impl<'a> ParseStream<'a> {
+    pub fn new(input: &'a Stream) -> Self {
         Self {
-            buffer,
+            input,
             index: 0,
             output: Buffer::new(),
         }
     }
 
     pub fn is_empty(&self) -> bool {
-        self.index >= self.buffer.len()
+        self.index >= self.input.len()
     }
 
     pub fn span(&self) -> Span {
-        match self.buffer.get(self.index) {
-            Some(Token::Group(g)) => g.span().into(),
-            Some(Token::Ident(i)) => i.span().into(),
-            Some(Token::Punct(p)) => p.span().into(),
-            Some(Token::Literal(l)) => l.span().into(),
-            None => Span::call_site(),
+        self.input
+            .get(self.index)
+            .map(|t| t.span())
+            .unwrap_or(Span::call_site())
+    }
+
+    pub fn fork(&self) -> Self {
+        Self {
+            input: self.input,
+            index: self.index,
+            output: Buffer::new(),
         }
+    }
+
+    pub fn seek(&mut self, other: &Self) {
+        self.index = other.index;
     }
 }
 
-// impl Reader for ParseStream {
-//     fn peek(&mut self) -> Option<&Token> {
-//         self.buffer.get(self.index)
-//     }
+impl<'a> Reader for ParseStream<'a> {
+    fn remaining(&self) -> usize {
+        self.input.len().saturating_sub(self.index)
+    }
 
-//     fn next(&mut self) -> Option<Token> {
-//         let token = self.buffer.get(self.index)?.clone();
-//         self.index += 1;
-//         Some(token)
-//     }
+    fn peek(&self) -> Option<&Token> {
+        self.input.get(self.index)
+    }
 
-//     fn fork(&self) -> Self {
-//         Self {
-//             buffer: self.buffer.clone(),
-//             index: self.index,
-//             output: Buffer::new(),
-//         }
-//     }
+    fn next_n(&mut self, n: usize) -> Option<&[Token]> {
+        if self.index + n > self.input.len() {
+            return None;
+        }
 
-//     fn seek(&mut self, other: &Self) {
-//         self.index = other.index;
-//     }
-// }
+        let start = self.index;
+        self.index += n;
+        Some(&self.input.as_slice()[start..self.index])
+    }
+}
 
-// impl TokenWriter for ParseStream {
-//     fn write(&mut self, value: impl Stream) -> Result<()> {
-//         self.output.extend(value.stream());
-//         Ok(())
-//     }
-// }
+impl<'a> Writer for ParseStream<'a> {
+    type Error = SpanError;
+
+    fn write(&mut self, tokens: impl IntoIterator<Item = Token>) -> Result<(), Self::Error> {
+        self.output.extend(tokens);
+        Ok(())
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::*;
 
-    fn parse(input: &str) -> ParseStream {
-        let stream: Stream = input
+    fn parse(input: &str) -> Stream {
+        input
             .parse::<proc_macro2::TokenStream>()
             .unwrap()
             .into_iter()
             .map(Token::from)
-            .collect();
-        ParseStream::new(stream)
+            .collect()
     }
 
     #[test]
     fn empty_stream() {
-        let stream = ParseStream::new(Stream::new());
-        assert!(stream.is_empty());
+        let stream = Stream::new();
+        let ps = ParseStream::new(&stream);
+        assert!(ps.is_empty());
     }
 
     #[test]
     fn simple_idents_and_punct() {
-        let mut stream = parse("a + b");
+        let stream = parse("a + b");
+        let mut ps = ParseStream::new(&stream);
 
-        assert!(matches!(stream.next().unwrap(), Token::Ident(_)));
-        assert!(matches!(stream.next().unwrap(), Token::Punct(_)));
-        assert!(matches!(stream.next().unwrap(), Token::Ident(_)));
-        assert!(stream.is_empty());
+        assert!(matches!(ps.next().unwrap(), Token::Ident(_)));
+        assert!(matches!(ps.next().unwrap(), Token::Punct(_)));
+        assert!(matches!(ps.next().unwrap(), Token::Ident(_)));
+        assert!(ps.is_empty());
     }
 
     #[test]
     fn peek_does_not_consume() {
-        let mut stream = parse("a b");
+        let stream = parse("a b");
+        let mut ps = ParseStream::new(&stream);
 
-        assert!(matches!(stream.peek().unwrap(), Token::Ident(_)));
-        assert!(matches!(stream.peek().unwrap(), Token::Ident(_)));
-        assert!(matches!(stream.next().unwrap(), Token::Ident(_)));
-        assert!(!stream.is_empty()); // "b" remains
+        assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
+        assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
+        assert!(matches!(ps.next().unwrap(), Token::Ident(_)));
+        assert!(!ps.is_empty()); // "b" remains
     }
 
     #[test]
     fn fork_does_not_advance_original() {
-        let mut stream = parse("a b");
-        let mut fork = stream.fork();
+        let stream = parse("a b");
+        let ps = ParseStream::new(&stream);
+        let mut fork = ps.fork();
 
         assert!(matches!(fork.next().unwrap(), Token::Ident(_))); // "a"
-        assert!(matches!(stream.peek().unwrap(), Token::Ident(_))); // still "a"
+        assert!(matches!(ps.peek().unwrap(), Token::Ident(_))); // still "a"
     }
 
     #[test]
     fn commit_fork() {
-        let mut stream = parse("a b");
-        let mut fork = stream.fork();
+        let stream = parse("a b");
+        let mut ps = ParseStream::new(&stream);
+        let mut fork = ps.fork();
 
         fork.next().unwrap(); // advance fork past "a"
 
         // original still at "a"
-        assert!(matches!(stream.peek().unwrap(), Token::Ident(_)));
+        assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
 
         // commit fork progress to original
-        stream.seek(&fork);
-        assert!(matches!(stream.peek().unwrap(), Token::Ident(_))); // now at "b"
+        ps.seek(&fork);
+        assert!(matches!(ps.peek().unwrap(), Token::Ident(_))); // now at "b"
     }
 
     #[test]
     fn write_appends() {
-        let mut stream = ParseStream::new(Stream::new());
-        let ident = Ident::new("x", proc_macro2::Span::call_site());
-        stream.write(Token::Ident(ident)).unwrap();
-        assert_eq!(stream.output.len(), 1);
+        let stream = Stream::new();
+        let mut ps = ParseStream::new(&stream);
+        let ident = Ident::new("x", Span::call_site());
+        ps.write(Token::Ident(ident)).unwrap();
+        assert_eq!(ps.output.len(), 1);
     }
 
     #[test]
     fn group_token_accessible() {
-        let mut stream = parse("(a + b) c");
-        let group = stream.next().unwrap();
+        let stream = parse("(a + b) c");
+        let mut ps = ParseStream::new(&stream);
+        let group = ps.next().unwrap();
         assert!(matches!(group, Token::Group(_)));
+
         if let Token::Group(g) = group {
-            let mut inner = ParseStream::new(g.stream());
+            let tokens = g.as_stream().clone();
+            let mut inner = ParseStream::new(&tokens);
             assert!(matches!(inner.next().unwrap(), Token::Ident(_))); // "a"
         }
     }

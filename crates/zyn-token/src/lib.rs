@@ -1,16 +1,22 @@
-pub use proc_macro2::{Ident, Literal, Punct, Spacing};
-
 mod delim;
 mod error;
 mod group;
+mod ident;
 mod iter;
+mod literal;
+mod punct;
+mod spacing;
 mod span;
 mod stream;
 
 pub use delim::*;
 pub use error::*;
 pub use group::*;
+pub use ident::*;
 pub use iter::*;
+pub use literal::*;
+pub use punct::*;
+pub use spacing::*;
 pub use span::*;
 pub use stream::*;
 
@@ -48,9 +54,9 @@ pub enum Token {
 impl Token {
     pub fn span(&self) -> Span {
         match self {
-            Self::Ident(v) => v.span().into(),
-            Self::Punct(v) => v.span().into(),
-            Self::Literal(v) => v.span().into(),
+            Self::Ident(v) => v.span(),
+            Self::Punct(v) => v.span(),
+            Self::Literal(v) => v.span(),
             Self::Group(v) => v.span().into(),
         }
     }
@@ -83,9 +89,9 @@ impl From<Group> for Token {
 impl From<proc_macro2::TokenTree> for Token {
     fn from(value: proc_macro2::TokenTree) -> Self {
         match value {
-            proc_macro2::TokenTree::Ident(v) => v.into(),
-            proc_macro2::TokenTree::Punct(v) => v.into(),
-            proc_macro2::TokenTree::Literal(v) => v.into(),
+            proc_macro2::TokenTree::Ident(v) => Ident::from(v).into(),
+            proc_macro2::TokenTree::Punct(v) => Punct::from(v).into(),
+            proc_macro2::TokenTree::Literal(v) => Literal::from(v).into(),
             proc_macro2::TokenTree::Group(v) => Group::from(v).into(),
         }
     }
@@ -94,11 +100,20 @@ impl From<proc_macro2::TokenTree> for Token {
 impl From<Token> for proc_macro2::TokenTree {
     fn from(value: Token) -> Self {
         match value {
-            Token::Ident(v) => v.into(),
-            Token::Punct(v) => v.into(),
-            Token::Literal(v) => v.into(),
+            Token::Ident(v) => proc_macro2::Ident::from(v).into(),
+            Token::Punct(v) => proc_macro2::Punct::from(v).into(),
+            Token::Literal(v) => proc_macro2::Literal::from(v).into(),
             Token::Group(v) => proc_macro2::Group::from(v).into(),
         }
+    }
+}
+
+impl IntoIterator for Token {
+    type Item = Token;
+    type IntoIter = std::iter::Once<Token>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        std::iter::once(self)
     }
 }
 
@@ -119,19 +134,19 @@ impl ToStream for Token {
     }
 }
 
-impl ToStream for proc_macro2::Ident {
+impl ToStream for Ident {
     fn to_stream(self) -> Stream {
         Token::from(self).to_stream()
     }
 }
 
-impl ToStream for proc_macro2::Punct {
+impl ToStream for Punct {
     fn to_stream(self) -> Stream {
         Token::from(self).to_stream()
     }
 }
 
-impl ToStream for proc_macro2::Literal {
+impl ToStream for Literal {
     fn to_stream(self) -> Stream {
         Token::from(self).to_stream()
     }
