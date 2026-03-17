@@ -28,7 +28,7 @@ pub trait TokenReader {
 }
 
 pub trait TokenWriter {
-    fn write(&mut self, value: impl Stream) -> Result<()>;
+    fn write(&mut self, stream: impl Stream) -> Result<()>;
 }
 
 #[derive(Debug, Clone)]
