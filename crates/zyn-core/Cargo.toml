@@ -1,5 +1,5 @@
 [package]
-name = "zyn-token"
+name = "zyn-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
