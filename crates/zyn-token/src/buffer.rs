@@ -70,3 +70,15 @@ impl std::fmt::Display for TokenBuffer {
         Ok(())
     }
 }
+
+impl Extend<Token> for TokenBuffer {
+    fn extend<T: IntoIterator<Item = Token>>(&mut self, iter: T) {
+        self.0.extend(iter)
+    }
+}
+
+impl<'a> Extend<&'a Token> for TokenBuffer {
+    fn extend<T: IntoIterator<Item = &'a Token>>(&mut self, iter: T) {
+        self.0.extend(iter.into_iter().map(|v| v.clone()))
+    }
+}

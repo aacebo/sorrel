@@ -21,13 +21,15 @@ pub trait Syntax: Stream {
     fn span(&self) -> Span;
 }
 
-// pub trait Read {
-//     fn read(&mut self, stream: &mut Parse) -> Result<usize>;
-// }
+pub trait TokenReader {
+    fn peek(&mut self) -> Option<&Token>;
+    fn next(&mut self) -> Option<Token>;
+    fn fork(&self) -> Self where Self: Sized;
+}
 
-// pub trait Write {
-//     fn write(&mut self, stream: &TokenStream) -> Result<usize>;
-// }
+pub trait TokenWriter {
+    fn write(&mut self, token: Token) -> Result<()>;
+}
 
 #[derive(Debug, Clone)]
 pub enum Token {
