@@ -88,6 +88,7 @@ impl From<Diagnostic> for proc_macro::Diagnostic {
     }
 }
 
+#[must_use]
 #[derive(Debug, Clone)]
 pub struct Builder {
     span: Option<Span>,

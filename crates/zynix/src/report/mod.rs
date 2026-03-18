@@ -1,10 +1,10 @@
 mod diagnostic;
+mod label;
 mod level;
-mod mark;
 
 pub use diagnostic::*;
+pub use label::*;
 pub use level::*;
-pub use mark::*;
 
 impl crate::Span {
     pub fn error(&self, message: impl std::fmt::Display) -> Diagnostic {

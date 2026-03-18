@@ -38,7 +38,9 @@ impl<T: Reader> Reader for Limit<T> {
     }
 
     fn next_n(&mut self, n: usize) -> Option<&[Token]> {
-        assert!(n <= self.limit);
+        if n < self.limit {
+            return None;
+        }
 
         match self.inner.next_n(n) {
             None => None,

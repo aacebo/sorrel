@@ -44,14 +44,11 @@ impl Stream {
     }
 
     pub fn first(&self) -> Span {
-        self.0
-            .first()
-            .map(|v| v.span())
-            .unwrap_or(Span::call_site())
+        self.0.first().map(|v| v.span()).unwrap_or_default()
     }
 
     pub fn last(&self) -> Span {
-        self.0.last().map(|v| v.span()).unwrap_or(Span::call_site())
+        self.0.last().map(|v| v.span()).unwrap_or_default()
     }
 
     pub fn span(&self) -> Span {

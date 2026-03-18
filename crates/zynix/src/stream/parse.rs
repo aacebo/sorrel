@@ -23,7 +23,7 @@ impl<'a> ParseStream<'a> {
         self.input
             .get(self.index)
             .map(|t| t.span())
-            .unwrap_or(Span::call_site())
+            .unwrap_or_default()
     }
 
     pub fn fork(&self) -> Self {
@@ -36,6 +36,12 @@ impl<'a> ParseStream<'a> {
 
     pub fn seek(&mut self, other: &Self) {
         self.index = other.index;
+    }
+
+    pub fn join(&mut self, other: Self) {
+        assert!(self.index <= other.index);
+        self.index = other.index;
+        self.output.extend(other.output);
     }
 }
 

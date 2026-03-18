@@ -1,12 +1,12 @@
 use crate::Span;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Mark {
+pub struct Label {
     span: Span,
     text: String,
 }
 
-impl Mark {
+impl Label {
     pub fn new(span: Span, text: impl std::fmt::Display) -> Self {
         Self {
             span,
@@ -23,14 +23,14 @@ impl Mark {
     }
 }
 
-impl std::fmt::Display for Mark {
+impl std::fmt::Display for Label {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", &self.text)
     }
 }
 
 impl Span {
-    pub fn mark(&self, text: impl std::fmt::Display) -> Mark {
-        Mark::new(*self, text)
+    pub fn Label(&self, text: impl std::fmt::Display) -> Label {
+        Label::new(*self, text)
     }
 }

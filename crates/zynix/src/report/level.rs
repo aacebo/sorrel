@@ -13,19 +13,19 @@ impl Level {
     }
 
     pub fn is_note(&self) -> bool {
-        matches!(self, Self::Unknown)
+        matches!(self, Self::Note)
     }
 
     pub fn is_help(&self) -> bool {
-        matches!(self, Self::Unknown)
+        matches!(self, Self::Help)
     }
 
     pub fn is_warning(&self) -> bool {
-        matches!(self, Self::Unknown)
+        matches!(self, Self::Warning)
     }
 
     pub fn is_error(&self) -> bool {
-        matches!(self, Self::Unknown)
+        matches!(self, Self::Error)
     }
 
     pub fn as_u8(&self) -> u8 {
