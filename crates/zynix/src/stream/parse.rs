@@ -1,4 +1,4 @@
-use crate::{AsStream, Buffer, Reader, Span, SpanError, Stream, ToStream, Token, Writer};
+use crate::{AsStream, Buffer, ParseError, Reader, Span, Stream, ToStream, Token, Writer};
 
 pub struct ParseStream<'a> {
     input: &'a Stream,
@@ -76,7 +76,7 @@ impl<'a> Reader for ParseStream<'a> {
 }
 
 impl<'a> Writer for ParseStream<'a> {
-    type Error = SpanError;
+    type Error = ParseError;
 
     fn write(&mut self, tokens: impl IntoIterator<Item = Token>) -> Result<(), Self::Error> {
         self.output.extend(tokens);

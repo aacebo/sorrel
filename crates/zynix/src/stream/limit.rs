@@ -1,4 +1,4 @@
-use crate::{Reader, SpanError, Token, Writer};
+use crate::{ParseError, Reader, Token, Writer};
 
 #[derive(Debug, Clone)]
 pub struct Limit<T> {
@@ -53,7 +53,7 @@ impl<T: Reader> Reader for Limit<T> {
 }
 
 impl<T: Writer> Writer for Limit<T> {
-    type Error = SpanError;
+    type Error = ParseError;
 
     fn write(&mut self, tokens: impl IntoIterator<Item = Token>) -> Result<(), Self::Error> {
         match self.inner.write(tokens) {

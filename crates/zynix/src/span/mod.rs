@@ -110,6 +110,12 @@ impl Spanner for Span {
     }
 }
 
+impl Spanner for &Span {
+    fn span(&self) -> Span {
+        **self
+    }
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SpanSet {
     primary: Option<Span>,
@@ -142,7 +148,7 @@ impl SpanSet {
             .unwrap_or_default()
     }
 
-    pub fn add(mut self, other: Span) -> Self {
+    pub fn push(mut self, other: Span) -> Self {
         if self.primary.is_none() {
             self.primary = Some(other);
             self

@@ -1,4 +1,4 @@
-use crate::{SpanSet, Spanner, report::Level};
+use crate::{Span, SpanSet, Spanner, report::Level};
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
@@ -47,17 +47,36 @@ impl From<Diagnostic> for proc_macro::Diagnostic {
             let message = child.message().unwrap_or_default();
 
             if child.level.is_error() {
-                new = new.span_error(child.span(), message);
+                new = new.span_error(&child.spans, message);
             } else if child.level.is_help() {
-                new = new.span_help(child.span(), message);
+                new = new.span_help(&child.spans, message);
             } else if child.level.is_note() {
-                new = new.span_note(child.span(), message);
+                new = new.span_note(&child.spans, message);
             } else if child.level.is_warning() {
-                new = new.span_warning(child.span(), message);
+                new = new.span_warning(&child.spans, message);
             }
         }
 
         new
+    }
+}
+
+impl Spanner for Diagnostic {
+    fn span(&self) -> Span {
+        self.spans.span()
+    }
+
+    fn into_spans(self) -> SpanSet
+    where
+        Self: Sized,
+    {
+        self.spans
+    }
+}
+
+impl std::fmt::Display for Diagnostic {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }
 

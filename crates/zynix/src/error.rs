@@ -1,62 +1,58 @@
-use std::fmt;
+use crate::{Span, SpanSet, Spanner};
 
-use crate::{Span, Spanner};
-
-#[derive(Clone)]
-pub struct SpanError {
-    messages: Vec<(Span, String)>,
+#[derive(Debug)]
+pub enum ParseError {
+    Lex(proc_macro2::LexError),
+    #[cfg(feature = "report")]
+    Diagnostic(crate::report::Diagnostic),
 }
 
-impl SpanError {
-    pub fn new(span: Span, message: impl fmt::Display) -> Self {
-        Self {
-            messages: vec![(span, message.to_string())],
-        }
-    }
-
-    pub fn call_site(message: impl fmt::Display) -> Self {
-        Self::new(Span::call_site(), message)
-    }
-
+impl ParseError {
     pub fn span(&self) -> Span {
-        self.messages[0].0
-    }
-
-    pub fn join(&mut self, other: Self) -> &mut Self {
-        self.messages.extend(other.messages);
-        self
-    }
-
-    pub fn add(mut self, span: impl Spanner, message: impl fmt::Display) -> Self {
-        self.messages.push((span.span(), message.to_string()));
-        self
-    }
-}
-
-impl From<proc_macro2::LexError> for SpanError {
-    fn from(e: proc_macro2::LexError) -> Self {
-        Self::new(e.span().into(), e)
-    }
-}
-
-impl fmt::Display for SpanError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (i, (_, msg)) in self.messages.iter().enumerate() {
-            if i > 0 {
-                f.write_str("\n")?;
-            }
-
-            f.write_str(msg)?;
+        match self {
+            Self::Lex(v) => v.span().into(),
+            #[cfg(feature = "report")]
+            Self::Diagnostic(v) => v.span().span(),
         }
-
-        Ok(())
     }
 }
 
-impl fmt::Debug for SpanError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self, f)
+impl From<proc_macro2::LexError> for ParseError {
+    fn from(value: proc_macro2::LexError) -> Self {
+        Self::Lex(value)
     }
 }
 
-impl std::error::Error for SpanError {}
+#[cfg(feature = "report")]
+impl From<crate::report::Diagnostic> for ParseError {
+    fn from(value: crate::report::Diagnostic) -> Self {
+        Self::Diagnostic(value)
+    }
+}
+
+impl Spanner for ParseError {
+    fn span(&self) -> Span {
+        self.span()
+    }
+
+    fn into_spans(self) -> SpanSet
+    where
+        Self: Sized,
+    {
+        match self {
+            Self::Lex(v) => SpanSet::new(v.span().into()),
+            #[cfg(feature = "report")]
+            Self::Diagnostic(v) => v.into_spans(),
+        }
+    }
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Lex(v) => write!(f, "{}", v),
+            #[cfg(feature = "report")]
+            Self::Diagnostic(v) => write!(f, "{}", v),
+        }
+    }
+}

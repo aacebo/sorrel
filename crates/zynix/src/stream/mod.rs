@@ -8,7 +8,7 @@ pub use parse::*;
 
 use std::str::FromStr;
 
-use crate::{DelimSpan, Span, SpanError, Token};
+use crate::{DelimSpan, ParseError, Span, Token};
 
 pub trait ToStream {
     fn to_stream(self) -> Stream;
@@ -127,7 +127,7 @@ impl IntoIterator for Stream {
 }
 
 impl FromStr for Stream {
-    type Err = SpanError;
+    type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let stream = proc_macro2::TokenStream::from_str(s)?;

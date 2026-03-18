@@ -1,5 +1,6 @@
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub enum Spacing {
+    #[default]
     Alone,
     Joint,
 }
@@ -28,11 +29,5 @@ impl From<Spacing> for proc_macro2::Spacing {
             Spacing::Alone => proc_macro2::Spacing::Alone,
             Spacing::Joint => proc_macro2::Spacing::Joint,
         }
-    }
-}
-
-impl Default for Spacing {
-    fn default() -> Self {
-        Self::Alone
     }
 }

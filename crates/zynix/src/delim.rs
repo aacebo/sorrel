@@ -1,9 +1,10 @@
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub enum Delim {
+    #[default]
+    None,
     Paren,
     Brace,
     Bracket,
-    None,
 }
 
 impl Delim {
@@ -36,11 +37,5 @@ impl From<Delim> for proc_macro2::Delimiter {
             Delim::Bracket => proc_macro2::Delimiter::Bracket,
             Delim::None => proc_macro2::Delimiter::None,
         }
-    }
-}
-
-impl Default for Delim {
-    fn default() -> Self {
-        Self::None
     }
 }
