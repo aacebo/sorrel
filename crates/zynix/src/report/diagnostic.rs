@@ -13,6 +13,7 @@ impl Diagnostic {
         Builder::new().span(span).level(level)
     }
 
+    /// the max level of this diagnostic and its children.
     pub fn level(&self) -> Level {
         self.level
     }

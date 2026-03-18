@@ -38,3 +38,9 @@ impl From<Delim> for proc_macro2::Delimiter {
         }
     }
 }
+
+impl Default for Delim {
+    fn default() -> Self {
+        Self::None
+    }
+}

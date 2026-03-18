@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::Span;
+use crate::{Span, Spanner};
 
 #[derive(Clone)]
 pub struct SpanError {
@@ -27,8 +27,8 @@ impl SpanError {
         self
     }
 
-    pub fn add(mut self, span: Span, message: impl fmt::Display) -> Self {
-        self.messages.push((span, message.to_string()));
+    pub fn add(mut self, span: impl Spanner, message: impl fmt::Display) -> Self {
+        self.messages.push((span.span(), message.to_string()));
         self
     }
 }

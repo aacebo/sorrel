@@ -30,3 +30,9 @@ impl From<Spacing> for proc_macro2::Spacing {
         }
     }
 }
+
+impl Default for Spacing {
+    fn default() -> Self {
+        Self::Alone
+    }
+}

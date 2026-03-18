@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::Span;
 
 #[derive(Debug, Clone)]
@@ -14,10 +16,10 @@ impl Ident {
         }
     }
 
-    pub fn name(&self) -> String {
+    pub fn name(&self) -> Cow<'_, str> {
         match self {
-            Self::External(v) => v.to_string(),
-            Self::Internal { name, .. } => name.to_string(),
+            Self::External(v) => Cow::Owned(v.to_string()),
+            Self::Internal { name, .. } => Cow::Borrowed(name.as_ref()),
         }
     }
 

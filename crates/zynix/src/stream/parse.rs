@@ -39,7 +39,11 @@ impl<'a> ParseStream<'a> {
     }
 
     pub fn join(&mut self, other: Self) {
-        assert!(self.index <= other.index);
+        assert!(
+            self.index <= other.index,
+            "cannot merge a parser behind the current location."
+        );
+
         self.index = other.index;
         self.output.extend(other.output);
     }

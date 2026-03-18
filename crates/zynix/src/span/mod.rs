@@ -64,6 +64,13 @@ impl PartialOrd for Span {
     }
 }
 
+impl std::hash::Hash for Span {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.start().hash(state);
+        self.end().hash(state);
+    }
+}
+
 impl From<proc_macro2::Span> for Span {
     fn from(value: proc_macro2::Span) -> Self {
         Self(value)
@@ -90,6 +97,7 @@ impl std::ops::DerefMut for Span {
     }
 }
 
+#[cfg(nightly)]
 impl proc_macro::MultiSpan for Span {
     fn into_spans(self) -> Vec<proc_macro::Span> {
         vec![proc_macro2::Span::from(self).unwrap()]
@@ -170,6 +178,19 @@ impl Spanner for SpanSet {
     }
 }
 
+impl std::hash::Hash for SpanSet {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        if let Some(primary) = &self.primary {
+            primary.hash(state);
+        }
+
+        for span in &self.secondary {
+            span.hash(state);
+        }
+    }
+}
+
+#[cfg(nightly)]
 impl proc_macro::MultiSpan for SpanSet {
     fn into_spans(self) -> Vec<proc_macro::Span> {
         let mut spans = vec![];
@@ -186,6 +207,7 @@ impl proc_macro::MultiSpan for SpanSet {
     }
 }
 
+#[cfg(nightly)]
 impl proc_macro::MultiSpan for &SpanSet {
     fn into_spans(self) -> Vec<proc_macro::Span> {
         let mut spans = vec![];

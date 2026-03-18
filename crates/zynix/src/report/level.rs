@@ -57,7 +57,7 @@ impl From<Level> for proc_macro::Level {
             Level::Warning => Self::Warning,
             Level::Note => Self::Note,
             Level::Help => Self::Help,
-            Level::Unknown => unreachable!(),
+            Level::Unknown => Self::Note,
         }
     }
 }
