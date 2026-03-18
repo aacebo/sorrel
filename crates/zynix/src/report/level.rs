@@ -1,13 +1,37 @@
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Level {
-    Error,
-    Warning,
+    Unknown,
     Note,
     Help,
-    Unknown,
+    Warning,
+    Error,
 }
 
 impl Level {
+    pub fn is_unknown(&self) -> bool {
+        matches!(self, Self::Unknown)
+    }
+
+    pub fn is_note(&self) -> bool {
+        matches!(self, Self::Unknown)
+    }
+
+    pub fn is_help(&self) -> bool {
+        matches!(self, Self::Unknown)
+    }
+
+    pub fn is_warning(&self) -> bool {
+        matches!(self, Self::Unknown)
+    }
+
+    pub fn is_error(&self) -> bool {
+        matches!(self, Self::Unknown)
+    }
+
+    pub fn as_u8(&self) -> u8 {
+        *self as u8
+    }
+
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Error => "error",
@@ -29,10 +53,10 @@ impl std::fmt::Display for Level {
 impl From<Level> for proc_macro::Level {
     fn from(value: Level) -> Self {
         match value {
-            Level::Error => proc_macro::Level::Error,
-            Level::Warning => proc_macro::Level::Warning,
-            Level::Note => proc_macro::Level::Note,
-            Level::Help => proc_macro::Level::Help,
+            Level::Error => Self::Error,
+            Level::Warning => Self::Warning,
+            Level::Note => Self::Note,
+            Level::Help => Self::Help,
             Level::Unknown => unreachable!(),
         }
     }

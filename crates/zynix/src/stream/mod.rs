@@ -55,7 +55,7 @@ impl Stream {
     }
 
     pub fn span(&self) -> Span {
-        self.first().join(self.last()).unwrap_or(Span::call_site())
+        self.first().join(self.last())
     }
 
     pub fn delim(&self) -> DelimSpan {
