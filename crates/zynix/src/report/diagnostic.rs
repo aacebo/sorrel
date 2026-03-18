@@ -1,4 +1,4 @@
-use crate::{AsStream, ParseError, Span, Stream, ToStream, report::Level};
+use crate::{ParseError, Span, Stream, ToStream, report::Level};
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
