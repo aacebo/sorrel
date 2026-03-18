@@ -30,14 +30,11 @@ impl Diagnostic {
         &self.children
     }
 
-    #[cfg(nightly)]
     pub fn emit(self) -> Stream {
-        proc_macro::Diagnostic::from(self.clone()).emit();
-        self.to_stream()
-    }
+        if cfg!(nightly) && proc_macro::is_available() {
+            proc_macro::Diagnostic::from(self.clone()).emit();
+        }
 
-    #[cfg(not(nightly))]
-    pub fn emit(self) -> Stream {
         self.to_stream()
     }
 
@@ -187,5 +184,236 @@ impl proc_macro::ToTokens for Diagnostic {
         if let Ok(ts) = s.parse::<proc_macro::TokenStream>() {
             tokens.extend(ts);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Span;
+
+    #[test]
+    fn builder_defaults() {
+        let d = Builder::new().build();
+        assert_eq!(d.level(), Level::Unknown);
+        assert!(d.spans().is_empty());
+        assert!(d.message().is_none());
+        assert!(d.children().is_empty());
+    }
+
+    #[test]
+    fn builder_set_all_fields() {
+        let span = Span::call_site();
+        let d = Builder::new()
+            .level(Level::Error)
+            .message("test error")
+            .span(span)
+            .build();
+
+        assert_eq!(d.level(), Level::Error);
+        assert_eq!(d.message(), Some("test error"));
+        assert_eq!(d.spans().len(), 1);
+        assert_eq!(d.spans()[0], span);
+    }
+
+    #[test]
+    fn diagnostic_new_sets_level() {
+        let d = Diagnostic::new(Level::Warning).build();
+        assert_eq!(d.level(), Level::Warning);
+    }
+
+    #[test]
+    fn level_elevated_by_child() {
+        let child = Builder::new().level(Level::Error).message("child").build();
+        let parent = Builder::new()
+            .level(Level::Note)
+            .message("parent")
+            .add(child)
+            .build();
+
+        assert_eq!(parent.level(), Level::Error);
+    }
+
+    #[test]
+    fn level_not_lowered_by_child() {
+        let child = Builder::new().level(Level::Note).message("child").build();
+        let parent = Builder::new()
+            .level(Level::Error)
+            .message("parent")
+            .add(child)
+            .build();
+
+        assert_eq!(parent.level(), Level::Error);
+    }
+
+    #[test]
+    fn level_max_across_multiple_children() {
+        let c1 = Builder::new().level(Level::Note).build();
+        let c2 = Builder::new().level(Level::Warning).build();
+        let c3 = Builder::new().level(Level::Help).build();
+        let parent = Builder::new()
+            .level(Level::Unknown)
+            .add(c1)
+            .add(c2)
+            .add(c3)
+            .build();
+
+        assert_eq!(parent.level(), Level::Warning);
+    }
+
+    #[test]
+    fn multiple_spans() {
+        let s1 = Span::call_site();
+        let s2 = Span::call_site();
+        let d = Builder::new().spans(vec![s1, s2].into_iter()).build();
+        assert_eq!(d.spans().len(), 2);
+    }
+
+    #[test]
+    fn display_with_message() {
+        let d = Builder::new()
+            .level(Level::Error)
+            .message("something broke")
+            .build();
+        let s = format!("{}", d);
+        assert_eq!(s, "[error]:: something broke");
+    }
+
+    #[test]
+    fn display_without_message() {
+        let d = Builder::new().level(Level::Warning).build();
+        let s = format!("{}", d);
+        assert_eq!(s, "[warning]:");
+    }
+
+    #[test]
+    fn display_with_children() {
+        let child = Builder::new()
+            .level(Level::Help)
+            .message("try this")
+            .build();
+        let parent = Builder::new()
+            .level(Level::Error)
+            .message("failed")
+            .add(child)
+            .build();
+        let s = format!("{}", parent);
+        assert!(s.contains("[error]:: failed"));
+        assert!(s.contains("\n  [help]:: try this"));
+    }
+
+    #[test]
+    fn partial_eq_same_spans() {
+        let span = Span::call_site();
+        let d1 = Builder::new()
+            .level(Level::Error)
+            .message("a")
+            .span(span)
+            .build();
+        let d2 = Builder::new()
+            .level(Level::Note)
+            .message("b")
+            .span(span)
+            .build();
+        assert_eq!(d1, d2);
+    }
+
+    #[test]
+    fn partial_eq_no_spans() {
+        let d1 = Builder::new().level(Level::Error).message("a").build();
+        let d2 = Builder::new().level(Level::Note).message("b").build();
+        // Both have empty spans, so they are equal
+        assert_eq!(d1, d2);
+    }
+
+    #[test]
+    fn into_error() {
+        let d = Builder::new().level(Level::Error).message("err").build();
+        let err = d.into_error();
+        assert!(matches!(err, ParseError::Diagnostic(_)));
+    }
+
+    #[test]
+    fn to_stream_produces_compile_error() {
+        let d = Builder::new().level(Level::Error).message("broken").build();
+        let stream = d.to_stream();
+        let s = stream.to_string();
+        assert!(
+            s.contains("compile_error"),
+            "expected compile_error in: {}",
+            s
+        );
+        assert!(s.contains("broken"), "expected message in: {}", s);
+    }
+
+    #[test]
+    fn emit_returns_stream() {
+        let d = Builder::new()
+            .level(Level::Warning)
+            .message("warn msg")
+            .build();
+        let stream = d.emit();
+        let s = stream.to_string();
+        assert!(
+            s.contains("compile_error"),
+            "expected compile_error in: {}",
+            s
+        );
+        assert!(s.contains("warn msg"), "expected message in: {}", s);
+    }
+
+    #[test]
+    fn to_stream_includes_children() {
+        let child = Builder::new().level(Level::Help).message("hint").build();
+        let parent = Builder::new()
+            .level(Level::Error)
+            .message("main error")
+            .add(child)
+            .build();
+        let s = parent.to_stream().to_string();
+        assert!(s.contains("compile_error"));
+        assert!(s.contains("main error"));
+        assert!(s.contains("hint"));
+    }
+
+    #[test]
+    fn to_stream_no_message() {
+        let d = Builder::new().level(Level::Error).build();
+        let s = d.to_stream().to_string();
+        assert!(s.contains("compile_error"));
+    }
+
+    #[test]
+    fn span_error_helper() {
+        let span = Span::call_site();
+        let d = span.error("err msg");
+        assert_eq!(d.level(), Level::Error);
+        assert_eq!(d.message(), Some("err msg"));
+        assert_eq!(d.spans().len(), 1);
+        assert_eq!(d.spans()[0], span);
+    }
+
+    #[test]
+    fn span_warn_helper() {
+        let span = Span::call_site();
+        let d = span.warn("warn msg");
+        assert_eq!(d.level(), Level::Warning);
+        assert_eq!(d.message(), Some("warn msg"));
+    }
+
+    #[test]
+    fn span_note_helper() {
+        let span = Span::call_site();
+        let d = span.note("note msg");
+        assert_eq!(d.level(), Level::Note);
+        assert_eq!(d.message(), Some("note msg"));
+    }
+
+    #[test]
+    fn span_help_helper() {
+        let span = Span::call_site();
+        let d = span.help("help msg");
+        assert_eq!(d.level(), Level::Help);
+        assert_eq!(d.message(), Some("help msg"));
     }
 }
