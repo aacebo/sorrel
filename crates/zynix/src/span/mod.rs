@@ -4,9 +4,14 @@ mod range;
 pub use delim::*;
 pub use range::*;
 
-/// Trait implemented by types that can be converted into a set of `Spans`.
-pub trait MultiSpan {
-    fn into_spans(self) -> Vec<Span>;
+pub trait Spanner {
+    fn span(&self) -> Span;
+    fn into_spans(self) -> SpanSet
+    where
+        Self: Sized,
+    {
+        SpanSet::new(self.span())
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -85,14 +90,114 @@ impl std::ops::DerefMut for Span {
     }
 }
 
-impl MultiSpan for Span {
-    fn into_spans(self) -> Vec<Span> {
-        vec![self]
-    }
-}
-
 impl proc_macro::MultiSpan for Span {
     fn into_spans(self) -> Vec<proc_macro::Span> {
         vec![proc_macro2::Span::from(self).unwrap()]
+    }
+}
+
+impl Spanner for Span {
+    fn span(&self) -> Span {
+        *self
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct SpanSet {
+    primary: Option<Span>,
+    secondary: Vec<Span>,
+}
+
+impl SpanSet {
+    pub fn new(primary: Span) -> Self {
+        Self {
+            primary: Some(primary),
+            secondary: vec![],
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.primary.is_none() && self.secondary.is_empty()
+    }
+
+    pub fn primary(&self) -> Option<Span> {
+        self.primary
+    }
+
+    pub fn secondary(&self) -> &[Span] {
+        &self.secondary
+    }
+
+    pub fn span(&self) -> Span {
+        self.primary
+            .or(self.secondary.first().copied())
+            .unwrap_or_default()
+    }
+
+    pub fn add(mut self, other: Span) -> Self {
+        if self.primary.is_none() {
+            self.primary = Some(other);
+            self
+        } else {
+            self.secondary.push(other);
+            self
+        }
+    }
+
+    pub fn join(mut self, other: Self) -> Self {
+        self.primary = self.primary.or(other.primary);
+        self.secondary.extend(other.secondary);
+        self
+    }
+}
+
+impl From<Span> for SpanSet {
+    fn from(value: Span) -> Self {
+        Self {
+            primary: Some(value),
+            secondary: vec![],
+        }
+    }
+}
+
+impl Spanner for SpanSet {
+    fn span(&self) -> Span {
+        self.span()
+    }
+
+    fn into_spans(self) -> SpanSet {
+        self
+    }
+}
+
+impl proc_macro::MultiSpan for SpanSet {
+    fn into_spans(self) -> Vec<proc_macro::Span> {
+        let mut spans = vec![];
+
+        if let Some(primary) = self.primary {
+            spans.push(proc_macro2::Span::from(primary).unwrap());
+        }
+
+        for span in self.secondary {
+            spans.push(proc_macro2::Span::from(span).unwrap());
+        }
+
+        spans
+    }
+}
+
+impl proc_macro::MultiSpan for &SpanSet {
+    fn into_spans(self) -> Vec<proc_macro::Span> {
+        let mut spans = vec![];
+
+        if let Some(primary) = self.primary {
+            spans.push(proc_macro2::Span::from(primary).unwrap());
+        }
+
+        for span in self.secondary.iter().copied() {
+            spans.push(proc_macro2::Span::from(span).unwrap());
+        }
+
+        spans
     }
 }

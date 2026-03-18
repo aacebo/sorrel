@@ -1,24 +1,24 @@
-use crate::{Span, report::Level};
+use crate::{SpanSet, Spanner, report::Level};
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
-    span: Span,
     level: Level,
+    spans: SpanSet,
     message: Option<String>,
     children: Vec<Self>,
 }
 
 impl Diagnostic {
-    pub fn new(span: Span, level: Level) -> Builder {
+    pub fn new(span: impl Spanner, level: Level) -> Builder {
         Builder::new().span(span).level(level)
-    }
-
-    pub fn span(&self) -> Span {
-        self.span
     }
 
     pub fn level(&self) -> Level {
         self.level
+    }
+
+    pub fn span(&self) -> &SpanSet {
+        &self.spans
     }
 
     pub fn message(&self) -> Option<&str> {
@@ -63,8 +63,8 @@ impl From<Diagnostic> for proc_macro::Diagnostic {
 #[must_use]
 #[derive(Debug, Clone)]
 pub struct Builder {
-    span: Option<Span>,
     level: Level,
+    spans: SpanSet,
     message: Option<String>,
     children: Vec<Diagnostic>,
 }
@@ -72,15 +72,15 @@ pub struct Builder {
 impl Builder {
     pub fn new() -> Self {
         Self {
-            span: None,
             level: Level::Unknown,
+            spans: SpanSet::default(),
             message: None,
             children: vec![],
         }
     }
 
-    pub fn span(mut self, span: Span) -> Self {
-        self.span = Some(span);
+    pub fn span(mut self, span: impl Spanner) -> Self {
+        self.spans = span.into_spans();
         self
     }
 
@@ -99,25 +99,7 @@ impl Builder {
         self
     }
 
-    pub fn build(mut self) -> Diagnostic {
-        self.children.sort();
-
-        let span = self.span.unwrap_or_else(|| {
-            let first = self
-                .children
-                .first()
-                .map(|v| v.span())
-                .unwrap_or(Span::call_site());
-
-            let last = self
-                .children
-                .last()
-                .map(|v| v.span())
-                .unwrap_or(Span::call_site());
-
-            Span::range(first, last)
-        });
-
+    pub fn build(self) -> Diagnostic {
         let mut level = self.level;
 
         for child in &self.children {
@@ -129,7 +111,7 @@ impl Builder {
         }
 
         Diagnostic {
-            span,
+            spans: self.spans,
             level,
             message: self.message,
             children: self.children,
@@ -141,18 +123,6 @@ impl Eq for Diagnostic {}
 
 impl PartialEq for Diagnostic {
     fn eq(&self, other: &Self) -> bool {
-        self.span == other.span
-    }
-}
-
-impl Ord for Diagnostic {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.span.cmp(&other.span)
-    }
-}
-
-impl PartialOrd for Diagnostic {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        self.spans == other.spans
     }
 }

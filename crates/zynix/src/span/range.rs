@@ -1,4 +1,4 @@
-use crate::{MultiSpan, Span};
+use crate::Span;
 
 #[derive(Debug, Copy, Clone)]
 pub struct RangeSpan {
@@ -27,11 +27,5 @@ impl RangeSpan {
 impl From<RangeSpan> for Span {
     fn from(value: RangeSpan) -> Self {
         value.span()
-    }
-}
-
-impl MultiSpan for RangeSpan {
-    fn into_spans(self) -> Vec<Span> {
-        vec![self.start, self.end]
     }
 }

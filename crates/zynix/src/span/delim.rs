@@ -1,4 +1,4 @@
-use crate::{MultiSpan, Span};
+use crate::Span;
 
 #[derive(Debug, Copy, Clone)]
 pub struct DelimSpan {
@@ -36,11 +36,5 @@ impl From<proc_macro2::extra::DelimSpan> for DelimSpan {
 impl From<DelimSpan> for Span {
     fn from(value: DelimSpan) -> Self {
         value.span()
-    }
-}
-
-impl MultiSpan for DelimSpan {
-    fn into_spans(self) -> Vec<Span> {
-        vec![self.open, self.close]
     }
 }
