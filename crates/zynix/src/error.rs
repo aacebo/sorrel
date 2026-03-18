@@ -1,4 +1,4 @@
-use crate::{Span, SpanSet, Spanner};
+use crate::Span;
 
 #[derive(Debug)]
 pub enum ParseError {
@@ -8,11 +8,11 @@ pub enum ParseError {
 }
 
 impl ParseError {
-    pub fn span(&self) -> Span {
+    pub fn span(&self) -> Option<Span> {
         match self {
-            Self::Lex(v) => v.span().into(),
+            Self::Lex(v) => Some(v.span().into()),
             #[cfg(feature = "report")]
-            Self::Diagnostic(v) => v.span().span(),
+            Self::Diagnostic(v) => v.spans().first().cloned(),
         }
     }
 }
@@ -27,23 +27,6 @@ impl From<proc_macro2::LexError> for ParseError {
 impl From<crate::report::Diagnostic> for ParseError {
     fn from(value: crate::report::Diagnostic) -> Self {
         Self::Diagnostic(value)
-    }
-}
-
-impl Spanner for ParseError {
-    fn span(&self) -> Span {
-        self.span()
-    }
-
-    fn into_spans(self) -> SpanSet
-    where
-        Self: Sized,
-    {
-        match self {
-            Self::Lex(v) => SpanSet::new(v.span().into()),
-            #[cfg(feature = "report")]
-            Self::Diagnostic(v) => v.into_spans(),
-        }
     }
 }
 

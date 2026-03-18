@@ -1,16 +1,16 @@
-use crate::{Span, SpanSet, Spanner, report::Level};
+use crate::{ParseError, Span, report::Level};
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
     level: Level,
-    spans: SpanSet,
+    spans: Vec<Span>,
     message: Option<String>,
     children: Vec<Self>,
 }
 
 impl Diagnostic {
-    pub fn new(span: impl Spanner, level: Level) -> Builder {
-        Builder::new().span(span).level(level)
+    pub fn new(level: Level) -> Builder {
+        Builder::new().level(level)
     }
 
     /// the max level of this diagnostic and its children.
@@ -18,7 +18,7 @@ impl Diagnostic {
         self.level
     }
 
-    pub fn span(&self) -> &SpanSet {
+    pub fn spans(&self) -> &[Span] {
         &self.spans
     }
 
@@ -37,6 +37,10 @@ impl Diagnostic {
             todo!()
         }
     }
+
+    pub fn into_error(self) -> ParseError {
+        ParseError::Diagnostic(self)
+    }
 }
 
 impl From<Diagnostic> for proc_macro::Diagnostic {
@@ -44,33 +48,26 @@ impl From<Diagnostic> for proc_macro::Diagnostic {
         let mut new = Self::new(value.level.into(), value.message.unwrap_or_default());
 
         for child in value.children {
-            let message = child.message().unwrap_or_default();
+            let message = child.message.unwrap_or_default();
+            let spans: Vec<_> = child
+                .spans
+                .into_iter()
+                .map(proc_macro2::Span::from)
+                .map(|span| span.unwrap())
+                .collect();
 
             if child.level.is_error() {
-                new = new.span_error(&child.spans, message);
+                new = new.span_error(spans, message);
             } else if child.level.is_help() {
-                new = new.span_help(&child.spans, message);
+                new = new.span_help(spans, message);
             } else if child.level.is_note() {
-                new = new.span_note(&child.spans, message);
+                new = new.span_note(spans, message);
             } else if child.level.is_warning() {
-                new = new.span_warning(&child.spans, message);
+                new = new.span_warning(spans, message);
             }
         }
 
         new
-    }
-}
-
-impl Spanner for Diagnostic {
-    fn span(&self) -> Span {
-        self.spans.span()
-    }
-
-    fn into_spans(self) -> SpanSet
-    where
-        Self: Sized,
-    {
-        self.spans
     }
 }
 
@@ -84,7 +81,7 @@ impl std::fmt::Display for Diagnostic {
 #[derive(Debug, Clone)]
 pub struct Builder {
     level: Level,
-    spans: SpanSet,
+    spans: Vec<Span>,
     message: Option<String>,
     children: Vec<Diagnostic>,
 }
@@ -93,14 +90,19 @@ impl Builder {
     pub fn new() -> Self {
         Self {
             level: Level::Unknown,
-            spans: SpanSet::default(),
+            spans: vec![],
             message: None,
             children: vec![],
         }
     }
 
-    pub fn span(mut self, span: impl Spanner) -> Self {
-        self.spans = span.into_spans();
+    pub fn span(mut self, span: Span) -> Self {
+        self.spans.push(span);
+        self
+    }
+
+    pub fn spans(mut self, spans: impl Iterator<Item = Span>) -> Self {
+        self.spans.extend(spans);
         self
     }
 
