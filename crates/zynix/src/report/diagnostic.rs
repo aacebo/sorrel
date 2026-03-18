@@ -17,34 +17,16 @@ impl Diagnostic {
         self.span
     }
 
+    pub fn level(&self) -> Level {
+        self.level
+    }
+
     pub fn message(&self) -> Option<&str> {
         self.message.as_ref().map(|m| m.as_str())
     }
 
     pub fn children(&self) -> &[Self] {
         &self.children
-    }
-
-    pub fn level(&self) -> Level {
-        self.level
-    }
-
-    pub fn join(self, other: Self) -> Self {
-        let mut builder = Self::new(self.span.join(other.span), self.level.max(other.level));
-
-        if let Some(message) = other.message.or(self.message) {
-            builder = builder.message(message);
-        }
-
-        for child in self.children {
-            builder = builder.add(child);
-        }
-
-        for child in other.children {
-            builder = builder.add(child);
-        }
-
-        builder.build()
     }
 
     pub fn emit(self) {
