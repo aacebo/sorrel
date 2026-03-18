@@ -1,4 +1,7 @@
-#![cfg_attr(nightly, feature(proc_macro_diagnostic, proc_macro_span))]
+#![cfg_attr(
+    nightly,
+    feature(proc_macro_diagnostic, proc_macro_span, proc_macro_totokens)
+)]
 
 #[cfg(nightly)]
 extern crate proc_macro;

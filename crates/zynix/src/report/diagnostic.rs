@@ -1,4 +1,4 @@
-use crate::{ParseError, Span, report::Level};
+use crate::{AsStream, ParseError, Span, Stream, ToStream, report::Level};
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
@@ -30,12 +30,15 @@ impl Diagnostic {
         &self.children
     }
 
-    pub fn emit(self) {
-        if proc_macro::is_available() {
-            proc_macro::Diagnostic::from(self).emit();
-        } else {
-            todo!()
-        }
+    #[cfg(nightly)]
+    pub fn emit(self) -> Stream {
+        proc_macro::Diagnostic::from(self.clone()).emit();
+        self.to_stream()
+    }
+
+    #[cfg(not(nightly))]
+    pub fn emit(self) -> Stream {
+        self.to_stream()
     }
 
     pub fn into_error(self) -> ParseError {
@@ -43,9 +46,21 @@ impl Diagnostic {
     }
 }
 
+#[cfg(nightly)]
 impl From<Diagnostic> for proc_macro::Diagnostic {
     fn from(value: Diagnostic) -> Self {
-        let mut new = Self::new(value.level.into(), value.message.unwrap_or_default());
+        let msg = value.message.unwrap_or(String::new());
+        let spans: Vec<_> = value
+            .spans
+            .into_iter()
+            .map(|s| proc_macro2::Span::from(s).unwrap())
+            .collect();
+
+        let mut new = if spans.is_empty() {
+            Self::new(value.level.into(), msg)
+        } else {
+            Self::spanned(spans, value.level.into(), msg)
+        };
 
         for child in value.children {
             let message = child.message.unwrap_or_default();
@@ -72,8 +87,18 @@ impl From<Diagnostic> for proc_macro::Diagnostic {
 }
 
 impl std::fmt::Display for Diagnostic {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}]:", self.level)?;
+
+        if let Some(msg) = &self.message {
+            write!(f, ": {}", msg)?;
+        }
+
+        for child in &self.children {
+            write!(f, "\n  {}", child)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -146,5 +171,21 @@ impl Eq for Diagnostic {}
 impl PartialEq for Diagnostic {
     fn eq(&self, other: &Self) -> bool {
         self.spans == other.spans
+    }
+}
+
+impl ToStream for Diagnostic {
+    fn to_stream(self) -> Stream {
+        self.into_error().to_compile_error()
+    }
+}
+
+#[cfg(nightly)]
+impl proc_macro::ToTokens for Diagnostic {
+    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
+        let s = self.clone().to_stream().to_string();
+        if let Ok(ts) = s.parse::<proc_macro::TokenStream>() {
+            tokens.extend(ts);
+        }
     }
 }
