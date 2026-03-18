@@ -41,6 +41,6 @@ impl From<DelimSpan> for Span {
 
 impl MultiSpan for DelimSpan {
     fn into_spans(self) -> Vec<Span> {
-        vec![self.span()]
+        vec![self.open, self.close]
     }
 }

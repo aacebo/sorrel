@@ -1,6 +1,8 @@
 mod delim;
+mod range;
 
 pub use delim::*;
+pub use range::*;
 
 /// Trait implemented by types that can be converted into a set of `Spans`.
 pub trait MultiSpan {

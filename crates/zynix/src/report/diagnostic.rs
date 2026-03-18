@@ -26,17 +26,7 @@ impl Diagnostic {
     }
 
     pub fn level(&self) -> Level {
-        let mut level = self.level;
-
-        for child in &self.children {
-            let clevel = child.level();
-
-            if clevel > level {
-                level = clevel;
-            }
-        }
-
-        level
+        self.level
     }
 
     pub fn join(self, other: Self) -> Self {
@@ -146,9 +136,19 @@ impl Builder {
             Span::range(first, last)
         });
 
+        let mut level = self.level;
+
+        for child in &self.children {
+            let clevel = child.level();
+
+            if clevel > level {
+                level = clevel;
+            }
+        }
+
         Diagnostic {
             span,
-            level: self.level,
+            level,
             message: self.message,
             children: self.children,
         }

@@ -1,9 +1,7 @@
 mod diagnostic;
-mod label;
 mod level;
 
 pub use diagnostic::*;
-pub use label::*;
 pub use level::*;
 
 impl crate::Span {
