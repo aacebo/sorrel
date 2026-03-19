@@ -1,10 +1,12 @@
-use crate::{Delim, Group, Ident, Literal, ParseError, Punct, Spacing, Span, Token, TokenStream};
+use crate::{
+    Delim, Group, Ident, LexError, Literal, ParseError, Punct, Spacing, Span, Token, TokenStream,
+};
 
 // --- LexError ---
 
 impl From<proc_macro2::LexError> for ParseError {
     fn from(value: proc_macro2::LexError) -> Self {
-        Self::Fallback(value)
+        Self::Fallback(LexError::new(Span::Fallback(value.span().into())).message(value))
     }
 }
 
@@ -141,7 +143,7 @@ impl From<Group> for proc_macro2::Group {
             .as_tokens()
             .clone()
             .into_iter()
-            .map(|t| proc_macro2::TokenTree::from(t))
+            .map(proc_macro2::TokenTree::from)
             .collect();
         proc_macro2::Group::new(delim, stream)
     }

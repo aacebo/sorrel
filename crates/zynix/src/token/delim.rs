@@ -16,6 +16,42 @@ impl Delim {
             Self::None => "none",
         }
     }
+
+    pub fn open(&self) -> char {
+        match self {
+            Self::None => ' ',
+            Self::Brace => '{',
+            Self::Bracket => '[',
+            Self::Paren => '(',
+        }
+    }
+
+    pub fn close(&self) -> char {
+        match self {
+            Self::None => ' ',
+            Self::Brace => '}',
+            Self::Bracket => ']',
+            Self::Paren => ')',
+        }
+    }
+
+    pub fn from_open(ch: char) -> Option<Self> {
+        match ch {
+            '(' => Some(Self::Paren),
+            '[' => Some(Self::Bracket),
+            '{' => Some(Self::Brace),
+            _ => None,
+        }
+    }
+
+    pub fn from_close(ch: char) -> Option<Self> {
+        match ch {
+            ')' => Some(Self::Paren),
+            ']' => Some(Self::Bracket),
+            '}' => Some(Self::Brace),
+            _ => None,
+        }
+    }
 }
 
 impl From<proc_macro::Delimiter> for Delim {
