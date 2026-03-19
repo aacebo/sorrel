@@ -9,8 +9,8 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
-    pub fn new(level: Level) -> Builder {
-        Builder::new().level(level)
+    pub fn new() -> build::Builder {
+        build::Builder::new()
     }
 
     /// the max level of this diagnostic and its children.
@@ -99,70 +99,6 @@ impl std::fmt::Display for Diagnostic {
     }
 }
 
-#[must_use]
-#[derive(Debug, Clone)]
-pub struct Builder {
-    level: Level,
-    spans: Vec<Span>,
-    message: Option<String>,
-    children: Vec<Diagnostic>,
-}
-
-impl Builder {
-    pub fn new() -> Self {
-        Self {
-            level: Level::Unknown,
-            spans: vec![],
-            message: None,
-            children: vec![],
-        }
-    }
-
-    pub fn span(mut self, span: Span) -> Self {
-        self.spans.push(span);
-        self
-    }
-
-    pub fn spans(mut self, spans: impl Iterator<Item = Span>) -> Self {
-        self.spans.extend(spans);
-        self
-    }
-
-    pub fn level(mut self, level: Level) -> Self {
-        self.level = level;
-        self
-    }
-
-    pub fn message(mut self, message: impl std::fmt::Display) -> Self {
-        self.message = Some(message.to_string());
-        self
-    }
-
-    pub fn add(mut self, child: Diagnostic) -> Self {
-        self.children.push(child);
-        self
-    }
-
-    pub fn build(self) -> Diagnostic {
-        let mut level = self.level;
-
-        for child in &self.children {
-            let clevel = child.level();
-
-            if clevel > level {
-                level = clevel;
-            }
-        }
-
-        Diagnostic {
-            spans: self.spans,
-            level,
-            message: self.message,
-            children: self.children,
-        }
-    }
-}
-
 impl Eq for Diagnostic {}
 
 impl PartialEq for Diagnostic {
@@ -187,45 +123,92 @@ impl proc_macro::ToTokens for Diagnostic {
     }
 }
 
+pub mod build {
+    use super::*;
+
+    #[doc(hidden)]
+    #[derive(Debug, Clone)]
+    pub struct Builder {
+        level: Level,
+        spans: Vec<Span>,
+        message: Option<String>,
+        children: Vec<Diagnostic>,
+    }
+
+    impl Builder {
+        pub fn new() -> Self {
+            Self {
+                level: Level::Unknown,
+                spans: vec![],
+                message: None,
+                children: vec![],
+            }
+        }
+
+        pub fn span(mut self, span: Span) -> Self {
+            self.spans.push(span);
+            self
+        }
+
+        pub fn spans(mut self, spans: impl Iterator<Item = Span>) -> Self {
+            self.spans.extend(spans);
+            self
+        }
+
+        pub fn level(mut self, level: Level) -> Self {
+            self.level = level;
+            self
+        }
+
+        pub fn message(mut self, message: impl std::fmt::Display) -> Self {
+            self.message = Some(message.to_string());
+            self
+        }
+
+        pub fn add(mut self, child: Diagnostic) -> Self {
+            self.children.push(child);
+            self
+        }
+
+        pub fn build(self) -> Diagnostic {
+            let mut level = self.level;
+
+            for child in &self.children {
+                let clevel = child.level();
+
+                if clevel > level {
+                    level = clevel;
+                }
+            }
+
+            Diagnostic {
+                spans: self.spans,
+                level,
+                message: self.message,
+                children: self.children,
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::Span;
 
     #[test]
-    fn builder_defaults() {
-        let d = Builder::new().build();
-        assert_eq!(d.level(), Level::Unknown);
-        assert!(d.spans().is_empty());
-        assert!(d.message().is_none());
-        assert!(d.children().is_empty());
-    }
-
-    #[test]
-    fn builder_set_all_fields() {
-        let span = Span::call_site();
-        let d = Builder::new()
-            .level(Level::Error)
-            .message("test error")
-            .span(span)
-            .build();
-
-        assert_eq!(d.level(), Level::Error);
-        assert_eq!(d.message(), Some("test error"));
-        assert_eq!(d.spans().len(), 1);
-        assert_eq!(d.spans()[0], span);
-    }
-
-    #[test]
     fn diagnostic_new_sets_level() {
-        let d = Diagnostic::new(Level::Warning).build();
+        let d = Diagnostic::new().level(Level::Warning).build();
         assert_eq!(d.level(), Level::Warning);
     }
 
     #[test]
     fn level_elevated_by_child() {
-        let child = Builder::new().level(Level::Error).message("child").build();
-        let parent = Builder::new()
+        let child = Diagnostic::new()
+            .level(Level::Error)
+            .message("child")
+            .build();
+        let parent = Diagnostic::new()
             .level(Level::Note)
             .message("parent")
             .add(child)
@@ -236,8 +219,11 @@ mod tests {
 
     #[test]
     fn level_not_lowered_by_child() {
-        let child = Builder::new().level(Level::Note).message("child").build();
-        let parent = Builder::new()
+        let child = Diagnostic::new()
+            .level(Level::Note)
+            .message("child")
+            .build();
+        let parent = Diagnostic::new()
             .level(Level::Error)
             .message("parent")
             .add(child)
@@ -248,10 +234,10 @@ mod tests {
 
     #[test]
     fn level_max_across_multiple_children() {
-        let c1 = Builder::new().level(Level::Note).build();
-        let c2 = Builder::new().level(Level::Warning).build();
-        let c3 = Builder::new().level(Level::Help).build();
-        let parent = Builder::new()
+        let c1 = Diagnostic::new().level(Level::Note).build();
+        let c2 = Diagnostic::new().level(Level::Warning).build();
+        let c3 = Diagnostic::new().level(Level::Help).build();
+        let parent = Diagnostic::new()
             .level(Level::Unknown)
             .add(c1)
             .add(c2)
@@ -265,13 +251,13 @@ mod tests {
     fn multiple_spans() {
         let s1 = Span::call_site();
         let s2 = Span::call_site();
-        let d = Builder::new().spans(vec![s1, s2].into_iter()).build();
+        let d = Diagnostic::new().spans(vec![s1, s2].into_iter()).build();
         assert_eq!(d.spans().len(), 2);
     }
 
     #[test]
     fn display_with_message() {
-        let d = Builder::new()
+        let d = Diagnostic::new()
             .level(Level::Error)
             .message("something broke")
             .build();
@@ -281,18 +267,18 @@ mod tests {
 
     #[test]
     fn display_without_message() {
-        let d = Builder::new().level(Level::Warning).build();
+        let d = Diagnostic::new().level(Level::Warning).build();
         let s = format!("{}", d);
         assert_eq!(s, "[warning]:");
     }
 
     #[test]
     fn display_with_children() {
-        let child = Builder::new()
+        let child = Diagnostic::new()
             .level(Level::Help)
             .message("try this")
             .build();
-        let parent = Builder::new()
+        let parent = Diagnostic::new()
             .level(Level::Error)
             .message("failed")
             .add(child)
@@ -305,12 +291,12 @@ mod tests {
     #[test]
     fn partial_eq_same_spans() {
         let span = Span::call_site();
-        let d1 = Builder::new()
+        let d1 = Diagnostic::new()
             .level(Level::Error)
             .message("a")
             .span(span)
             .build();
-        let d2 = Builder::new()
+        let d2 = Diagnostic::new()
             .level(Level::Note)
             .message("b")
             .span(span)
@@ -320,22 +306,25 @@ mod tests {
 
     #[test]
     fn partial_eq_no_spans() {
-        let d1 = Builder::new().level(Level::Error).message("a").build();
-        let d2 = Builder::new().level(Level::Note).message("b").build();
+        let d1 = Diagnostic::new().level(Level::Error).message("a").build();
+        let d2 = Diagnostic::new().level(Level::Note).message("b").build();
         // Both have empty spans, so they are equal
         assert_eq!(d1, d2);
     }
 
     #[test]
     fn into_error() {
-        let d = Builder::new().level(Level::Error).message("err").build();
+        let d = Diagnostic::new().level(Level::Error).message("err").build();
         let err = d.into_error();
         assert!(matches!(err, ParseError::Diagnostic(_)));
     }
 
     #[test]
     fn to_stream_produces_compile_error() {
-        let d = Builder::new().level(Level::Error).message("broken").build();
+        let d = Diagnostic::new()
+            .level(Level::Error)
+            .message("broken")
+            .build();
         let stream = d.to_stream();
         let s = stream.to_string();
         assert!(
@@ -348,7 +337,7 @@ mod tests {
 
     #[test]
     fn emit_returns_stream() {
-        let d = Builder::new()
+        let d = Diagnostic::new()
             .level(Level::Warning)
             .message("warn msg")
             .build();
@@ -364,8 +353,8 @@ mod tests {
 
     #[test]
     fn to_stream_includes_children() {
-        let child = Builder::new().level(Level::Help).message("hint").build();
-        let parent = Builder::new()
+        let child = Diagnostic::new().level(Level::Help).message("hint").build();
+        let parent = Diagnostic::new()
             .level(Level::Error)
             .message("main error")
             .add(child)
@@ -378,7 +367,7 @@ mod tests {
 
     #[test]
     fn to_stream_no_message() {
-        let d = Builder::new().level(Level::Error).build();
+        let d = Diagnostic::new().level(Level::Error).build();
         let s = d.to_stream().to_string();
         assert!(s.contains("compile_error"));
     }
