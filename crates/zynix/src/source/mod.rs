@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 mod file;
 mod location;
 mod map;
