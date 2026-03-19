@@ -123,6 +123,7 @@ impl proc_macro::ToTokens for Diagnostic {
     }
 }
 
+#[doc(hidden)]
 pub mod build {
     use super::*;
 
