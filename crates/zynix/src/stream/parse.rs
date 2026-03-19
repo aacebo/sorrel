@@ -1,15 +1,15 @@
 use crate::{Buffer, ParseError, Reader, Span, Token, TokenStream, Writer};
 
 pub struct ParseStream<'a> {
-    input: &'a TokenStream,
+    input: &'a [Token],
     index: usize,
     output: Buffer,
 }
 
 impl<'a> ParseStream<'a> {
-    pub fn new(input: &'a TokenStream) -> Self {
+    pub fn new(input: &'a mut TokenStream) -> Self {
         Self {
-            input,
+            input: input.normalize(),
             index: 0,
             output: Buffer::new(),
         }
@@ -24,10 +24,6 @@ impl<'a> ParseStream<'a> {
             .get(self.index)
             .map(|t| t.span())
             .unwrap_or_default()
-    }
-
-    pub fn as_tokens(&self) -> &TokenStream {
-        self.input
     }
 
     pub fn fork(&self) -> Self {
@@ -50,12 +46,6 @@ impl<'a> ParseStream<'a> {
 
         self.index = other.index;
         self.output.extend(other.output);
-    }
-}
-
-impl<'a> From<&'a TokenStream> for ParseStream<'a> {
-    fn from(value: &'a TokenStream) -> Self {
-        Self::new(value)
     }
 }
 
@@ -100,25 +90,20 @@ mod tests {
     use crate::*;
 
     fn parse(input: &str) -> TokenStream {
-        input
-            .parse::<proc_macro2::TokenStream>()
-            .unwrap()
-            .into_iter()
-            .map(Token::from)
-            .collect()
+        input.parse::<TokenStream>().unwrap()
     }
 
     #[test]
     fn empty_stream() {
-        let stream = TokenStream::new();
-        let ps = ParseStream::new(&stream);
+        let mut stream = TokenStream::new();
+        let ps = ParseStream::new(&mut stream);
         assert!(ps.is_empty());
     }
 
     #[test]
     fn simple_idents_and_punct() {
-        let stream = parse("a + b");
-        let mut ps = ParseStream::new(&stream);
+        let mut stream = parse("a + b");
+        let mut ps = ParseStream::new(&mut stream);
 
         assert!(matches!(ps.next().unwrap(), Token::Ident(_)));
         assert!(matches!(ps.next().unwrap(), Token::Punct(_)));
@@ -128,8 +113,8 @@ mod tests {
 
     #[test]
     fn peek_does_not_consume() {
-        let stream = parse("a b");
-        let mut ps = ParseStream::new(&stream);
+        let mut stream = parse("a b");
+        let mut ps = ParseStream::new(&mut stream);
 
         assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
         assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
@@ -139,8 +124,8 @@ mod tests {
 
     #[test]
     fn fork_does_not_advance_original() {
-        let stream = parse("a b");
-        let ps = ParseStream::new(&stream);
+        let mut stream = parse("a b");
+        let ps = ParseStream::new(&mut stream);
         let mut fork = ps.fork();
 
         assert!(matches!(fork.next().unwrap(), Token::Ident(_))); // "a"
@@ -149,8 +134,8 @@ mod tests {
 
     #[test]
     fn commit_fork() {
-        let stream = parse("a b");
-        let mut ps = ParseStream::new(&stream);
+        let mut stream = parse("a b");
+        let mut ps = ParseStream::new(&mut stream);
         let mut fork = ps.fork();
 
         fork.next().unwrap(); // advance fork past "a"
@@ -165,23 +150,23 @@ mod tests {
 
     #[test]
     fn write_appends() {
-        let stream = TokenStream::new();
-        let mut ps = ParseStream::new(&stream);
-        let ident = Ident::new("x", Span::call_site());
+        let mut stream = TokenStream::new();
+        let mut ps = ParseStream::new(&mut stream);
+        let ident = Ident::new("x", Span::default());
         ps.write(Token::Ident(ident)).unwrap();
         assert_eq!(ps.output.freeze().len(), 1);
     }
 
     #[test]
     fn group_token_accessible() {
-        let stream = parse("(a + b) c");
-        let mut ps = ParseStream::new(&stream);
+        let mut stream = parse("(a + b) c");
+        let mut ps = ParseStream::new(&mut stream);
         let group = ps.next().unwrap();
         assert!(matches!(group, Token::Group(_)));
 
         if let Token::Group(g) = group {
-            let tokens = g.as_tokens().clone();
-            let mut inner = ParseStream::new(&tokens);
+            let mut tokens = g.as_tokens().clone();
+            let mut inner = ParseStream::new(&mut tokens);
             assert!(matches!(inner.next().unwrap(), Token::Ident(_))); // "a"
         }
     }

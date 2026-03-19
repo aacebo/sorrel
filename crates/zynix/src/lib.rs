@@ -35,7 +35,20 @@ pub use span::*;
 pub use stream::*;
 
 pub trait ToTokens {
-    fn to_tokens(self) -> TokenStream;
+    fn to_tokens(&self, tokens: &mut TokenStream);
+
+    fn to_token_stream(&self) -> TokenStream {
+        let mut tokens = TokenStream::new();
+        self.to_tokens(&mut tokens);
+        tokens
+    }
+
+    fn into_token_stream(self) -> TokenStream
+    where
+        Self: Sized,
+    {
+        self.to_token_stream()
+    }
 }
 
 pub trait Reader {
@@ -107,10 +120,10 @@ impl From<Group> for Token {
 impl From<proc_macro2::TokenTree> for Token {
     fn from(value: proc_macro2::TokenTree) -> Self {
         match value {
-            proc_macro2::TokenTree::Ident(v) => Ident::from(v).into(),
-            proc_macro2::TokenTree::Punct(v) => Punct::from(v).into(),
-            proc_macro2::TokenTree::Literal(v) => Literal::from(v).into(),
-            proc_macro2::TokenTree::Group(v) => Group::from(v).into(),
+            proc_macro2::TokenTree::Ident(v) => Self::Ident(v.into()),
+            proc_macro2::TokenTree::Punct(v) => Self::Punct(v.into()),
+            proc_macro2::TokenTree::Literal(v) => Self::Literal(v.into()),
+            proc_macro2::TokenTree::Group(v) => Self::Group(v.into()),
         }
     }
 }
@@ -118,10 +131,34 @@ impl From<proc_macro2::TokenTree> for Token {
 impl From<Token> for proc_macro2::TokenTree {
     fn from(value: Token) -> Self {
         match value {
-            Token::Ident(v) => proc_macro2::Ident::from(v).into(),
-            Token::Punct(v) => proc_macro2::Punct::from(v).into(),
-            Token::Literal(v) => proc_macro2::Literal::from(v).into(),
-            Token::Group(v) => proc_macro2::Group::from(v).into(),
+            Token::Ident(v) => proc_macro2::TokenTree::Ident(v.into()),
+            Token::Punct(v) => proc_macro2::TokenTree::Punct(v.into()),
+            Token::Literal(v) => proc_macro2::TokenTree::Literal(v.into()),
+            Token::Group(v) => proc_macro2::TokenTree::Group(v.into()),
+        }
+    }
+}
+
+#[cfg(nightly)]
+impl From<proc_macro::TokenTree> for Token {
+    fn from(value: proc_macro::TokenTree) -> Self {
+        match value {
+            proc_macro::TokenTree::Ident(v) => Self::Ident(v.into()),
+            proc_macro::TokenTree::Punct(v) => Self::Punct(v.into()),
+            proc_macro::TokenTree::Literal(v) => Self::Literal(v.into()),
+            proc_macro::TokenTree::Group(v) => Self::Group(v.into()),
+        }
+    }
+}
+
+#[cfg(nightly)]
+impl From<Token> for proc_macro::TokenTree {
+    fn from(value: Token) -> Self {
+        match value {
+            Token::Ident(v) => proc_macro::TokenTree::Ident(v.into()),
+            Token::Punct(v) => proc_macro::TokenTree::Punct(v.into()),
+            Token::Literal(v) => proc_macro::TokenTree::Literal(v.into()),
+            Token::Group(v) => proc_macro::TokenTree::Group(v.into()),
         }
     }
 }
@@ -152,62 +189,57 @@ impl std::fmt::Display for Token {
 
 #[cfg(not(nightly))]
 impl ToTokens for Token {
-    fn to_tokens(self) -> TokenStream {
-        vec![self].into()
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(self.clone());
     }
 }
 
 #[cfg(not(nightly))]
 impl ToTokens for Ident {
-    fn to_tokens(self) -> TokenStream {
-        Token::from(self).to_tokens()
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(self.clone().into());
     }
 }
 
 #[cfg(not(nightly))]
 impl ToTokens for Punct {
-    fn to_tokens(self) -> TokenStream {
-        Token::from(self).to_tokens()
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(self.clone().into());
     }
 }
 
 #[cfg(not(nightly))]
 impl ToTokens for Literal {
-    fn to_tokens(self) -> TokenStream {
-        Token::from(self).to_tokens()
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(self.clone().into());
     }
 }
 
 #[cfg(not(nightly))]
 impl ToTokens for TokenStream {
-    fn to_tokens(self) -> TokenStream {
-        self
-    }
-}
-
-#[cfg(not(nightly))]
-impl ToTokens for proc_macro2::TokenStream {
-    fn to_tokens(self) -> TokenStream {
-        self.into()
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend(self.iter().cloned());
     }
 }
 
 #[cfg(not(nightly))]
 impl ToTokens for &str {
-    fn to_tokens(self) -> TokenStream {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         use std::str::FromStr;
-        TokenStream::from_str(self).unwrap_or_default()
+        if let Ok(ts) = TokenStream::from_str(self) {
+            ts.to_tokens(tokens);
+        }
     }
 }
 
 // On nightly: blanket covers any T: proc_macro::ToTokens, including zynix types
-// (which implement proc_macro::ToTokens in their respective modules).
+// (which implement proc_macro::ToTokens below).
 #[cfg(nightly)]
 impl<T: proc_macro::ToTokens> ToTokens for T {
-    fn to_tokens(self) -> TokenStream {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         let mut ts = proc_macro::TokenStream::new();
-        proc_macro::ToTokens::to_tokens(&self, &mut ts);
-        proc_macro2::TokenStream::from(ts).into()
+        proc_macro::ToTokens::to_tokens(self, &mut ts);
+        tokens.extend(TokenStream::from(ts));
     }
 }
 
@@ -216,17 +248,20 @@ impl<T: proc_macro::ToTokens> ToTokens for T {
 #[cfg(nightly)]
 impl proc_macro::ToTokens for Token {
     fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        let pm2: proc_macro2::TokenStream = std::iter::once(self.clone())
-            .map(proc_macro2::TokenTree::from)
-            .collect();
-        tokens.extend(proc_macro::TokenStream::from(pm2));
+        let tt: proc_macro::TokenTree = self.clone().into();
+        tokens.extend(std::iter::once(tt));
     }
 }
 
 #[cfg(nightly)]
 impl proc_macro::ToTokens for TokenStream {
     fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        let pm2: proc_macro2::TokenStream = self.clone().into();
-        tokens.extend(proc_macro::TokenStream::from(pm2));
+        match self {
+            TokenStream::External(ts) => tokens.extend(ts.clone()),
+            TokenStream::Internal(_) => {
+                let pm: proc_macro::TokenStream = self.clone().into();
+                tokens.extend(pm);
+            }
+        }
     }
 }

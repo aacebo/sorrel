@@ -2,117 +2,83 @@ use crate::Span;
 
 #[derive(Debug, Clone)]
 pub enum Literal {
-    External(proc_macro2::Literal),
-    Internal { repr: Box<str>, span: Span },
+    #[cfg(nightly)]
+    External(proc_macro::Literal),
+    Internal {
+        repr: Box<str>,
+        span: Span,
+    },
+}
+
+macro_rules! lit_constructor {
+    ($name:ident, $ty:ty, $fmt:expr) => {
+        pub fn $name(value: $ty) -> Self {
+            #[cfg(nightly)]
+            if proc_macro::is_available() {
+                return Self::External(proc_macro::Literal::$name(value));
+            }
+
+            Self::Internal {
+                repr: format!($fmt, value).into_boxed_str(),
+                span: Span::default(),
+            }
+        }
+    };
 }
 
 impl Literal {
     pub fn string(value: &str) -> Self {
-        Self::External(proc_macro2::Literal::string(value))
+        #[cfg(nightly)]
+        if proc_macro::is_available() {
+            return Self::External(proc_macro::Literal::string(value));
+        }
+
+        Self::Internal {
+            repr: format!("{:?}", value).into_boxed_str(),
+            span: Span::default(),
+        }
     }
 
     pub fn character(value: char) -> Self {
-        Self::External(proc_macro2::Literal::character(value))
+        #[cfg(nightly)]
+        if proc_macro::is_available() {
+            return Self::External(proc_macro::Literal::character(value));
+        }
+
+        Self::Internal {
+            repr: format!("{:?}", value).into_boxed_str(),
+            span: Span::default(),
+        }
     }
 
-    pub fn u8_suffixed(value: u8) -> Self {
-        Self::External(proc_macro2::Literal::u8_suffixed(value))
-    }
-
-    pub fn u16_suffixed(value: u16) -> Self {
-        Self::External(proc_macro2::Literal::u16_suffixed(value))
-    }
-
-    pub fn u32_suffixed(value: u32) -> Self {
-        Self::External(proc_macro2::Literal::u32_suffixed(value))
-    }
-
-    pub fn u64_suffixed(value: u64) -> Self {
-        Self::External(proc_macro2::Literal::u64_suffixed(value))
-    }
-
-    pub fn usize_suffixed(value: usize) -> Self {
-        Self::External(proc_macro2::Literal::usize_suffixed(value))
-    }
-
-    pub fn i8_suffixed(value: i8) -> Self {
-        Self::External(proc_macro2::Literal::i8_suffixed(value))
-    }
-
-    pub fn i16_suffixed(value: i16) -> Self {
-        Self::External(proc_macro2::Literal::i16_suffixed(value))
-    }
-
-    pub fn i32_suffixed(value: i32) -> Self {
-        Self::External(proc_macro2::Literal::i32_suffixed(value))
-    }
-
-    pub fn i64_suffixed(value: i64) -> Self {
-        Self::External(proc_macro2::Literal::i64_suffixed(value))
-    }
-
-    pub fn isize_suffixed(value: isize) -> Self {
-        Self::External(proc_macro2::Literal::isize_suffixed(value))
-    }
-
-    pub fn f32_suffixed(value: f32) -> Self {
-        Self::External(proc_macro2::Literal::f32_suffixed(value))
-    }
-
-    pub fn f64_suffixed(value: f64) -> Self {
-        Self::External(proc_macro2::Literal::f64_suffixed(value))
-    }
-
-    pub fn u8_unsuffixed(value: u8) -> Self {
-        Self::External(proc_macro2::Literal::u8_unsuffixed(value))
-    }
-
-    pub fn u16_unsuffixed(value: u16) -> Self {
-        Self::External(proc_macro2::Literal::u16_unsuffixed(value))
-    }
-
-    pub fn u32_unsuffixed(value: u32) -> Self {
-        Self::External(proc_macro2::Literal::u32_unsuffixed(value))
-    }
-
-    pub fn u64_unsuffixed(value: u64) -> Self {
-        Self::External(proc_macro2::Literal::u64_unsuffixed(value))
-    }
-
-    pub fn usize_unsuffixed(value: usize) -> Self {
-        Self::External(proc_macro2::Literal::usize_unsuffixed(value))
-    }
-
-    pub fn i8_unsuffixed(value: i8) -> Self {
-        Self::External(proc_macro2::Literal::i8_unsuffixed(value))
-    }
-
-    pub fn i16_unsuffixed(value: i16) -> Self {
-        Self::External(proc_macro2::Literal::i16_unsuffixed(value))
-    }
-
-    pub fn i32_unsuffixed(value: i32) -> Self {
-        Self::External(proc_macro2::Literal::i32_unsuffixed(value))
-    }
-
-    pub fn i64_unsuffixed(value: i64) -> Self {
-        Self::External(proc_macro2::Literal::i64_unsuffixed(value))
-    }
-
-    pub fn isize_unsuffixed(value: isize) -> Self {
-        Self::External(proc_macro2::Literal::isize_unsuffixed(value))
-    }
-
-    pub fn f32_unsuffixed(value: f32) -> Self {
-        Self::External(proc_macro2::Literal::f32_unsuffixed(value))
-    }
-
-    pub fn f64_unsuffixed(value: f64) -> Self {
-        Self::External(proc_macro2::Literal::f64_unsuffixed(value))
-    }
+    lit_constructor!(u8_suffixed, u8, "{}u8");
+    lit_constructor!(u16_suffixed, u16, "{}u16");
+    lit_constructor!(u32_suffixed, u32, "{}u32");
+    lit_constructor!(u64_suffixed, u64, "{}u64");
+    lit_constructor!(usize_suffixed, usize, "{}usize");
+    lit_constructor!(i8_suffixed, i8, "{}i8");
+    lit_constructor!(i16_suffixed, i16, "{}i16");
+    lit_constructor!(i32_suffixed, i32, "{}i32");
+    lit_constructor!(i64_suffixed, i64, "{}i64");
+    lit_constructor!(isize_suffixed, isize, "{}isize");
+    lit_constructor!(f32_suffixed, f32, "{}f32");
+    lit_constructor!(f64_suffixed, f64, "{}f64");
+    lit_constructor!(u8_unsuffixed, u8, "{}");
+    lit_constructor!(u16_unsuffixed, u16, "{}");
+    lit_constructor!(u32_unsuffixed, u32, "{}");
+    lit_constructor!(u64_unsuffixed, u64, "{}");
+    lit_constructor!(usize_unsuffixed, usize, "{}");
+    lit_constructor!(i8_unsuffixed, i8, "{}");
+    lit_constructor!(i16_unsuffixed, i16, "{}");
+    lit_constructor!(i32_unsuffixed, i32, "{}");
+    lit_constructor!(i64_unsuffixed, i64, "{}");
+    lit_constructor!(isize_unsuffixed, isize, "{}");
+    lit_constructor!(f32_unsuffixed, f32, "{}");
+    lit_constructor!(f64_unsuffixed, f64, "{}");
 
     pub fn span(&self) -> Span {
         match self {
+            #[cfg(nightly)]
             Self::External(v) => v.span().into(),
             Self::Internal { span, .. } => *span,
         }
@@ -120,6 +86,7 @@ impl Literal {
 
     pub fn set_span(&mut self, span: Span) {
         match self {
+            #[cfg(nightly)]
             Self::External(v) => v.set_span(span.into()),
             Self::Internal { span: s, .. } => *s = span,
         }
@@ -128,21 +95,47 @@ impl Literal {
 
 impl From<proc_macro2::Literal> for Literal {
     fn from(value: proc_macro2::Literal) -> Self {
-        Self::External(value)
+        Self::Internal {
+            repr: value.to_string().into_boxed_str(),
+            span: Span {
+                #[cfg(nightly)]
+                inner: None,
+            },
+        }
     }
 }
 
 impl From<Literal> for proc_macro2::Literal {
     fn from(value: Literal) -> Self {
         match value {
-            Literal::External(v) => v,
-            Literal::Internal { repr, span } => {
-                let mut lit: proc_macro2::Literal = repr
-                    .parse()
-                    .unwrap_or_else(|_| proc_macro2::Literal::string(&repr));
-                lit.set_span(span.into());
-                lit
+            #[cfg(nightly)]
+            Literal::External(v) => {
+                let repr = v.to_string();
+                repr.parse()
+                    .unwrap_or_else(|_| proc_macro2::Literal::string(&repr))
             }
+            Literal::Internal { repr, .. } => repr
+                .parse()
+                .unwrap_or_else(|_| proc_macro2::Literal::string(&repr)),
+        }
+    }
+}
+
+#[cfg(nightly)]
+impl From<proc_macro::Literal> for Literal {
+    fn from(value: proc_macro::Literal) -> Self {
+        Self::External(value)
+    }
+}
+
+#[cfg(nightly)]
+impl From<Literal> for proc_macro::Literal {
+    fn from(value: Literal) -> Self {
+        match value {
+            Literal::External(v) => v,
+            Literal::Internal { repr, .. } => repr
+                .parse()
+                .unwrap_or_else(|_| proc_macro::Literal::string(&repr)),
         }
     }
 }
@@ -150,6 +143,7 @@ impl From<Literal> for proc_macro2::Literal {
 impl std::fmt::Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            #[cfg(nightly)]
             Self::External(v) => write!(f, "{}", v),
             Self::Internal { repr, .. } => write!(f, "{}", repr),
         }

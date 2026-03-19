@@ -10,7 +10,7 @@ pub enum ParseError {
 impl ParseError {
     pub fn span(&self) -> Option<Span> {
         match self {
-            Self::Lex(v) => Some(v.span().into()),
+            Self::Lex(_) => None,
             #[cfg(feature = "report")]
             Self::Diagnostic(v) => v.spans().first().cloned(),
         }
@@ -26,7 +26,7 @@ impl ParseError {
             lit.set_span(span);
         }
 
-        let inner = Token::Literal(lit).to_tokens();
+        let inner = Token::Literal(lit).into_token_stream();
         let group = Group::new(Delim::Paren, inner);
         vec![Token::Ident(ident), Token::Punct(bang), Token::Group(group)].into()
     }
@@ -67,12 +67,14 @@ impl std::error::Error for ParseError {
 
 #[cfg(not(nightly))]
 impl ToTokens for ParseError {
-    fn to_tokens(self) -> TokenStream {
-        match self {
-            #[cfg(feature = "report")]
-            Self::Diagnostic(d) => d.to_tokens(),
-            err => err.to_compile_error(),
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        #[cfg(feature = "report")]
+        if let Self::Diagnostic(d) = self {
+            d.to_tokens(tokens);
+            return;
         }
+
+        self.to_compile_error().to_tokens(tokens);
     }
 }
 
@@ -80,7 +82,6 @@ impl ToTokens for ParseError {
 impl proc_macro::ToTokens for ParseError {
     fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
         let stream = self.to_compile_error();
-        let token_stream = proc_macro2::TokenStream::from(stream);
-        tokens.extend(proc_macro::TokenStream::from(token_stream));
+        tokens.extend(proc_macro::TokenStream::from(stream));
     }
 }

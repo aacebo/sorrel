@@ -15,6 +15,7 @@ doctest = false
 
 [lints.clippy]
 collapsible-if = "allow"
+new-ret-no-self = "allow"
 
 [features]
 ast = []

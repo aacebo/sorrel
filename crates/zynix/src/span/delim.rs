@@ -24,15 +24,6 @@ impl DelimSpan {
     }
 }
 
-impl From<proc_macro2::extra::DelimSpan> for DelimSpan {
-    fn from(value: proc_macro2::extra::DelimSpan) -> Self {
-        Self {
-            open: value.open().into(),
-            close: value.close().into(),
-        }
-    }
-}
-
 impl From<DelimSpan> for Span {
     fn from(value: DelimSpan) -> Self {
         value.span()

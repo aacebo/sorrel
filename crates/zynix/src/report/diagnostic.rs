@@ -23,7 +23,7 @@ impl Diagnostic {
     }
 
     pub fn message(&self) -> Option<&str> {
-        self.message.as_ref().map(|m| m.as_str())
+        self.message.as_deref()
     }
 
     pub fn children(&self) -> &[Self] {
@@ -31,11 +31,12 @@ impl Diagnostic {
     }
 
     pub fn emit(self) -> TokenStream {
-        if cfg!(nightly) && proc_macro::is_available() {
+        #[cfg(nightly)]
+        if proc_macro::is_available() {
             proc_macro::Diagnostic::from(self.clone()).emit();
         }
 
-        self.to_tokens()
+        self.into_token_stream()
     }
 
     pub fn into_error(self) -> ParseError {
@@ -46,11 +47,11 @@ impl Diagnostic {
 #[cfg(nightly)]
 impl From<Diagnostic> for proc_macro::Diagnostic {
     fn from(value: Diagnostic) -> Self {
-        let msg = value.message.unwrap_or(String::new());
+        let msg = value.message.unwrap_or_default();
         let spans: Vec<_> = value
             .spans
             .into_iter()
-            .map(|s| proc_macro2::Span::from(s).unwrap())
+            .map(proc_macro::Span::from)
             .collect();
 
         let mut new = if spans.is_empty() {
@@ -64,8 +65,7 @@ impl From<Diagnostic> for proc_macro::Diagnostic {
             let spans: Vec<_> = child
                 .spans
                 .into_iter()
-                .map(proc_macro2::Span::from)
-                .map(|span| span.unwrap())
+                .map(proc_macro::Span::from)
                 .collect();
 
             if child.level.is_error() {
@@ -109,8 +109,11 @@ impl PartialEq for Diagnostic {
 
 #[cfg(not(nightly))]
 impl ToTokens for Diagnostic {
-    fn to_tokens(self) -> TokenStream {
-        self.into_error().to_compile_error()
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.clone()
+            .into_error()
+            .to_compile_error()
+            .to_tokens(tokens);
     }
 }
 
@@ -118,6 +121,7 @@ impl ToTokens for Diagnostic {
 impl proc_macro::ToTokens for Diagnostic {
     fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
         let s = self.clone().into_error().to_compile_error().to_string();
+
         if let Ok(ts) = s.parse::<proc_macro::TokenStream>() {
             tokens.extend(ts);
         }
@@ -135,6 +139,12 @@ pub mod build {
         spans: Vec<Span>,
         message: Option<String>,
         children: Vec<Diagnostic>,
+    }
+
+    impl Default for Builder {
+        fn default() -> Self {
+            Self::new()
+        }
     }
 
     impl Builder {
@@ -167,7 +177,7 @@ pub mod build {
             self
         }
 
-        pub fn add(mut self, child: Diagnostic) -> Self {
+        pub fn child(mut self, child: Diagnostic) -> Self {
             self.children.push(child);
             self
         }
@@ -213,7 +223,7 @@ mod tests {
         let parent = Diagnostic::new()
             .level(Level::Note)
             .message("parent")
-            .add(child)
+            .child(child)
             .build();
 
         assert_eq!(parent.level(), Level::Error);
@@ -228,7 +238,7 @@ mod tests {
         let parent = Diagnostic::new()
             .level(Level::Error)
             .message("parent")
-            .add(child)
+            .child(child)
             .build();
 
         assert_eq!(parent.level(), Level::Error);
@@ -241,9 +251,9 @@ mod tests {
         let c3 = Diagnostic::new().level(Level::Help).build();
         let parent = Diagnostic::new()
             .level(Level::Unknown)
-            .add(c1)
-            .add(c2)
-            .add(c3)
+            .child(c1)
+            .child(c2)
+            .child(c3)
             .build();
 
         assert_eq!(parent.level(), Level::Warning);
@@ -251,8 +261,8 @@ mod tests {
 
     #[test]
     fn multiple_spans() {
-        let s1 = Span::call_site();
-        let s2 = Span::call_site();
+        let s1 = Span::default();
+        let s2 = Span::default();
         let d = Diagnostic::new().spans(vec![s1, s2].into_iter()).build();
         assert_eq!(d.spans().len(), 2);
     }
@@ -283,7 +293,7 @@ mod tests {
         let parent = Diagnostic::new()
             .level(Level::Error)
             .message("failed")
-            .add(child)
+            .child(child)
             .build();
         let s = format!("{}", parent);
         assert!(s.contains("[error]:: failed"));
@@ -292,7 +302,7 @@ mod tests {
 
     #[test]
     fn partial_eq_same_spans() {
-        let span = Span::call_site();
+        let span = Span::default();
         let d1 = Diagnostic::new()
             .level(Level::Error)
             .message("a")
@@ -321,13 +331,14 @@ mod tests {
         assert!(matches!(err, ParseError::Diagnostic(_)));
     }
 
+    #[cfg(not(nightly))]
     #[test]
     fn to_stream_produces_compile_error() {
         let d = Diagnostic::new()
             .level(Level::Error)
             .message("broken")
             .build();
-        let stream = d.to_tokens();
+        let stream = d.to_token_stream();
         let s = stream.to_string();
         assert!(
             s.contains("compile_error"),
@@ -337,6 +348,7 @@ mod tests {
         assert!(s.contains("broken"), "expected message in: {}", s);
     }
 
+    #[cfg(not(nightly))]
     #[test]
     fn emit_returns_stream() {
         let d = Diagnostic::new()
@@ -353,30 +365,32 @@ mod tests {
         assert!(s.contains("warn msg"), "expected message in: {}", s);
     }
 
+    #[cfg(not(nightly))]
     #[test]
     fn to_stream_includes_children() {
         let child = Diagnostic::new().level(Level::Help).message("hint").build();
         let parent = Diagnostic::new()
             .level(Level::Error)
             .message("main error")
-            .add(child)
+            .child(child)
             .build();
-        let s = parent.to_tokens().to_string();
+        let s = parent.to_token_stream().to_string();
         assert!(s.contains("compile_error"));
         assert!(s.contains("main error"));
         assert!(s.contains("hint"));
     }
 
+    #[cfg(not(nightly))]
     #[test]
     fn to_stream_no_message() {
         let d = Diagnostic::new().level(Level::Error).build();
-        let s = d.to_tokens().to_string();
+        let s = d.to_token_stream().to_string();
         assert!(s.contains("compile_error"));
     }
 
     #[test]
     fn span_error_helper() {
-        let span = Span::call_site();
+        let span = Span::default();
         let d = span.error("err msg");
         assert_eq!(d.level(), Level::Error);
         assert_eq!(d.message(), Some("err msg"));
@@ -386,7 +400,7 @@ mod tests {
 
     #[test]
     fn span_warn_helper() {
-        let span = Span::call_site();
+        let span = Span::default();
         let d = span.warn("warn msg");
         assert_eq!(d.level(), Level::Warning);
         assert_eq!(d.message(), Some("warn msg"));
@@ -394,7 +408,7 @@ mod tests {
 
     #[test]
     fn span_note_helper() {
-        let span = Span::call_site();
+        let span = Span::default();
         let d = span.note("note msg");
         assert_eq!(d.level(), Level::Note);
         assert_eq!(d.message(), Some("note msg"));
@@ -402,7 +416,7 @@ mod tests {
 
     #[test]
     fn span_help_helper() {
-        let span = Span::call_site();
+        let span = Span::default();
         let d = span.help("help msg");
         assert_eq!(d.level(), Level::Help);
         assert_eq!(d.message(), Some("help msg"));

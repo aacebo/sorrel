@@ -5,15 +5,24 @@ pub use delim::*;
 pub use range::*;
 
 #[derive(Debug, Copy, Clone)]
-pub struct Span(proc_macro2::Span);
+pub struct Span {
+    #[cfg(nightly)]
+    pub(crate) inner: Option<proc_macro::Span>,
+}
 
 impl Span {
     pub fn call_site() -> Self {
-        proc_macro2::Span::call_site().into()
+        Self {
+            #[cfg(nightly)]
+            inner: Some(proc_macro::Span::call_site()),
+        }
     }
 
     pub fn mixed_site() -> Self {
-        proc_macro2::Span::mixed_site().into()
+        Self {
+            #[cfg(nightly)]
+            inner: Some(proc_macro::Span::mixed_site()),
+        }
     }
 
     pub fn range(from: Self, to: Self) -> Self {
@@ -21,13 +30,29 @@ impl Span {
     }
 
     pub fn join(&self, other: Self) -> Self {
-        self.0.join(other.0).map(|v| v.into()).unwrap_or(other)
+        #[cfg(nightly)]
+        if let (Some(a), Some(b)) = (self.inner, other.inner) {
+            if let Some(joined) = a.join(b) {
+                return Self {
+                    inner: Some(joined),
+                };
+            }
+        }
+
+        other
     }
 }
 
 impl Default for Span {
     fn default() -> Self {
-        Self::call_site()
+        if cfg!(nightly) && proc_macro::is_available() {
+            Self::call_site()
+        } else {
+            Self {
+                #[cfg(nightly)]
+                inner: None,
+            }
+        }
     }
 }
 
@@ -35,16 +60,46 @@ impl Eq for Span {}
 
 impl PartialEq for Span {
     fn eq(&self, other: &Self) -> bool {
-        self.start() == other.start() && self.end() == other.end()
+        #[cfg(nightly)]
+        {
+            match (self.inner, other.inner) {
+                (None, None) => true,
+                (Some(a), Some(b)) => {
+                    a.line() == b.line()
+                        && a.column() == b.column()
+                        && a.end().line() == b.end().line()
+                        && a.end().column() == b.end().column()
+                }
+                _ => false,
+            }
+        }
+        #[cfg(not(nightly))]
+        true
     }
 }
 
 impl Ord for Span {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match self.start().cmp(&other.start()) {
-            std::cmp::Ordering::Equal => self.end().cmp(&other.end()),
-            ord => ord,
+        #[cfg(nightly)]
+        {
+            match (self.inner, other.inner) {
+                (None, None) => std::cmp::Ordering::Equal,
+                (None, Some(_)) => std::cmp::Ordering::Less,
+                (Some(_), None) => std::cmp::Ordering::Greater,
+                (Some(a), Some(b)) => match a.line().cmp(&b.line()) {
+                    std::cmp::Ordering::Equal => match a.column().cmp(&b.column()) {
+                        std::cmp::Ordering::Equal => match a.end().line().cmp(&b.end().line()) {
+                            std::cmp::Ordering::Equal => a.end().column().cmp(&b.end().column()),
+                            ord => ord,
+                        },
+                        ord => ord,
+                    },
+                    ord => ord,
+                },
+            }
         }
+        #[cfg(not(nightly))]
+        std::cmp::Ordering::Equal
     }
 }
 
@@ -56,40 +111,36 @@ impl PartialOrd for Span {
 
 impl std::hash::Hash for Span {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.start().hash(state);
-        self.end().hash(state);
+        #[cfg(nightly)]
+        if let Some(s) = self.inner {
+            s.line().hash(state);
+            s.column().hash(state);
+            s.end().line().hash(state);
+            s.end().column().hash(state);
+        }
     }
 }
 
-impl From<proc_macro2::Span> for Span {
-    fn from(value: proc_macro2::Span) -> Self {
-        Self(value)
+#[cfg(nightly)]
+impl From<proc_macro::Span> for Span {
+    fn from(value: proc_macro::Span) -> Self {
+        Self { inner: Some(value) }
     }
 }
 
-impl From<Span> for proc_macro2::Span {
+#[cfg(nightly)]
+impl From<Span> for proc_macro::Span {
     fn from(value: Span) -> Self {
-        value.0
-    }
-}
-
-impl std::ops::Deref for Span {
-    type Target = proc_macro2::Span;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl std::ops::DerefMut for Span {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        value.inner.unwrap_or_else(proc_macro::Span::call_site)
     }
 }
 
 #[cfg(nightly)]
 impl proc_macro::MultiSpan for Span {
     fn into_spans(self) -> Vec<proc_macro::Span> {
-        vec![proc_macro2::Span::from(self).unwrap()]
+        match self.inner {
+            Some(s) => vec![s],
+            None => vec![proc_macro::Span::call_site()],
+        }
     }
 }
