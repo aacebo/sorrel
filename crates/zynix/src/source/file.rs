@@ -1,12 +1,12 @@
 use std::{cell::RefCell, collections::BTreeMap};
 
-use super::SourceLocation;
+use super::Location;
 use crate::span::fallback::Span;
 
 /// Primarily used to map spans (0 based character index ranges)
 /// to bytes.
 #[derive(Debug)]
-pub struct SourceFile {
+pub struct Source {
     /// raw source text
     text: String,
 
@@ -20,7 +20,7 @@ pub struct SourceFile {
     char_to_byte: RefCell<BTreeMap<usize, usize>>,
 }
 
-impl SourceFile {
+impl Source {
     pub(crate) fn new(start: usize, src: impl Into<String>) -> Self {
         let text = src.into();
         let mut lines = vec![0];
@@ -60,13 +60,13 @@ impl SourceFile {
         self.text[self.range(span)].to_owned()
     }
 
-    /// Resolves a global character index within this file into a 0-based `SourceLocation`.
-    pub fn location(&self, i: usize) -> SourceLocation {
+    /// Resolves a global character index within this file into a 0-based `Location`.
+    pub fn location(&self, i: usize) -> Location {
         let index = i - self.span.start();
 
         match self.lines.binary_search(&index) {
-            Err(next) => SourceLocation::new(index, next - 1, index - self.lines[next - 1]),
-            Ok(line) => SourceLocation::new(index, line, 0),
+            Err(next) => Location::new(index, next - 1, index - self.lines[next - 1]),
+            Ok(line) => Location::new(index, line, 0),
         }
     }
 
@@ -100,7 +100,7 @@ impl SourceFile {
     }
 }
 
-impl Default for SourceFile {
+impl Default for Source {
     fn default() -> Self {
         Self {
             text: String::default(),

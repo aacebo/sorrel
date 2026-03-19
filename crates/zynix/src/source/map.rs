@@ -1,15 +1,15 @@
-use super::SourceFile;
+use super::Source;
 use crate::span::fallback::Span;
 
 #[derive(Debug)]
-pub struct SourceMap(Vec<SourceFile>);
+pub struct SourceMap(Vec<Source>);
 
 impl SourceMap {
     pub fn new() -> Self {
         Self(vec![])
     }
 
-    pub fn files(&self) -> &[SourceFile] {
+    pub fn files(&self) -> &[Source] {
         &self.0
     }
 
@@ -21,14 +21,14 @@ impl SourceMap {
         self.0.is_empty()
     }
 
-    pub fn find(&self, span: Span) -> Option<&SourceFile> {
+    pub fn find(&self, span: Span) -> Option<&Source> {
         match self.find_index(span) {
             None => None,
             Some(i) => Some(&self.0[i]),
         }
     }
 
-    pub fn find_mut(&mut self, span: Span) -> Option<&mut SourceFile> {
+    pub fn find_mut(&mut self, span: Span) -> Option<&mut Source> {
         match self.find_index(span) {
             None => None,
             Some(i) => Some(&mut self.0[i]),
@@ -53,7 +53,7 @@ impl SourceMap {
 
     pub fn push(&mut self, src: impl Into<String>) -> Span {
         let start = self.0.last().map(|file| file.span().end()).unwrap_or(0);
-        let file = SourceFile::new(start, src);
+        let file = Source::new(start, src);
         let span = file.span();
         self.0.push(file);
         span
