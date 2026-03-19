@@ -93,12 +93,3 @@ impl From<Span> for proc_macro::Span {
         proc_macro::Span::call_site()
     }
 }
-
-impl From<proc_macro2::Span> for Span {
-    fn from(value: proc_macro2::Span) -> Self {
-        Self::new(
-            value.byte_range().start as u32,
-            value.byte_range().end as u32,
-        )
-    }
-}

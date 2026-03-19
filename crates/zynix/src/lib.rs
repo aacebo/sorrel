@@ -10,6 +10,7 @@
 
 extern crate proc_macro;
 
+mod convert;
 mod parse;
 pub mod source;
 mod span;

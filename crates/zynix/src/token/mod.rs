@@ -80,45 +80,6 @@ impl Token {
             Self::Group(v) => v.span().into(),
         }
     }
-
-    /// Convert a `proc_macro2::TokenTree` into a `Token`.
-    /// Used internally for parsing outside proc-macro context.
-    pub(crate) fn from_pm2(tt: proc_macro2::TokenTree) -> Self {
-        match tt {
-            proc_macro2::TokenTree::Ident(v) => {
-                let span: Span = v.span().into();
-                Self::Ident(Ident::Fallback(fallback::Ident::new(&v.to_string(), span)))
-            }
-            proc_macro2::TokenTree::Punct(v) => {
-                let span: Span = v.span().into();
-                Self::Punct(Punct::Fallback(fallback::Punct {
-                    ch: v.as_char(),
-                    spacing: match v.spacing() {
-                        proc_macro2::Spacing::Alone => Spacing::Alone,
-                        proc_macro2::Spacing::Joint => Spacing::Joint,
-                    },
-                    span,
-                }))
-            }
-            proc_macro2::TokenTree::Literal(v) => {
-                let span: Span = v.span().into();
-                Self::Literal(Literal::Fallback(fallback::Literal {
-                    repr: v.to_string().into_boxed_str(),
-                    span,
-                }))
-            }
-            proc_macro2::TokenTree::Group(v) => {
-                let delim = match v.delimiter() {
-                    proc_macro2::Delimiter::Parenthesis => Delim::Paren,
-                    proc_macro2::Delimiter::Brace => Delim::Brace,
-                    proc_macro2::Delimiter::Bracket => Delim::Bracket,
-                    proc_macro2::Delimiter::None => Delim::None,
-                };
-                let stream: TokenStream = v.stream().into_iter().map(Self::from_pm2).collect();
-                Self::Group(Group::Fallback(fallback::Group::new(delim, stream)))
-            }
-        }
-    }
 }
 
 impl From<Ident> for Token {

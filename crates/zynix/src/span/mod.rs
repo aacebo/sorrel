@@ -218,12 +218,6 @@ impl From<Span> for proc_macro::Span {
     }
 }
 
-impl From<proc_macro2::Span> for Span {
-    fn from(value: proc_macro2::Span) -> Self {
-        Self::Fallback(value.into())
-    }
-}
-
 #[cfg(nightly)]
 impl proc_macro::MultiSpan for Span {
     fn into_spans(self) -> Vec<proc_macro::Span> {

@@ -187,11 +187,16 @@ impl FromStr for TokenStream {
             return Ok(Self::Compiler(pm));
         }
 
-        let pm = proc_macro2::TokenStream::from_str(s).map_err(ParseError::from)?;
+        #[cfg(feature = "proc-macro2")]
+        {
+            let pm = proc_macro2::TokenStream::from_str(s).map_err(ParseError::from)?;
+            return Ok(Self::Fallback(pm.into_iter().map(Token::from).collect()));
+        }
 
-        Ok(Self::Fallback(
-            pm.into_iter().map(Token::from_pm2).collect(),
-        ))
+        #[cfg(not(feature = "proc-macro2"))]
+        panic!(
+            "cannot parse string to tokens without either being in a proc-macro context, or having the proc-macro2 feature enabled."
+        );
     }
 }
 

@@ -3,6 +3,7 @@ use crate::{Delim, Group, Ident, Literal, Punct, Spacing, Span, ToTokens, Token,
 #[derive(Debug)]
 pub enum ParseError {
     Compiler(proc_macro::LexError),
+    #[cfg(feature = "proc-macro2")]
     Fallback(proc_macro2::LexError),
     #[cfg(feature = "report")]
     Diagnostic(crate::report::Diagnostic),
@@ -12,6 +13,7 @@ impl ParseError {
     pub fn span(&self) -> Option<Span> {
         match self {
             Self::Compiler(_) => None,
+            #[cfg(feature = "proc-macro2")]
             Self::Fallback(v) => Some(v.span().into()),
             #[cfg(feature = "report")]
             Self::Diagnostic(v) => v.spans().first().cloned(),
@@ -40,12 +42,6 @@ impl From<proc_macro::LexError> for ParseError {
     }
 }
 
-impl From<proc_macro2::LexError> for ParseError {
-    fn from(value: proc_macro2::LexError) -> Self {
-        Self::Fallback(value)
-    }
-}
-
 #[cfg(feature = "report")]
 impl From<crate::report::Diagnostic> for ParseError {
     fn from(value: crate::report::Diagnostic) -> Self {
@@ -57,6 +53,7 @@ impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Compiler(v) => write!(f, "{}", v),
+            #[cfg(feature = "proc-macro2")]
             Self::Fallback(v) => write!(f, "{}", v),
             #[cfg(feature = "report")]
             Self::Diagnostic(v) => write!(f, "{}", v),
@@ -66,7 +63,6 @@ impl std::fmt::Display for ParseError {
 
 impl std::error::Error for ParseError {}
 
-#[cfg(not(nightly))]
 impl ToTokens for ParseError {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         #[cfg(feature = "report")]
@@ -76,13 +72,5 @@ impl ToTokens for ParseError {
         }
 
         self.to_compile_error().to_tokens(tokens);
-    }
-}
-
-#[cfg(nightly)]
-impl proc_macro::ToTokens for ParseError {
-    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        let stream = self.to_compile_error();
-        tokens.extend(proc_macro::TokenStream::from(stream));
     }
 }
