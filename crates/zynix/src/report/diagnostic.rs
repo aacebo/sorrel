@@ -1,4 +1,4 @@
-use crate::{ParseError, Span, Stream, ToStream, report::Level};
+use crate::{ParseError, Span, ToTokens, TokenStream, report::Level};
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
@@ -30,12 +30,12 @@ impl Diagnostic {
         &self.children
     }
 
-    pub fn emit(self) -> Stream {
+    pub fn emit(self) -> TokenStream {
         if cfg!(nightly) && proc_macro::is_available() {
             proc_macro::Diagnostic::from(self.clone()).emit();
         }
 
-        self.to_stream()
+        self.to_tokens()
     }
 
     pub fn into_error(self) -> ParseError {
@@ -107,8 +107,9 @@ impl PartialEq for Diagnostic {
     }
 }
 
-impl ToStream for Diagnostic {
-    fn to_stream(self) -> Stream {
+#[cfg(not(nightly))]
+impl ToTokens for Diagnostic {
+    fn to_tokens(self) -> TokenStream {
         self.into_error().to_compile_error()
     }
 }
@@ -116,7 +117,7 @@ impl ToStream for Diagnostic {
 #[cfg(nightly)]
 impl proc_macro::ToTokens for Diagnostic {
     fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        let s = self.clone().to_stream().to_string();
+        let s = self.clone().into_error().to_compile_error().to_string();
         if let Ok(ts) = s.parse::<proc_macro::TokenStream>() {
             tokens.extend(ts);
         }
@@ -326,7 +327,7 @@ mod tests {
             .level(Level::Error)
             .message("broken")
             .build();
-        let stream = d.to_stream();
+        let stream = d.to_tokens();
         let s = stream.to_string();
         assert!(
             s.contains("compile_error"),
@@ -360,7 +361,7 @@ mod tests {
             .message("main error")
             .add(child)
             .build();
-        let s = parent.to_stream().to_string();
+        let s = parent.to_tokens().to_string();
         assert!(s.contains("compile_error"));
         assert!(s.contains("main error"));
         assert!(s.contains("hint"));
@@ -369,7 +370,7 @@ mod tests {
     #[test]
     fn to_stream_no_message() {
         let d = Diagnostic::new().level(Level::Error).build();
-        let s = d.to_stream().to_string();
+        let s = d.to_tokens().to_string();
         assert!(s.contains("compile_error"));
     }
 

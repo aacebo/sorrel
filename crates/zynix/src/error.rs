@@ -1,4 +1,4 @@
-use crate::{Delim, Group, Ident, Literal, Punct, Spacing, Span, Stream, ToStream, Token};
+use crate::{Delim, Group, Ident, Literal, Punct, Spacing, Span, ToTokens, Token, TokenStream};
 
 #[derive(Debug)]
 pub enum ParseError {
@@ -16,7 +16,7 @@ impl ParseError {
         }
     }
 
-    pub fn to_compile_error(&self) -> Stream {
+    pub fn to_compile_error(&self) -> TokenStream {
         let ident = Ident::new("compile_error", self.span().unwrap_or_default());
         let mut bang = Punct::new('!', Spacing::Alone);
         let mut lit = Literal::string(&self.to_string());
@@ -26,7 +26,7 @@ impl ParseError {
             lit.set_span(span);
         }
 
-        let inner = Token::Literal(lit).to_stream();
+        let inner = Token::Literal(lit).to_tokens();
         let group = Group::new(Delim::Paren, inner);
         vec![Token::Ident(ident), Token::Punct(bang), Token::Group(group)].into()
     }
@@ -65,11 +65,12 @@ impl std::error::Error for ParseError {
     }
 }
 
-impl ToStream for ParseError {
-    fn to_stream(self) -> Stream {
+#[cfg(not(nightly))]
+impl ToTokens for ParseError {
+    fn to_tokens(self) -> TokenStream {
         match self {
             #[cfg(feature = "report")]
-            Self::Diagnostic(d) => d.to_stream(),
+            Self::Diagnostic(d) => d.to_tokens(),
             err => err.to_compile_error(),
         }
     }

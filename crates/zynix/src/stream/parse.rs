@@ -1,13 +1,13 @@
-use crate::{AsStream, Buffer, ParseError, Reader, Span, Stream, ToStream, Token, Writer};
+use crate::{Buffer, ParseError, Reader, Span, Token, TokenStream, Writer};
 
 pub struct ParseStream<'a> {
-    input: &'a Stream,
+    input: &'a TokenStream,
     index: usize,
     output: Buffer,
 }
 
 impl<'a> ParseStream<'a> {
-    pub fn new(input: &'a Stream) -> Self {
+    pub fn new(input: &'a TokenStream) -> Self {
         Self {
             input,
             index: 0,
@@ -24,6 +24,10 @@ impl<'a> ParseStream<'a> {
             .get(self.index)
             .map(|t| t.span())
             .unwrap_or_default()
+    }
+
+    pub fn as_tokens(&self) -> &TokenStream {
+        self.input
     }
 
     pub fn fork(&self) -> Self {
@@ -49,8 +53,8 @@ impl<'a> ParseStream<'a> {
     }
 }
 
-impl<'a> From<&'a Stream> for ParseStream<'a> {
-    fn from(value: &'a Stream) -> Self {
+impl<'a> From<&'a TokenStream> for ParseStream<'a> {
+    fn from(value: &'a TokenStream) -> Self {
         Self::new(value)
     }
 }
@@ -84,15 +88,9 @@ impl<'a> Writer for ParseStream<'a> {
     }
 }
 
-impl<'a> AsStream for ParseStream<'a> {
-    fn as_stream(&self) -> &Stream {
-        self.input
-    }
-}
-
-impl<'a> ToStream for ParseStream<'a> {
-    fn to_stream(self) -> Stream {
-        self.output.to_stream()
+impl<'a> From<ParseStream<'a>> for TokenStream {
+    fn from(value: ParseStream<'a>) -> Self {
+        value.output.freeze()
     }
 }
 
@@ -101,7 +99,7 @@ mod tests {
     use super::*;
     use crate::*;
 
-    fn parse(input: &str) -> Stream {
+    fn parse(input: &str) -> TokenStream {
         input
             .parse::<proc_macro2::TokenStream>()
             .unwrap()
@@ -112,7 +110,7 @@ mod tests {
 
     #[test]
     fn empty_stream() {
-        let stream = Stream::new();
+        let stream = TokenStream::new();
         let ps = ParseStream::new(&stream);
         assert!(ps.is_empty());
     }
@@ -167,7 +165,7 @@ mod tests {
 
     #[test]
     fn write_appends() {
-        let stream = Stream::new();
+        let stream = TokenStream::new();
         let mut ps = ParseStream::new(&stream);
         let ident = Ident::new("x", Span::call_site());
         ps.write(Token::Ident(ident)).unwrap();
@@ -182,7 +180,7 @@ mod tests {
         assert!(matches!(group, Token::Group(_)));
 
         if let Token::Group(g) = group {
-            let tokens = g.as_stream().clone();
+            let tokens = g.as_tokens().clone();
             let mut inner = ParseStream::new(&tokens);
             assert!(matches!(inner.next().unwrap(), Token::Ident(_))); // "a"
         }

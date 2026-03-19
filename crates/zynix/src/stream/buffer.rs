@@ -1,6 +1,6 @@
-use crate::{ToStream, Token};
+use crate::Token;
 
-use super::Stream;
+use super::TokenStream;
 
 /// A mutable collection of tokens
 #[derive(Debug, Default, Clone)]
@@ -15,18 +15,18 @@ impl Buffer {
         self.0.push(token);
     }
 
-    pub fn freeze(self) -> Stream {
-        Stream::from(self.0)
+    pub fn freeze(self) -> TokenStream {
+        TokenStream::from(self.0)
     }
 }
 
-impl From<Stream> for Buffer {
-    fn from(value: Stream) -> Self {
+impl From<TokenStream> for Buffer {
+    fn from(value: TokenStream) -> Self {
         Self(value.into())
     }
 }
 
-impl From<Buffer> for Stream {
+impl From<Buffer> for TokenStream {
     fn from(value: Buffer) -> Self {
         value.freeze()
     }
@@ -74,11 +74,5 @@ impl Extend<Token> for Buffer {
 impl<'a> Extend<&'a Token> for Buffer {
     fn extend<T: IntoIterator<Item = &'a Token>>(&mut self, iter: T) {
         self.0.extend(iter.into_iter().cloned());
-    }
-}
-
-impl ToStream for Buffer {
-    fn to_stream(self) -> Stream {
-        self.freeze()
     }
 }

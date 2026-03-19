@@ -34,6 +34,10 @@ pub use spacing::*;
 pub use span::*;
 pub use stream::*;
 
+pub trait ToTokens {
+    fn to_tokens(self) -> TokenStream;
+}
+
 pub trait Reader {
     /// the remaining token count.
     fn remaining(&self) -> usize;
@@ -142,26 +146,87 @@ impl std::fmt::Display for Token {
     }
 }
 
-impl ToStream for Token {
-    fn to_stream(self) -> Stream {
+// On stable: explicit ToTokens impls for zynix's own types.
+// On nightly: blanket ToTokens for any T: proc_macro::ToTokens covers everything,
+//   so zynix types only need proc_macro::ToTokens impls (defined further below).
+
+#[cfg(not(nightly))]
+impl ToTokens for Token {
+    fn to_tokens(self) -> TokenStream {
         vec![self].into()
     }
 }
 
-impl ToStream for Ident {
-    fn to_stream(self) -> Stream {
-        Token::from(self).to_stream()
+#[cfg(not(nightly))]
+impl ToTokens for Ident {
+    fn to_tokens(self) -> TokenStream {
+        Token::from(self).to_tokens()
     }
 }
 
-impl ToStream for Punct {
-    fn to_stream(self) -> Stream {
-        Token::from(self).to_stream()
+#[cfg(not(nightly))]
+impl ToTokens for Punct {
+    fn to_tokens(self) -> TokenStream {
+        Token::from(self).to_tokens()
     }
 }
 
-impl ToStream for Literal {
-    fn to_stream(self) -> Stream {
-        Token::from(self).to_stream()
+#[cfg(not(nightly))]
+impl ToTokens for Literal {
+    fn to_tokens(self) -> TokenStream {
+        Token::from(self).to_tokens()
+    }
+}
+
+#[cfg(not(nightly))]
+impl ToTokens for TokenStream {
+    fn to_tokens(self) -> TokenStream {
+        self
+    }
+}
+
+#[cfg(not(nightly))]
+impl ToTokens for proc_macro2::TokenStream {
+    fn to_tokens(self) -> TokenStream {
+        self.into()
+    }
+}
+
+#[cfg(not(nightly))]
+impl ToTokens for &str {
+    fn to_tokens(self) -> TokenStream {
+        use std::str::FromStr;
+        TokenStream::from_str(self).unwrap_or_default()
+    }
+}
+
+// On nightly: blanket covers any T: proc_macro::ToTokens, including zynix types
+// (which implement proc_macro::ToTokens in their respective modules).
+#[cfg(nightly)]
+impl<T: proc_macro::ToTokens> ToTokens for T {
+    fn to_tokens(self) -> TokenStream {
+        let mut ts = proc_macro::TokenStream::new();
+        proc_macro::ToTokens::to_tokens(&self, &mut ts);
+        proc_macro2::TokenStream::from(ts).into()
+    }
+}
+
+// proc_macro::ToTokens impls for zynix types (nightly only).
+// These feed into the blanket impl above.
+#[cfg(nightly)]
+impl proc_macro::ToTokens for Token {
+    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
+        let pm2: proc_macro2::TokenStream = std::iter::once(self.clone())
+            .map(proc_macro2::TokenTree::from)
+            .collect();
+        tokens.extend(proc_macro::TokenStream::from(pm2));
+    }
+}
+
+#[cfg(nightly)]
+impl proc_macro::ToTokens for TokenStream {
+    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
+        let pm2: proc_macro2::TokenStream = self.clone().into();
+        tokens.extend(proc_macro::TokenStream::from(pm2));
     }
 }
