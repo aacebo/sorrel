@@ -1,14 +1,6 @@
-mod buffer;
-mod limit;
-mod parse;
-
-pub use buffer::*;
-pub use limit::*;
-pub use parse::*;
-
 use std::str::FromStr;
 
-use crate::{DelimSpan, ParseError, Span, Token};
+use crate::{DelimSpan, ParseError, ParseStream, Span, Token};
 
 /// An immutable collection of tokens.
 /// On nightly, stays as `External` (native `proc_macro::TokenStream`) when running inside
@@ -243,6 +235,19 @@ impl std::fmt::Display for TokenStream {
                 }
 
                 Ok(())
+            }
+        }
+    }
+}
+
+#[cfg(nightly)]
+impl proc_macro::ToTokens for TokenStream {
+    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
+        match self {
+            Self::External(ts) => tokens.extend(ts.clone()),
+            Self::Internal(_) => {
+                let pm: proc_macro::TokenStream = self.clone().into();
+                tokens.extend(pm);
             }
         }
     }
