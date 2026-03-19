@@ -2,7 +2,8 @@ use crate::{Delim, Group, Ident, Literal, Punct, Spacing, Span, ToTokens, Token,
 
 #[derive(Debug)]
 pub enum ParseError {
-    Lex(proc_macro2::LexError),
+    Compiler(proc_macro::LexError),
+    Fallback(proc_macro2::LexError),
     #[cfg(feature = "report")]
     Diagnostic(crate::report::Diagnostic),
 }
@@ -10,7 +11,8 @@ pub enum ParseError {
 impl ParseError {
     pub fn span(&self) -> Option<Span> {
         match self {
-            Self::Lex(_) => None,
+            Self::Compiler(_) => None,
+            Self::Fallback(v) => Some(v.span().into()),
             #[cfg(feature = "report")]
             Self::Diagnostic(v) => v.spans().first().cloned(),
         }
@@ -32,9 +34,15 @@ impl ParseError {
     }
 }
 
+impl From<proc_macro::LexError> for ParseError {
+    fn from(value: proc_macro::LexError) -> Self {
+        Self::Compiler(value)
+    }
+}
+
 impl From<proc_macro2::LexError> for ParseError {
     fn from(value: proc_macro2::LexError) -> Self {
-        Self::Lex(value)
+        Self::Fallback(value)
     }
 }
 
@@ -48,22 +56,15 @@ impl From<crate::report::Diagnostic> for ParseError {
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Lex(v) => write!(f, "{}", v),
+            Self::Compiler(v) => write!(f, "{}", v),
+            Self::Fallback(v) => write!(f, "{}", v),
             #[cfg(feature = "report")]
             Self::Diagnostic(v) => write!(f, "{}", v),
         }
     }
 }
 
-impl std::error::Error for ParseError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Lex(v) => Some(v),
-            #[cfg(feature = "report")]
-            _ => None,
-        }
-    }
-}
+impl std::error::Error for ParseError {}
 
 #[cfg(not(nightly))]
 impl ToTokens for ParseError {

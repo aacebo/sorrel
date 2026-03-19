@@ -11,7 +11,7 @@
 extern crate proc_macro;
 
 mod parse;
-pub(crate) mod source;
+pub mod source;
 mod span;
 mod token;
 
@@ -22,5 +22,6 @@ pub mod report;
 pub mod ast;
 
 pub use parse::*;
+pub use source::*;
 pub use span::*;
 pub use token::*;

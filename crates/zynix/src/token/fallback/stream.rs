@@ -78,6 +78,22 @@ impl IntoIterator for TokenStream {
     }
 }
 
+impl From<proc_macro::TokenStream> for TokenStream {
+    fn from(value: proc_macro::TokenStream) -> Self {
+        Self(value.into_iter().map(Token::from).collect())
+    }
+}
+
+impl From<TokenStream> for proc_macro::TokenStream {
+    fn from(value: TokenStream) -> Self {
+        value
+            .0
+            .into_iter()
+            .map(proc_macro::TokenTree::from)
+            .collect()
+    }
+}
+
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for token in self.0.iter() {

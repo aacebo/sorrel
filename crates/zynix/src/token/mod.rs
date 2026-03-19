@@ -80,6 +80,45 @@ impl Token {
             Self::Group(v) => v.span().into(),
         }
     }
+
+    /// Convert a `proc_macro2::TokenTree` into a `Token`.
+    /// Used internally for parsing outside proc-macro context.
+    pub(crate) fn from_pm2(tt: proc_macro2::TokenTree) -> Self {
+        match tt {
+            proc_macro2::TokenTree::Ident(v) => {
+                let span: Span = v.span().into();
+                Self::Ident(Ident::Fallback(fallback::Ident::new(&v.to_string(), span)))
+            }
+            proc_macro2::TokenTree::Punct(v) => {
+                let span: Span = v.span().into();
+                Self::Punct(Punct::Fallback(fallback::Punct {
+                    ch: v.as_char(),
+                    spacing: match v.spacing() {
+                        proc_macro2::Spacing::Alone => Spacing::Alone,
+                        proc_macro2::Spacing::Joint => Spacing::Joint,
+                    },
+                    span,
+                }))
+            }
+            proc_macro2::TokenTree::Literal(v) => {
+                let span: Span = v.span().into();
+                Self::Literal(Literal::Fallback(fallback::Literal {
+                    repr: v.to_string().into_boxed_str(),
+                    span,
+                }))
+            }
+            proc_macro2::TokenTree::Group(v) => {
+                let delim = match v.delimiter() {
+                    proc_macro2::Delimiter::Parenthesis => Delim::Paren,
+                    proc_macro2::Delimiter::Brace => Delim::Brace,
+                    proc_macro2::Delimiter::Bracket => Delim::Bracket,
+                    proc_macro2::Delimiter::None => Delim::None,
+                };
+                let stream: TokenStream = v.stream().into_iter().map(Self::from_pm2).collect();
+                Self::Group(Group::Fallback(fallback::Group::new(delim, stream)))
+            }
+        }
+    }
 }
 
 impl From<Ident> for Token {
@@ -103,28 +142,6 @@ impl From<Literal> for Token {
 impl From<Group> for Token {
     fn from(value: Group) -> Self {
         Self::Group(value)
-    }
-}
-
-impl From<proc_macro2::TokenTree> for Token {
-    fn from(value: proc_macro2::TokenTree) -> Self {
-        match value {
-            proc_macro2::TokenTree::Ident(v) => Self::Ident(v.into()),
-            proc_macro2::TokenTree::Punct(v) => Self::Punct(v.into()),
-            proc_macro2::TokenTree::Literal(v) => Self::Literal(v.into()),
-            proc_macro2::TokenTree::Group(v) => Self::Group(v.into()),
-        }
-    }
-}
-
-impl From<Token> for proc_macro2::TokenTree {
-    fn from(value: Token) -> Self {
-        match value {
-            Token::Ident(v) => proc_macro2::TokenTree::Ident(v.into()),
-            Token::Punct(v) => proc_macro2::TokenTree::Punct(v.into()),
-            Token::Literal(v) => proc_macro2::TokenTree::Literal(v.into()),
-            Token::Group(v) => proc_macro2::TokenTree::Group(v.into()),
-        }
     }
 }
 
@@ -237,5 +254,206 @@ impl proc_macro::ToTokens for Token {
     fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
         let tt: proc_macro::TokenTree = self.clone().into();
         tokens.extend(std::iter::once(tt));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::source::SourceMap;
+    use crate::span::fallback as span_fb;
+
+    fn span(start: u32, end: u32) -> Span {
+        SourceMap::with_mut(|sm| {
+            if sm.is_empty() {
+                sm.push("0123456789abcdef");
+            }
+        });
+        Span::Fallback(span_fb::Span::new(start, end))
+    }
+
+    // --- Ident ---
+
+    #[test]
+    fn ident_new_and_name() {
+        let id = Ident::new("foo", Span::default());
+        assert_eq!(id.name().as_ref(), "foo");
+    }
+
+    #[test]
+    fn ident_span_and_set_span() {
+        let mut id = Ident::new("x", span(0, 1));
+        assert_eq!(id.span().start().index(), 0);
+        id.set_span(span(5, 6));
+        assert_eq!(id.span().start().index(), 5);
+    }
+
+    #[test]
+    fn ident_display() {
+        let id = Ident::new("hello", Span::default());
+        assert_eq!(format!("{}", id), "hello");
+    }
+
+    #[test]
+    fn ident_fallback_roundtrip() {
+        let id = Ident::new("bar", Span::default());
+        let fb: fallback::Ident = id.clone().into();
+        assert_eq!(fb.name().as_ref(), "bar");
+        let back: Ident = fb.into();
+        assert_eq!(back.name().as_ref(), "bar");
+    }
+
+    // --- Punct ---
+
+    #[test]
+    fn punct_new_and_accessors() {
+        let p = Punct::new('+', Spacing::Alone);
+        assert_eq!(p.as_char(), '+');
+        assert_eq!(p.spacing(), Spacing::Alone);
+    }
+
+    #[test]
+    fn punct_display() {
+        let p = Punct::new(';', Spacing::Alone);
+        assert_eq!(format!("{}", p), ";");
+    }
+
+    #[test]
+    fn punct_fallback_roundtrip() {
+        let p = Punct::new('!', Spacing::Joint);
+        let fb: fallback::Punct = p.clone().into();
+        assert_eq!(fb.as_char(), '!');
+        assert_eq!(fb.spacing(), Spacing::Joint);
+        let back: Punct = fb.into();
+        assert_eq!(back.as_char(), '!');
+    }
+
+    // --- Literal ---
+
+    #[test]
+    fn literal_string() {
+        let lit = Literal::string("hello");
+        let s = format!("{}", lit);
+        assert!(s.contains("hello"));
+    }
+
+    #[test]
+    fn literal_integer() {
+        let lit = Literal::u32_suffixed(42);
+        let s = format!("{}", lit);
+        assert!(s.contains("42"));
+    }
+
+    #[test]
+    fn literal_fallback_roundtrip() {
+        let lit = Literal::string("test");
+        let fb: fallback::Literal = lit.clone().into();
+        let back: Literal = fb.into();
+        let s = format!("{}", back);
+        assert!(s.contains("test"));
+    }
+
+    // --- Group ---
+
+    #[test]
+    fn group_new_and_delim() {
+        let g = Group::new(Delim::Paren, TokenStream::new());
+        assert_eq!(g.delim(), Delim::Paren);
+    }
+
+    #[test]
+    fn group_as_tokens() {
+        let mut ts = TokenStream::new();
+        ts.extend_one(Ident::new("x", Span::default()).into());
+        let g = Group::new(Delim::Brace, ts);
+        assert!(!g.as_tokens().is_empty());
+    }
+
+    #[test]
+    fn group_fallback_roundtrip() {
+        let g = Group::new(Delim::Bracket, TokenStream::new());
+        let fb: fallback::Group = g.clone().into();
+        assert_eq!(fb.delim(), Delim::Bracket);
+        let back: Group = fb.into();
+        assert_eq!(back.delim(), Delim::Bracket);
+    }
+
+    // --- TokenStream ---
+
+    #[test]
+    fn token_stream_new_is_empty() {
+        let ts = TokenStream::new();
+        assert!(ts.is_empty());
+    }
+
+    #[test]
+    fn token_stream_extend_one() {
+        let mut ts = TokenStream::new();
+        ts.extend_one(Ident::new("a", Span::default()).into());
+        assert_eq!(ts.len(), 1);
+    }
+
+    #[test]
+    fn token_stream_iter() {
+        let mut ts = TokenStream::new();
+        ts.extend_one(Ident::new("x", Span::default()).into());
+        ts.extend_one(Punct::new('+', Spacing::Alone).into());
+        let count = ts.iter().count();
+        assert_eq!(count, 2);
+    }
+
+    #[test]
+    fn token_stream_fallback_roundtrip() {
+        let mut ts = TokenStream::new();
+        ts.extend_one(Ident::new("y", Span::default()).into());
+        let fb: fallback::TokenStream = ts.into();
+        assert_eq!(fb.len(), 1);
+        let back: TokenStream = fb.into();
+        assert!(!back.is_empty());
+    }
+
+    #[test]
+    fn token_stream_from_str() {
+        use std::str::FromStr;
+        let ts = TokenStream::from_str("fn main() {}").unwrap();
+        assert!(!ts.is_empty());
+    }
+
+    // --- Token enum ---
+
+    #[test]
+    fn token_from_ident() {
+        let t: Token = Ident::new("foo", Span::default()).into();
+        assert!(matches!(t, Token::Ident(_)));
+    }
+
+    #[test]
+    fn token_from_punct() {
+        let t: Token = Punct::new('+', Spacing::Alone).into();
+        assert!(matches!(t, Token::Punct(_)));
+    }
+
+    #[test]
+    fn token_from_literal() {
+        let t: Token = Literal::string("x").into();
+        assert!(matches!(t, Token::Literal(_)));
+    }
+
+    #[test]
+    fn token_from_group() {
+        let t: Token = Group::new(Delim::Paren, TokenStream::new()).into();
+        assert!(matches!(t, Token::Group(_)));
+    }
+
+    #[test]
+    fn token_span() {
+        let t: Token = Ident::new("x", span(3, 4)).into();
+        assert_eq!(t.span().start().index(), 3);
+    }
+
+    #[test]
+    fn token_display() {
+        let t: Token = Ident::new("hello", Span::default()).into();
+        assert_eq!(format!("{}", t), "hello");
     }
 }

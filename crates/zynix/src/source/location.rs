@@ -7,7 +7,7 @@ pub struct Location {
 }
 
 impl Location {
-    pub(crate) const fn new(index: usize, line: usize, column: usize) -> Self {
+    pub const fn new(index: usize, line: usize, column: usize) -> Self {
         Self {
             index,
             line,

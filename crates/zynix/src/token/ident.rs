@@ -40,23 +40,6 @@ impl Ident {
     }
 }
 
-impl From<proc_macro2::Ident> for Ident {
-    fn from(value: proc_macro2::Ident) -> Self {
-        Self::Fallback(fallback::Ident::new(&value.to_string(), Span::default()))
-    }
-}
-
-impl From<Ident> for proc_macro2::Ident {
-    fn from(value: Ident) -> Self {
-        match value {
-            Ident::Compiler(v) => {
-                proc_macro2::Ident::new(&v.to_string(), proc_macro2::Span::call_site())
-            }
-            Ident::Fallback(v) => proc_macro2::Ident::new(&v.name, proc_macro2::Span::call_site()),
-        }
-    }
-}
-
 impl From<proc_macro::Ident> for Ident {
     fn from(value: proc_macro::Ident) -> Self {
         Self::Compiler(value)
@@ -68,6 +51,21 @@ impl From<Ident> for proc_macro::Ident {
         match value {
             Ident::Compiler(v) => v,
             Ident::Fallback(v) => proc_macro::Ident::new(&v.name, v.span.into()),
+        }
+    }
+}
+
+impl From<fallback::Ident> for Ident {
+    fn from(value: fallback::Ident) -> Self {
+        Self::Fallback(value)
+    }
+}
+
+impl From<Ident> for fallback::Ident {
+    fn from(value: Ident) -> Self {
+        match value {
+            Ident::Compiler(v) => fallback::Ident::new(&v.to_string(), v.span().into()),
+            Ident::Fallback(v) => v,
         }
     }
 }

@@ -45,22 +45,6 @@ impl Punct {
     }
 }
 
-impl From<proc_macro2::Punct> for Punct {
-    fn from(value: proc_macro2::Punct) -> Self {
-        Self::Fallback(fallback::Punct {
-            ch: value.as_char(),
-            spacing: value.spacing().into(),
-            span: Span::default(),
-        })
-    }
-}
-
-impl From<Punct> for proc_macro2::Punct {
-    fn from(value: Punct) -> Self {
-        proc_macro2::Punct::new(value.as_char(), value.spacing().into())
-    }
-}
-
 impl From<proc_macro::Punct> for Punct {
     fn from(value: proc_macro::Punct) -> Self {
         Self::Compiler(value)
@@ -76,6 +60,25 @@ impl From<Punct> for proc_macro::Punct {
                 p.set_span(v.span.into());
                 p
             }
+        }
+    }
+}
+
+impl From<fallback::Punct> for Punct {
+    fn from(value: fallback::Punct) -> Self {
+        Self::Fallback(value)
+    }
+}
+
+impl From<Punct> for fallback::Punct {
+    fn from(value: Punct) -> Self {
+        match value {
+            Punct::Compiler(v) => fallback::Punct {
+                ch: v.as_char(),
+                spacing: v.spacing().into(),
+                span: v.span().into(),
+            },
+            Punct::Fallback(v) => v,
         }
     }
 }

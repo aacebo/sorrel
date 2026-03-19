@@ -100,31 +100,6 @@ impl std::ops::Deref for TokenStream {
     }
 }
 
-impl From<proc_macro2::TokenStream> for TokenStream {
-    fn from(stream: proc_macro2::TokenStream) -> Self {
-        if proc_macro::is_available() {
-            return Self::Compiler(stream.into());
-        }
-
-        Self::Fallback(stream.into_iter().map(Token::from).collect())
-    }
-}
-
-impl From<TokenStream> for proc_macro2::TokenStream {
-    fn from(mut stream: TokenStream) -> Self {
-        if let TokenStream::Compiler(ts) = stream {
-            return proc_macro2::TokenStream::from(ts);
-        }
-
-        stream
-            .normalize()
-            .iter()
-            .cloned()
-            .map(proc_macro2::TokenTree::from)
-            .collect()
-    }
-}
-
 impl From<proc_macro::TokenStream> for TokenStream {
     fn from(stream: proc_macro::TokenStream) -> Self {
         Self::Compiler(stream)
@@ -136,6 +111,24 @@ impl From<TokenStream> for proc_macro::TokenStream {
         match stream {
             TokenStream::Compiler(ts) => ts,
             TokenStream::Fallback(v) => v.into_iter().map(proc_macro::TokenTree::from).collect(),
+        }
+    }
+}
+
+impl From<fallback::TokenStream> for TokenStream {
+    fn from(value: fallback::TokenStream) -> Self {
+        Self::Fallback(value)
+    }
+}
+
+impl From<TokenStream> for fallback::TokenStream {
+    fn from(mut value: TokenStream) -> Self {
+        match value {
+            TokenStream::Compiler(_) => {
+                let tokens: Vec<Token> = value.normalize().drain(..).collect();
+                fallback::TokenStream(tokens)
+            }
+            TokenStream::Fallback(v) => v,
         }
     }
 }
@@ -189,13 +182,16 @@ impl FromStr for TokenStream {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let pm2 = proc_macro2::TokenStream::from_str(s)?;
-
         if proc_macro::is_available() {
-            return Ok(Self::Compiler(pm2.into()));
+            let pm = s.parse().map_err(ParseError::from)?;
+            return Ok(Self::Compiler(pm));
         }
 
-        Ok(Self::Fallback(pm2.into_iter().map(Token::from).collect()))
+        let pm = proc_macro2::TokenStream::from_str(s).map_err(ParseError::from)?;
+
+        Ok(Self::Fallback(
+            pm.into_iter().map(Token::from_pm2).collect(),
+        ))
     }
 }
 

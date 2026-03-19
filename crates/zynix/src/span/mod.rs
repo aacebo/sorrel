@@ -5,6 +5,8 @@ mod range;
 pub use delim::*;
 pub use range::*;
 
+use crate::source::Location;
+
 #[derive(Debug, Copy, Clone)]
 pub enum Span {
     Compiler(proc_macro::Span),
@@ -37,8 +39,75 @@ impl Span {
         Self::Fallback(fallback::Span::def_site())
     }
 
-    pub fn range(from: Self, to: Self) -> Self {
-        from.join(to)
+    pub fn start(&self) -> Location {
+        match self {
+            Self::Compiler(v) => {
+                let lc = v.start();
+
+                if cfg!(nightly) {
+                    Location::new(v.byte_range().start, lc.line(), lc.column())
+                } else {
+                    Location::new(0, lc.line(), lc.column())
+                }
+            }
+            Self::Fallback(v) => v.start(),
+        }
+    }
+
+    pub fn end(&self) -> Location {
+        match self {
+            Self::Compiler(v) => {
+                let lc = v.end();
+
+                if cfg!(nightly) {
+                    Location::new(v.byte_range().end, lc.line(), lc.column())
+                } else {
+                    Location::new(0, lc.line(), lc.column())
+                }
+            }
+            Self::Fallback(v) => v.end(),
+        }
+    }
+
+    pub fn byte_range(&self) -> std::ops::Range<usize> {
+        match self {
+            Self::Compiler(v) => {
+                if cfg!(nightly) {
+                    v.byte_range()
+                } else {
+                    0..0
+                }
+            }
+            Self::Fallback(v) => v.byte_range(),
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        match self {
+            Self::Compiler(_) => 0,
+            Self::Fallback(v) => v.len(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::Compiler(_) => true,
+            Self::Fallback(v) => v.is_empty(),
+        }
+    }
+
+    pub fn contains(&self, i: usize) -> bool {
+        match self {
+            Self::Compiler(_) => false,
+            Self::Fallback(v) => v.contains(i),
+        }
+    }
+
+    pub fn is_subset(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Fallback(a), Self::Fallback(b)) => a.is_subset(b),
+            _ => false,
+        }
     }
 
     pub fn join(&self, other: Self) -> Self {
@@ -49,17 +118,17 @@ impl Span {
             }
         }
 
+        if let (Self::Fallback(a), Self::Fallback(b)) = (self, other) {
+            return Self::Fallback(a.join(b));
+        }
+
         other
     }
 }
 
 impl Default for Span {
     fn default() -> Self {
-        if proc_macro::is_available() {
-            Self::call_site()
-        } else {
-            Self::Fallback(fallback::Span::call_site())
-        }
+        Self::call_site()
     }
 }
 
@@ -67,46 +136,44 @@ impl Eq for Span {}
 
 impl PartialEq for Span {
     fn eq(&self, other: &Self) -> bool {
-        #[cfg(nightly)]
-        {
-            match (self, other) {
-                (Self::Compiler(a), Self::Compiler(b)) => {
-                    a.line() == b.line()
-                        && a.column() == b.column()
-                        && a.end().line() == b.end().line()
-                        && a.end().column() == b.end().column()
-                }
-                (Self::Fallback(_), Self::Fallback(_)) => true,
-                _ => false,
+        match (self, other) {
+            (Self::Compiler(a), Self::Compiler(b)) => {
+                a.start().line() == b.start().line()
+                    && a.start().column() == b.start().column()
+                    && a.end().line() == b.end().line()
+                    && a.end().column() == b.end().column()
             }
+            (Self::Fallback(a), Self::Fallback(b)) => a == b,
+            _ => false,
         }
-        #[cfg(not(nightly))]
-        true
     }
 }
 
 impl Ord for Span {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        #[cfg(nightly)]
-        {
-            match (self, other) {
-                (Self::Compiler(a), Self::Compiler(b)) => match a.line().cmp(&b.line()) {
-                    std::cmp::Ordering::Equal => match a.column().cmp(&b.column()) {
-                        std::cmp::Ordering::Equal => match a.end().line().cmp(&b.end().line()) {
-                            std::cmp::Ordering::Equal => a.end().column().cmp(&b.end().column()),
+        match (self, other) {
+            (Self::Compiler(a), Self::Compiler(b)) => {
+                match a.start().line().cmp(&b.start().line()) {
+                    std::cmp::Ordering::Equal => {
+                        match a.start().column().cmp(&b.start().column()) {
+                            std::cmp::Ordering::Equal => {
+                                match a.end().line().cmp(&b.end().line()) {
+                                    std::cmp::Ordering::Equal => {
+                                        a.end().column().cmp(&b.end().column())
+                                    }
+                                    ord => ord,
+                                }
+                            }
                             ord => ord,
-                        },
-                        ord => ord,
-                    },
+                        }
+                    }
                     ord => ord,
-                },
-                (Self::Fallback(_), Self::Fallback(_)) => std::cmp::Ordering::Equal,
-                (Self::Fallback(_), Self::Compiler(_)) => std::cmp::Ordering::Less,
-                (Self::Compiler(_), Self::Fallback(_)) => std::cmp::Ordering::Greater,
+                }
             }
+            (Self::Fallback(a), Self::Fallback(b)) => a.cmp(b),
+            (Self::Fallback(_), Self::Compiler(_)) => std::cmp::Ordering::Less,
+            (Self::Compiler(_), Self::Fallback(_)) => std::cmp::Ordering::Greater,
         }
-        #[cfg(not(nightly))]
-        std::cmp::Ordering::Equal
     }
 }
 
@@ -118,12 +185,14 @@ impl PartialOrd for Span {
 
 impl std::hash::Hash for Span {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        #[cfg(nightly)]
-        if let Self::Compiler(s) = self {
-            s.line().hash(state);
-            s.column().hash(state);
-            s.end().line().hash(state);
-            s.end().column().hash(state);
+        match self {
+            Self::Compiler(s) => {
+                s.start().line().hash(state);
+                s.start().column().hash(state);
+                s.end().line().hash(state);
+                s.end().column().hash(state);
+            }
+            Self::Fallback(s) => s.hash(state),
         }
     }
 }
@@ -149,6 +218,12 @@ impl From<Span> for proc_macro::Span {
     }
 }
 
+impl From<proc_macro2::Span> for Span {
+    fn from(value: proc_macro2::Span) -> Self {
+        Self::Fallback(value.into())
+    }
+}
+
 #[cfg(nightly)]
 impl proc_macro::MultiSpan for Span {
     fn into_spans(self) -> Vec<proc_macro::Span> {
@@ -156,5 +231,108 @@ impl proc_macro::MultiSpan for Span {
             Self::Compiler(s) => vec![s],
             Self::Fallback(_) => vec![proc_macro::Span::call_site()],
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fb(start: u32, end: u32) -> Span {
+        crate::source::SourceMap::with_mut(|sm| {
+            if sm.is_empty() {
+                sm.push("0123456789abcdef");
+            }
+        });
+        Span::Fallback(fallback::Span::new(start, end))
+    }
+
+    #[test]
+    fn call_site_does_not_panic() {
+        let _ = Span::call_site();
+    }
+
+    #[test]
+    fn mixed_site_does_not_panic() {
+        let _ = Span::mixed_site();
+    }
+
+    #[test]
+    fn def_site_does_not_panic() {
+        let _ = Span::def_site();
+    }
+
+    #[test]
+    fn default_does_not_panic() {
+        let _ = Span::default();
+    }
+
+    #[test]
+    fn start_end_fallback() {
+        use crate::source::SourceMap;
+        // Register source so span resolution works
+        SourceMap::with_mut(|sm| {
+            sm.push("0123456789abcdef");
+        });
+        let s = fb(5, 10);
+        assert_eq!(s.start().index(), 5);
+        assert_eq!(s.end().index(), 10);
+    }
+
+    #[test]
+    fn len_fallback() {
+        assert_eq!(fb(0, 7).len(), 7);
+        assert_eq!(fb(3, 3).len(), 0);
+    }
+
+    #[test]
+    fn is_empty_fallback() {
+        assert!(fb(0, 0).is_empty());
+        assert!(!fb(0, 1).is_empty());
+    }
+
+    #[test]
+    fn contains_fallback() {
+        let s = fb(2, 5);
+        assert!(!s.contains(1));
+        assert!(s.contains(2));
+        assert!(s.contains(4));
+        assert!(!s.contains(5));
+    }
+
+    #[test]
+    fn is_subset_fallback() {
+        let outer = fb(0, 10);
+        let inner = fb(2, 5);
+        assert!(inner.is_subset(&outer));
+        assert!(!outer.is_subset(&inner));
+    }
+
+    #[test]
+    fn join_fallback() {
+        let a = fb(2, 5);
+        let b = fb(8, 12);
+        let joined = a.join(b);
+        match joined {
+            Span::Fallback(v) => {
+                assert_eq!(v.byte_range(), 2..12);
+            }
+            _ => panic!("expected fallback"),
+        }
+    }
+
+    #[test]
+    fn from_fallback_roundtrip() {
+        let inner = fallback::Span::new(3, 7);
+        let wrapper: Span = inner.into();
+        assert!(matches!(wrapper, Span::Fallback(v) if v == inner));
+    }
+
+    #[test]
+    fn eq_fallback() {
+        // On stable, all spans are equal
+        let a = Span::default();
+        let b = Span::default();
+        assert_eq!(a, b);
     }
 }

@@ -29,6 +29,18 @@ impl Ident {
     }
 }
 
+impl From<proc_macro::Ident> for Ident {
+    fn from(value: proc_macro::Ident) -> Self {
+        Self::new(&value.to_string(), value.span().into())
+    }
+}
+
+impl From<Ident> for proc_macro::Ident {
+    fn from(value: Ident) -> Self {
+        proc_macro::Ident::new(&value.name, value.span.into())
+    }
+}
+
 impl std::fmt::Display for Ident {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name)

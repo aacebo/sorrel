@@ -33,6 +33,24 @@ impl Punct {
     }
 }
 
+impl From<proc_macro::Punct> for Punct {
+    fn from(value: proc_macro::Punct) -> Self {
+        Self {
+            ch: value.as_char(),
+            spacing: value.spacing().into(),
+            span: value.span().into(),
+        }
+    }
+}
+
+impl From<Punct> for proc_macro::Punct {
+    fn from(value: Punct) -> Self {
+        let mut p = proc_macro::Punct::new(value.ch, value.spacing.into());
+        p.set_span(value.span.into());
+        p
+    }
+}
+
 impl std::fmt::Display for Punct {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.ch)

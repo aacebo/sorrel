@@ -43,31 +43,6 @@ impl Group {
     }
 }
 
-impl From<proc_macro2::Group> for Group {
-    fn from(value: proc_macro2::Group) -> Self {
-        Self::Fallback(fallback::Group::new(
-            value.delimiter().into(),
-            value.stream().into(),
-        ))
-    }
-}
-
-impl From<Group> for proc_macro2::Group {
-    fn from(value: Group) -> Self {
-        match value {
-            Group::Compiler(v) => {
-                let delim: Delim = v.delimiter().into();
-                let stream: proc_macro2::TokenStream = proc_macro2::TokenStream::from(v.stream());
-                proc_macro2::Group::new(delim.into(), stream)
-            }
-            Group::Fallback(v) => {
-                let stream: proc_macro2::TokenStream = v.tokens.into();
-                proc_macro2::Group::new(v.delim.into(), stream)
-            }
-        }
-    }
-}
-
 impl From<proc_macro::Group> for Group {
     fn from(value: proc_macro::Group) -> Self {
         Self::Compiler(value)
@@ -79,6 +54,21 @@ impl From<Group> for proc_macro::Group {
         match value {
             Group::Compiler(v) => v,
             Group::Fallback(v) => proc_macro::Group::new(v.delim.into(), v.tokens.into()),
+        }
+    }
+}
+
+impl From<fallback::Group> for Group {
+    fn from(value: fallback::Group) -> Self {
+        Self::Fallback(value)
+    }
+}
+
+impl From<Group> for fallback::Group {
+    fn from(value: Group) -> Self {
+        match value {
+            Group::Compiler(v) => fallback::Group::new(v.delimiter().into(), v.stream().into()),
+            Group::Fallback(v) => v,
         }
     }
 }

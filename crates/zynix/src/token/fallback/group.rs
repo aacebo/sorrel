@@ -29,6 +29,18 @@ impl Group {
     }
 }
 
+impl From<proc_macro::Group> for Group {
+    fn from(value: proc_macro::Group) -> Self {
+        Self::new(value.delimiter().into(), value.stream().into())
+    }
+}
+
+impl From<Group> for proc_macro::Group {
+    fn from(value: Group) -> Self {
+        proc_macro::Group::new(value.delim.into(), value.tokens.into())
+    }
+}
+
 impl std::fmt::Display for Group {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", &self.tokens)

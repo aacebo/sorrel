@@ -76,31 +76,6 @@ impl Literal {
     }
 }
 
-impl From<proc_macro2::Literal> for Literal {
-    fn from(value: proc_macro2::Literal) -> Self {
-        Self::Fallback(fallback::Literal {
-            repr: value.to_string().into_boxed_str(),
-            span: Span::default(),
-        })
-    }
-}
-
-impl From<Literal> for proc_macro2::Literal {
-    fn from(value: Literal) -> Self {
-        match value {
-            Literal::Compiler(v) => {
-                let repr = v.to_string();
-                repr.parse()
-                    .unwrap_or_else(|_| proc_macro2::Literal::string(&repr))
-            }
-            Literal::Fallback(v) => v
-                .repr
-                .parse()
-                .unwrap_or_else(|_| proc_macro2::Literal::string(&v.repr)),
-        }
-    }
-}
-
 impl From<proc_macro::Literal> for Literal {
     fn from(value: proc_macro::Literal) -> Self {
         Self::Compiler(value)
@@ -115,6 +90,24 @@ impl From<Literal> for proc_macro::Literal {
                 .repr
                 .parse()
                 .unwrap_or_else(|_| proc_macro::Literal::string(&v.repr)),
+        }
+    }
+}
+
+impl From<fallback::Literal> for Literal {
+    fn from(value: fallback::Literal) -> Self {
+        Self::Fallback(value)
+    }
+}
+
+impl From<Literal> for fallback::Literal {
+    fn from(value: Literal) -> Self {
+        match value {
+            Literal::Compiler(v) => fallback::Literal {
+                repr: v.to_string().into_boxed_str(),
+                span: v.span().into(),
+            },
+            Literal::Fallback(v) => v,
         }
     }
 }

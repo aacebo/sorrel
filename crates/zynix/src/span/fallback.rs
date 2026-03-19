@@ -1,3 +1,5 @@
+use crate::source::{Location, SourceMap};
+
 #[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct Span {
     /// the start char index (inclusive).
@@ -24,12 +26,22 @@ impl Span {
         Self::call_site()
     }
 
-    pub const fn start(&self) -> usize {
-        self.start as usize
+    pub fn byte_range(&self) -> std::ops::Range<usize> {
+        self.start as usize..self.end as usize
     }
 
-    pub const fn end(&self) -> usize {
-        self.end as usize
+    pub fn start(&self) -> Location {
+        SourceMap::with(|sm| {
+            let file = sm.find(*self).expect("span not found in source map");
+            file.location(self.start as usize)
+        })
+    }
+
+    pub fn end(&self) -> Location {
+        SourceMap::with(|sm| {
+            let file = sm.find(*self).expect("span not found in source map");
+            file.location(self.end as usize)
+        })
     }
 
     pub const fn len(&self) -> usize {
@@ -45,7 +57,7 @@ impl Span {
     }
 
     pub const fn is_subset(&self, other: &Self) -> bool {
-        other.start >= self.start && other.end < self.end
+        self.start >= other.start && self.end <= other.end
     }
 
     pub const fn join(self, other: Self) -> Self {
@@ -62,5 +74,31 @@ impl Span {
         };
 
         Self { start, end }
+    }
+}
+
+impl From<proc_macro::Span> for Span {
+    fn from(value: proc_macro::Span) -> Self {
+        if cfg!(nightly) {
+            let r = value.byte_range();
+            return Self::new(r.start as u32, r.end as u32);
+        }
+
+        Self::default()
+    }
+}
+
+impl From<Span> for proc_macro::Span {
+    fn from(_value: Span) -> Self {
+        proc_macro::Span::call_site()
+    }
+}
+
+impl From<proc_macro2::Span> for Span {
+    fn from(value: proc_macro2::Span) -> Self {
+        Self::new(
+            value.byte_range().start as u32,
+            value.byte_range().end as u32,
+        )
     }
 }
