@@ -1,73 +1,57 @@
+use super::fallback;
 use crate::{Spacing, Span};
 
 #[derive(Debug, Clone)]
 pub enum Punct {
-    #[cfg(nightly)]
-    External(proc_macro::Punct),
-    Internal {
-        ch: char,
-        spacing: Spacing,
-        span: Span,
-    },
+    Compiler(proc_macro::Punct),
+    Fallback(fallback::Punct),
 }
 
 impl Punct {
     pub fn new(ch: char, spacing: Spacing) -> Self {
-        #[cfg(nightly)]
         if proc_macro::is_available() {
-            return Self::External(proc_macro::Punct::new(ch, spacing.into()));
-        }
-
-        Self::Internal {
-            ch,
-            spacing,
-            span: Span::default(),
+            Self::Compiler(proc_macro::Punct::new(ch, spacing.into()))
+        } else {
+            Self::Fallback(fallback::Punct::new(ch, spacing))
         }
     }
 
     pub fn as_char(&self) -> char {
         match self {
-            #[cfg(nightly)]
-            Self::External(v) => v.as_char(),
-            Self::Internal { ch, .. } => *ch,
+            Self::Compiler(v) => v.as_char(),
+            Self::Fallback(v) => v.as_char(),
         }
     }
 
     pub fn spacing(&self) -> Spacing {
         match self {
-            #[cfg(nightly)]
-            Self::External(v) => v.spacing().into(),
-            Self::Internal { spacing, .. } => *spacing,
+            Self::Compiler(v) => v.spacing().into(),
+            Self::Fallback(v) => v.spacing(),
         }
     }
 
     pub fn span(&self) -> Span {
         match self {
-            #[cfg(nightly)]
-            Self::External(v) => v.span().into(),
-            Self::Internal { span, .. } => *span,
+            Self::Compiler(v) => v.span().into(),
+            Self::Fallback(v) => v.span(),
         }
     }
 
     pub fn set_span(&mut self, span: Span) {
         match self {
-            #[cfg(nightly)]
-            Self::External(v) => v.set_span(span.into()),
-            Self::Internal { span: s, .. } => *s = span,
+            Self::Compiler(v) => v.set_span(span.into()),
+            Self::Fallback(v) => v.set_span(span),
         }
     }
 }
 
 impl From<proc_macro2::Punct> for Punct {
     fn from(value: proc_macro2::Punct) -> Self {
-        Self::Internal {
+        Self::Fallback(fallback::Punct {
             ch: value.as_char(),
             spacing: value.spacing().into(),
-            span: Span {
-                #[cfg(nightly)]
-                inner: None,
-            },
-        }
+            span: Span::default(),
+        })
     }
 }
 
@@ -77,21 +61,19 @@ impl From<Punct> for proc_macro2::Punct {
     }
 }
 
-#[cfg(nightly)]
 impl From<proc_macro::Punct> for Punct {
     fn from(value: proc_macro::Punct) -> Self {
-        Self::External(value)
+        Self::Compiler(value)
     }
 }
 
-#[cfg(nightly)]
 impl From<Punct> for proc_macro::Punct {
     fn from(value: Punct) -> Self {
         match value {
-            Punct::External(v) => v,
-            Punct::Internal { ch, spacing, span } => {
-                let mut p = proc_macro::Punct::new(ch, spacing.into());
-                p.set_span(span.into());
+            Punct::Compiler(v) => v,
+            Punct::Fallback(v) => {
+                let mut p = proc_macro::Punct::new(v.ch, v.spacing.into());
+                p.set_span(v.span.into());
                 p
             }
         }
@@ -101,9 +83,8 @@ impl From<Punct> for proc_macro::Punct {
 impl std::fmt::Display for Punct {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            #[cfg(nightly)]
-            Self::External(v) => write!(f, "{}", v),
-            Self::Internal { ch, .. } => write!(f, "{}", ch),
+            Self::Compiler(v) => write!(f, "{}", v),
+            Self::Fallback(v) => write!(f, "{}", v),
         }
     }
 }

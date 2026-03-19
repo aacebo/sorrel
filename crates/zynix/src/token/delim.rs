@@ -1,4 +1,4 @@
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Delim {
     #[default]
     None,
@@ -40,7 +40,6 @@ impl From<Delim> for proc_macro2::Delimiter {
     }
 }
 
-#[cfg(nightly)]
 impl From<proc_macro::Delimiter> for Delim {
     fn from(value: proc_macro::Delimiter) -> Self {
         match value {
@@ -52,7 +51,6 @@ impl From<proc_macro::Delimiter> for Delim {
     }
 }
 
-#[cfg(nightly)]
 impl From<Delim> for proc_macro::Delimiter {
     fn from(value: Delim) -> Self {
         match value {

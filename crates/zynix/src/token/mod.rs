@@ -1,5 +1,6 @@
 mod buffer;
 mod delim;
+pub(crate) mod fallback;
 mod group;
 mod ident;
 mod iter;
@@ -127,7 +128,6 @@ impl From<Token> for proc_macro2::TokenTree {
     }
 }
 
-#[cfg(nightly)]
 impl From<proc_macro::TokenTree> for Token {
     fn from(value: proc_macro::TokenTree) -> Self {
         match value {
@@ -139,7 +139,6 @@ impl From<proc_macro::TokenTree> for Token {
     }
 }
 
-#[cfg(nightly)]
 impl From<Token> for proc_macro::TokenTree {
     fn from(value: Token) -> Self {
         match value {

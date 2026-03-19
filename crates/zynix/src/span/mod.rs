@@ -1,27 +1,30 @@
 mod delim;
+pub(crate) mod fallback;
 mod range;
 
 pub use delim::*;
 pub use range::*;
 
 #[derive(Debug, Copy, Clone)]
-pub struct Span {
-    #[cfg(nightly)]
-    pub(crate) inner: Option<proc_macro::Span>,
+pub enum Span {
+    Compiler(proc_macro::Span),
+    Fallback(fallback::Span),
 }
 
 impl Span {
     pub fn call_site() -> Self {
-        Self {
-            #[cfg(nightly)]
-            inner: Some(proc_macro::Span::call_site()),
+        if proc_macro::is_available() {
+            Self::Compiler(proc_macro::Span::call_site())
+        } else {
+            Self::Fallback(fallback::Span)
         }
     }
 
     pub fn mixed_site() -> Self {
-        Self {
-            #[cfg(nightly)]
-            inner: Some(proc_macro::Span::mixed_site()),
+        if proc_macro::is_available() {
+            Self::Compiler(proc_macro::Span::mixed_site())
+        } else {
+            Self::Fallback(fallback::Span)
         }
     }
 
@@ -31,11 +34,9 @@ impl Span {
 
     pub fn join(&self, other: Self) -> Self {
         #[cfg(nightly)]
-        if let (Some(a), Some(b)) = (self.inner, other.inner) {
+        if let (Self::Compiler(a), Self::Compiler(b)) = (self, other) {
             if let Some(joined) = a.join(b) {
-                return Self {
-                    inner: Some(joined),
-                };
+                return Self::Compiler(joined);
             }
         }
 
@@ -45,13 +46,10 @@ impl Span {
 
 impl Default for Span {
     fn default() -> Self {
-        if cfg!(nightly) && proc_macro::is_available() {
+        if proc_macro::is_available() {
             Self::call_site()
         } else {
-            Self {
-                #[cfg(nightly)]
-                inner: None,
-            }
+            Self::Fallback(fallback::Span)
         }
     }
 }
@@ -62,14 +60,14 @@ impl PartialEq for Span {
     fn eq(&self, other: &Self) -> bool {
         #[cfg(nightly)]
         {
-            match (self.inner, other.inner) {
-                (None, None) => true,
-                (Some(a), Some(b)) => {
+            match (self, other) {
+                (Self::Compiler(a), Self::Compiler(b)) => {
                     a.line() == b.line()
                         && a.column() == b.column()
                         && a.end().line() == b.end().line()
                         && a.end().column() == b.end().column()
                 }
+                (Self::Fallback(_), Self::Fallback(_)) => true,
                 _ => false,
             }
         }
@@ -82,11 +80,8 @@ impl Ord for Span {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         #[cfg(nightly)]
         {
-            match (self.inner, other.inner) {
-                (None, None) => std::cmp::Ordering::Equal,
-                (None, Some(_)) => std::cmp::Ordering::Less,
-                (Some(_), None) => std::cmp::Ordering::Greater,
-                (Some(a), Some(b)) => match a.line().cmp(&b.line()) {
+            match (self, other) {
+                (Self::Compiler(a), Self::Compiler(b)) => match a.line().cmp(&b.line()) {
                     std::cmp::Ordering::Equal => match a.column().cmp(&b.column()) {
                         std::cmp::Ordering::Equal => match a.end().line().cmp(&b.end().line()) {
                             std::cmp::Ordering::Equal => a.end().column().cmp(&b.end().column()),
@@ -96,6 +91,9 @@ impl Ord for Span {
                     },
                     ord => ord,
                 },
+                (Self::Fallback(_), Self::Fallback(_)) => std::cmp::Ordering::Equal,
+                (Self::Fallback(_), Self::Compiler(_)) => std::cmp::Ordering::Less,
+                (Self::Compiler(_), Self::Fallback(_)) => std::cmp::Ordering::Greater,
             }
         }
         #[cfg(not(nightly))]
@@ -112,7 +110,7 @@ impl PartialOrd for Span {
 impl std::hash::Hash for Span {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         #[cfg(nightly)]
-        if let Some(s) = self.inner {
+        if let Self::Compiler(s) = self {
             s.line().hash(state);
             s.column().hash(state);
             s.end().line().hash(state);
@@ -121,26 +119,27 @@ impl std::hash::Hash for Span {
     }
 }
 
-#[cfg(nightly)]
 impl From<proc_macro::Span> for Span {
     fn from(value: proc_macro::Span) -> Self {
-        Self { inner: Some(value) }
+        Self::Compiler(value)
     }
 }
 
-#[cfg(nightly)]
 impl From<Span> for proc_macro::Span {
     fn from(value: Span) -> Self {
-        value.inner.unwrap_or_else(proc_macro::Span::call_site)
+        match value {
+            Span::Compiler(s) => s,
+            Span::Fallback(_) => proc_macro::Span::call_site(),
+        }
     }
 }
 
 #[cfg(nightly)]
 impl proc_macro::MultiSpan for Span {
     fn into_spans(self) -> Vec<proc_macro::Span> {
-        match self.inner {
-            Some(s) => vec![s],
-            None => vec![proc_macro::Span::call_site()],
+        match self {
+            Self::Compiler(s) => vec![s],
+            Self::Fallback(_) => vec![proc_macro::Span::call_site()],
         }
     }
 }

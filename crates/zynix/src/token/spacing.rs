@@ -1,4 +1,4 @@
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Spacing {
     #[default]
     Alone,
@@ -32,7 +32,6 @@ impl From<Spacing> for proc_macro2::Spacing {
     }
 }
 
-#[cfg(nightly)]
 impl From<proc_macro::Spacing> for Spacing {
     fn from(value: proc_macro::Spacing) -> Self {
         match value {
@@ -42,7 +41,6 @@ impl From<proc_macro::Spacing> for Spacing {
     }
 }
 
-#[cfg(nightly)]
 impl From<Spacing> for proc_macro::Spacing {
     fn from(value: Spacing) -> Self {
         match value {
