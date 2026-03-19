@@ -1,11 +1,17 @@
 #![cfg_attr(
     nightly,
-    feature(proc_macro_diagnostic, proc_macro_span, proc_macro_totokens)
+    feature(
+        proc_macro_diagnostic,
+        proc_macro_span,
+        proc_macro_totokens,
+        proc_macro_def_site,
+    )
 )]
 
 extern crate proc_macro;
 
 mod parse;
+pub(crate) mod source;
 mod span;
 mod token;
 

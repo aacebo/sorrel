@@ -16,7 +16,7 @@ impl Span {
         if proc_macro::is_available() {
             Self::Compiler(proc_macro::Span::call_site())
         } else {
-            Self::Fallback(fallback::Span)
+            Self::Fallback(fallback::Span::call_site())
         }
     }
 
@@ -24,8 +24,17 @@ impl Span {
         if proc_macro::is_available() {
             Self::Compiler(proc_macro::Span::mixed_site())
         } else {
-            Self::Fallback(fallback::Span)
+            Self::Fallback(fallback::Span::mixed_site())
         }
+    }
+
+    pub fn def_site() -> Self {
+        #[cfg(nightly)]
+        if proc_macro::is_available() {
+            return Self::Compiler(proc_macro::Span::def_site());
+        }
+
+        Self::Fallback(fallback::Span::def_site())
     }
 
     pub fn range(from: Self, to: Self) -> Self {
@@ -49,7 +58,7 @@ impl Default for Span {
         if proc_macro::is_available() {
             Self::call_site()
         } else {
-            Self::Fallback(fallback::Span)
+            Self::Fallback(fallback::Span::call_site())
         }
     }
 }
@@ -122,6 +131,12 @@ impl std::hash::Hash for Span {
 impl From<proc_macro::Span> for Span {
     fn from(value: proc_macro::Span) -> Self {
         Self::Compiler(value)
+    }
+}
+
+impl From<fallback::Span> for Span {
+    fn from(value: fallback::Span) -> Self {
+        Self::Fallback(value)
     }
 }
 
