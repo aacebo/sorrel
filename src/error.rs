@@ -34,7 +34,7 @@ impl Error {
     }
 
     pub fn exit(&self) -> ! {
-        eprintln!("{}", self.to_string());
+        eprintln!("{}", self);
         std::process::exit(1)
     }
 }
@@ -85,7 +85,7 @@ impl std::fmt::Display for Error {
         }
 
         if !self.items.is_empty() {
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
 
         write!(f, "Error: {}", &self.inner)
@@ -232,8 +232,8 @@ impl ToError for serde_yml::Error {
     }
 }
 
-impl<T> Into<Result<T, Error>> for Error {
-    fn into(self) -> Result<T, Error> {
-        Err(self)
+impl<T> From<Error> for Result<T, Error> {
+    fn from(value: Error) -> Self {
+        Self::Err(value)
     }
 }

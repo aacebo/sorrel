@@ -1,17 +1,15 @@
-use std::{collections::BTreeMap, path::PathBuf};
+use std::collections::BTreeMap;
 
 use quote::{format_ident, quote};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct SourceMap {
     sources: BTreeMap<String, Source>,
 }
 
 impl SourceMap {
     pub fn new() -> Self {
-        Self {
-            sources: BTreeMap::default(),
-        }
+        Self::default()
     }
 
     pub fn len(&self) -> usize {
@@ -42,7 +40,7 @@ impl SourceMap {
         self.sources.iter()
     }
 
-    pub fn save(&self, path: &PathBuf) -> std::io::Result<()> {
+    pub fn save(&self, path: &std::path::Path) -> std::io::Result<()> {
         let mut root = vec![];
 
         for src in self.sources.values() {
@@ -63,17 +61,17 @@ impl SourceMap {
 
 #[derive(Debug, Clone)]
 pub struct Source {
-    pub file: PathBuf,
+    pub file: std::path::PathBuf,
     pub module: String,
     pub content: proc_macro2::TokenStream,
 }
 
 impl Source {
-    pub fn dir(&self) -> PathBuf {
+    pub fn dir(&self) -> std::path::PathBuf {
         self.file
             .parent()
             .map(|p| p.to_path_buf())
-            .unwrap_or(PathBuf::default())
+            .unwrap_or_default()
     }
 
     pub fn save(&self) -> std::io::Result<()> {
