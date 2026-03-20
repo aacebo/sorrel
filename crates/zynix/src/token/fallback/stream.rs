@@ -91,6 +91,7 @@ impl crate::token::lex::Scan for TokenStream {
 
         loop {
             c = c.skip_whitespace();
+
             if c.is_empty() {
                 break;
             }
