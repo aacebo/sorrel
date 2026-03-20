@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use super::fallback;
-use crate::{DelimSpan, ParseError, ParseStream, Span, Token};
+use crate::{ParseError, ParseStream, ToTokens, Token};
 
 #[derive(Clone)]
 pub enum TokenStream {
@@ -11,19 +11,10 @@ pub enum TokenStream {
 
 impl TokenStream {
     pub fn new() -> Self {
-        Self::Fallback(fallback::TokenStream::new())
-    }
-
-    /// Normalize to Fallback, returning a mutable reference to the vec.
-    pub fn normalize(&mut self) -> &mut Vec<Token> {
-        if let Self::Compiler(ts) = self {
-            let tokens: Vec<Token> = ts.clone().into_iter().map(Token::from).collect();
-            *self = Self::Fallback(fallback::TokenStream(tokens));
-        }
-
-        match self {
-            Self::Compiler(_) => unreachable!(),
-            Self::Fallback(v) => v.inner_mut(),
+        if proc_macro::is_available() {
+            Self::Compiler(proc_macro::TokenStream::new())
+        } else {
+            Self::Fallback(fallback::TokenStream::new())
         }
     }
 
@@ -34,46 +25,22 @@ impl TokenStream {
         }
     }
 
-    pub fn len(&mut self) -> usize {
-        self.normalize().len()
-    }
-
-    pub fn get(&mut self, index: usize) -> Option<&Token> {
-        self.normalize().get(index)
-    }
-
-    pub fn iter(&mut self) -> impl Iterator<Item = &Token> {
-        self.normalize().iter()
-    }
-
-    pub fn first(&mut self) -> Span {
-        self.normalize()
-            .first()
-            .map(|v| v.span())
-            .unwrap_or_default()
-    }
-
-    pub fn last(&mut self) -> Span {
-        self.normalize()
-            .last()
-            .map(|v| v.span())
-            .unwrap_or_default()
-    }
-
-    pub fn span(&mut self) -> Span {
-        self.first().join(self.last())
-    }
-
-    pub fn delim(&mut self) -> DelimSpan {
-        DelimSpan::new(self.first(), self.last())
-    }
-
     pub fn extend_one(&mut self, token: Token) {
-        self.normalize().push(token);
+        match self {
+            Self::Compiler(v) => v.extend_one(token.to_tree()),
+            Self::Fallback(v) => v.extend_one(token),
+        }
     }
 
-    pub fn parse(&mut self) -> ParseStream<'_> {
+    pub fn parse(&self) -> ParseStream<'_> {
         ParseStream::new(self)
+    }
+
+    pub fn to_vec(self) -> Vec<Token> {
+        match self {
+            Self::Compiler(v) => v.into_iter().map(Token::from).collect(),
+            Self::Fallback(v) => v.0,
+        }
     }
 }
 
@@ -85,7 +52,10 @@ impl Default for TokenStream {
 
 impl Extend<Token> for TokenStream {
     fn extend<T: IntoIterator<Item = Token>>(&mut self, iter: T) {
-        self.normalize().extend(iter);
+        match self {
+            Self::Compiler(v) => v.extend(iter.into_iter().map(proc_macro::TokenTree::from)),
+            Self::Fallback(v) => v.extend(iter),
+        }
     }
 }
 
@@ -122,10 +92,10 @@ impl From<fallback::TokenStream> for TokenStream {
 }
 
 impl From<TokenStream> for fallback::TokenStream {
-    fn from(mut value: TokenStream) -> Self {
+    fn from(value: TokenStream) -> Self {
         match value {
             TokenStream::Compiler(_) => {
-                let tokens: Vec<Token> = value.normalize().drain(..).collect();
+                let tokens: Vec<Token> = value.to_vec();
                 fallback::TokenStream(tokens)
             }
             TokenStream::Fallback(v) => v,
@@ -168,12 +138,12 @@ impl FromIterator<Self> for TokenStream {
 
 impl IntoIterator for TokenStream {
     type Item = Token;
-    type IntoIter = Box<dyn Iterator<Item = Token>>;
+    type IntoIter = super::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            Self::Compiler(ts) => Box::new(ts.into_iter().map(Token::from)),
-            Self::Fallback(v) => Box::new(v.into_iter()),
+            Self::Compiler(ts) => ts.into_iter().into(),
+            Self::Fallback(v) => v.into_iter().into(),
         }
     }
 }
@@ -209,15 +179,11 @@ impl std::fmt::Display for TokenStream {
     }
 }
 
-#[cfg(nightly)]
-impl proc_macro::ToTokens for TokenStream {
-    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
+impl ToTokens for TokenStream {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Self::Compiler(ts) => tokens.extend(ts.clone()),
-            Self::Fallback(_) => {
-                let pm: proc_macro::TokenStream = self.clone().into();
-                tokens.extend(pm);
-            }
+            Self::Compiler(v) => tokens.extend(v.clone().into_iter().map(Token::from)),
+            Self::Fallback(v) => v.to_tokens(tokens),
         }
     }
 }

@@ -107,24 +107,12 @@ impl PartialEq for Diagnostic {
     }
 }
 
-#[cfg(not(nightly))]
 impl ToTokens for Diagnostic {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.clone()
             .into_error()
             .to_compile_error()
             .to_tokens(tokens);
-    }
-}
-
-#[cfg(nightly)]
-impl proc_macro::ToTokens for Diagnostic {
-    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        let s = self.clone().into_error().to_compile_error().to_string();
-
-        if let Ok(ts) = s.parse::<proc_macro::TokenStream>() {
-            tokens.extend(ts);
-        }
     }
 }
 

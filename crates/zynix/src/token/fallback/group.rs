@@ -1,5 +1,6 @@
+use super::TokenStream;
 use crate::token::lex::{Cursor, LexError, Scan};
-use crate::{Delim, DelimSpan, TokenStream};
+use crate::{Delim, DelimSpan, Span};
 
 #[derive(Debug, Clone)]
 pub struct Group {
@@ -9,10 +10,10 @@ pub struct Group {
 }
 
 impl Group {
-    pub fn new(delim: Delim, mut stream: TokenStream) -> Self {
+    pub fn new(delim: Delim, stream: TokenStream) -> Self {
         Self {
             delim,
-            span: stream.delim(),
+            span: DelimSpan::new(Span::call_site(), Span::call_site()),
             tokens: stream,
         }
     }
@@ -25,14 +26,24 @@ impl Group {
         self.span
     }
 
-    pub fn as_tokens(&self) -> &TokenStream {
-        &self.tokens
+    pub fn stream(&self) -> TokenStream {
+        self.tokens.clone()
+    }
+
+    pub fn set_span(&mut self, span: DelimSpan) {
+        self.span = span;
     }
 }
 
 impl From<proc_macro::Group> for Group {
     fn from(value: proc_macro::Group) -> Self {
-        Self::new(value.delimiter().into(), value.stream().into())
+        let mut group = Self::new(value.delimiter().into(), value.stream().into());
+
+        group.set_span(DelimSpan::new(
+            value.span_open().into(),
+            value.span_close().into(),
+        ));
+        group
     }
 }
 
@@ -54,7 +65,7 @@ impl Scan for Group {
         let delim = Delim::from_open(ch).ok_or(cursor.error())?;
         let c = cursor.advance(ch.len_utf8());
         // Scan inner tokens until matching close delimiter
-        let (c, inner) = super::TokenStream::scan(c)?;
+        let (c, inner) = TokenStream::scan(c)?;
         let close_ch = c.first().ok_or_else(|| {
             cursor
                 .error()
@@ -78,7 +89,17 @@ impl Scan for Group {
         }
 
         let c = c.advance(close_ch.len_utf8());
-        let stream: TokenStream = inner.into();
-        Ok((c, Self::new(delim, stream)))
+        let mut group = Self::new(delim, inner);
+        group.set_span(DelimSpan::new(cursor.span(), c.span()));
+
+        Ok((c, group))
+    }
+}
+
+impl crate::ToTokens for Group {
+    fn to_tokens(&self, tokens: &mut crate::TokenStream) {
+        use crate::Token;
+
+        tokens.extend_one(Token::from(crate::Group::from(self.clone())));
     }
 }

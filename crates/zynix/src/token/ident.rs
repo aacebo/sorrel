@@ -78,3 +78,12 @@ impl std::fmt::Display for Ident {
         }
     }
 }
+
+#[cfg(nightly)]
+impl proc_macro::ToTokens for Ident {
+    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
+        use crate::Token;
+
+        tokens.extend_one(Token::from(self.clone()).to_tree());
+    }
+}

@@ -1,4 +1,4 @@
-use crate::{DelimSpan, Span, Token};
+use crate::{DelimSpan, Span, ToTokens, Token};
 
 #[derive(Debug, Default, Clone)]
 pub struct TokenStream(pub(crate) Vec<Token>);
@@ -8,20 +8,8 @@ impl TokenStream {
         Self(vec![])
     }
 
-    pub fn inner_mut(&mut self) -> &mut Vec<Token> {
-        &mut self.0
-    }
-
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    pub fn get(&self, index: usize) -> Option<&Token> {
-        self.0.get(index)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Token> {
@@ -175,5 +163,11 @@ impl std::fmt::Display for TokenStream {
         }
 
         Ok(())
+    }
+}
+
+impl ToTokens for TokenStream {
+    fn to_tokens(&self, tokens: &mut crate::TokenStream) {
+        tokens.extend(self.clone());
     }
 }

@@ -82,6 +82,10 @@ impl Token {
             Self::Group(v) => v.span().into(),
         }
     }
+
+    pub fn to_tree(self) -> proc_macro::TokenTree {
+        proc_macro::TokenTree::from(self)
+    }
 }
 
 impl From<Ident> for Token {
@@ -154,69 +158,43 @@ impl std::fmt::Display for Token {
 // On nightly: blanket ToTokens for any T: proc_macro::ToTokens covers everything,
 //   so zynix types only need proc_macro::ToTokens impls (defined further below).
 
-#[cfg(not(nightly))]
 impl ToTokens for Token {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(self.clone());
     }
 }
 
-#[cfg(not(nightly))]
 impl ToTokens for Ident {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(self.clone().into());
     }
 }
 
-#[cfg(not(nightly))]
+impl ToTokens for Group {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(self.clone().into());
+    }
+}
+
 impl ToTokens for Punct {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(self.clone().into());
     }
 }
 
-#[cfg(not(nightly))]
 impl ToTokens for Literal {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(self.clone().into());
     }
 }
 
-#[cfg(not(nightly))]
-impl ToTokens for TokenStream {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend(self.iter().cloned());
-    }
-}
-
-#[cfg(not(nightly))]
 impl ToTokens for &str {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         use std::str::FromStr;
+
         if let Ok(ts) = TokenStream::from_str(self) {
             ts.to_tokens(tokens);
         }
-    }
-}
-
-// On nightly: blanket covers any T: proc_macro::ToTokens, including zynix types
-// (which implement proc_macro::ToTokens below).
-#[cfg(nightly)]
-impl<T: proc_macro::ToTokens> ToTokens for T {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let mut ts = proc_macro::TokenStream::new();
-        proc_macro::ToTokens::to_tokens(self, &mut ts);
-        tokens.extend(TokenStream::from(ts));
-    }
-}
-
-// proc_macro::ToTokens impls for zynix types (nightly only).
-// These feed into the blanket impl above.
-#[cfg(nightly)]
-impl proc_macro::ToTokens for Token {
-    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        let tt: proc_macro::TokenTree = self.clone().into();
-        tokens.extend(std::iter::once(tt));
     }
 }
 
@@ -322,14 +300,6 @@ mod tests {
     fn group_new_and_delim() {
         let g = Group::new(Delim::Paren, TokenStream::new());
         assert_eq!(g.delim(), Delim::Paren);
-    }
-
-    #[test]
-    fn group_as_tokens() {
-        let mut ts = TokenStream::new();
-        ts.extend_one(Ident::new("x", Span::default()).into());
-        let g = Group::new(Delim::Brace, ts);
-        assert!(!g.as_tokens().is_empty());
     }
 
     #[test]

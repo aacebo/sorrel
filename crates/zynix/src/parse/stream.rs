@@ -1,15 +1,15 @@
 use crate::{Buffer, ParseError, Reader, Span, Token, TokenStream, Writer};
 
 pub struct ParseStream<'a> {
-    input: &'a [Token],
+    input: &'a TokenStream,
     index: usize,
     output: Buffer,
 }
 
 impl<'a> ParseStream<'a> {
-    pub fn new(input: &'a mut TokenStream) -> Self {
+    pub fn new(input: &'a TokenStream) -> Self {
         Self {
-            input: input.normalize(),
+            input,
             index: 0,
             output: Buffer::new(),
         }
@@ -86,24 +86,19 @@ impl<'a> From<ParseStream<'a>> for TokenStream {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::*;
-
-    fn parse(input: &str) -> TokenStream {
-        input.parse::<TokenStream>().unwrap()
-    }
 
     #[test]
     fn empty_stream() {
-        let mut stream = TokenStream::new();
-        let ps = ParseStream::new(&mut stream);
+        let stream = TokenStream::new();
+        let ps = stream.parse();
         assert!(ps.is_empty());
     }
 
     #[test]
     fn simple_idents_and_punct() {
-        let mut stream = parse("a + b");
-        let mut ps = ParseStream::new(&mut stream);
+        let stream = "a + b".parse::<TokenStream>().unwrap();
+        let mut ps = stream.parse();
 
         assert!(matches!(ps.next().unwrap(), Token::Ident(_)));
         assert!(matches!(ps.next().unwrap(), Token::Punct(_)));
@@ -113,8 +108,8 @@ mod tests {
 
     #[test]
     fn peek_does_not_consume() {
-        let mut stream = parse("a b");
-        let mut ps = ParseStream::new(&mut stream);
+        let stream = "a b".parse::<TokenStream>().unwrap();
+        let mut ps = stream.parse();
 
         assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
         assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
@@ -124,8 +119,8 @@ mod tests {
 
     #[test]
     fn fork_does_not_advance_original() {
-        let mut stream = parse("a b");
-        let ps = ParseStream::new(&mut stream);
+        let stream = "a b".parse::<TokenStream>().unwrap();
+        let ps = stream.parse();
         let mut fork = ps.fork();
 
         assert!(matches!(fork.next().unwrap(), Token::Ident(_))); // "a"
@@ -134,8 +129,8 @@ mod tests {
 
     #[test]
     fn commit_fork() {
-        let mut stream = parse("a b");
-        let mut ps = ParseStream::new(&mut stream);
+        let stream = "a b".parse::<TokenStream>().unwrap();
+        let mut ps = stream.parse();
         let mut fork = ps.fork();
 
         fork.next().unwrap(); // advance fork past "a"
@@ -150,8 +145,8 @@ mod tests {
 
     #[test]
     fn write_appends() {
-        let mut stream = TokenStream::new();
-        let mut ps = ParseStream::new(&mut stream);
+        let stream = TokenStream::new();
+        let mut ps = stream.parse();
         let ident = Ident::new("x", Span::default());
         ps.write(Token::Ident(ident)).unwrap();
         assert_eq!(ps.output.freeze().len(), 1);
@@ -159,15 +154,15 @@ mod tests {
 
     #[test]
     fn group_token_accessible() {
-        let mut stream = parse("(a + b) c");
-        let mut ps = ParseStream::new(&mut stream);
+        let stream = "(a + b) c".parse::<TokenStream>().unwrap();
+        let mut ps = stream.parse();
         let group = ps.next().unwrap();
         assert!(matches!(group, Token::Group(_)));
 
         if let Token::Group(g) = group {
-            let mut tokens = g.as_tokens().clone();
-            let mut inner = ParseStream::new(&mut tokens);
-            assert!(matches!(inner.next().unwrap(), Token::Ident(_))); // "a"
+            let tokens = g.stream();
+            let mut inner = tokens.parse();
+            debug_assert!(matches!(inner.next().unwrap(), Token::Ident(_))); // "a"
         }
     }
 }

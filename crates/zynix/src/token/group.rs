@@ -9,10 +9,9 @@ pub enum Group {
 
 impl Group {
     pub fn new(delim: Delim, stream: TokenStream) -> Self {
-        if proc_macro::is_available() {
-            Self::Compiler(proc_macro::Group::new(delim.into(), stream.into()))
-        } else {
-            Self::Fallback(fallback::Group::new(delim, stream))
+        match stream {
+            TokenStream::Compiler(v) => Self::Compiler(proc_macro::Group::new(delim.into(), v)),
+            TokenStream::Fallback(v) => Self::Fallback(fallback::Group::new(delim, v)),
         }
     }
 
@@ -25,20 +24,15 @@ impl Group {
 
     pub fn span(&self) -> DelimSpan {
         match self {
-            Self::Compiler(v) => {
-                let span = v.span().into();
-                DelimSpan::new(span, span)
-            }
+            Self::Compiler(v) => DelimSpan::new(v.span_open().into(), v.span_close().into()),
             Self::Fallback(v) => v.span(),
         }
     }
 
-    pub fn as_tokens(&self) -> &TokenStream {
+    pub fn stream(&self) -> TokenStream {
         match self {
-            Self::Compiler(_) => {
-                panic!("cannot borrow tokens from compiler group; normalize first")
-            }
-            Self::Fallback(v) => v.as_tokens(),
+            Self::Compiler(v) => v.stream().into(),
+            Self::Fallback(v) => v.stream().into(),
         }
     }
 }
@@ -53,7 +47,12 @@ impl From<Group> for proc_macro::Group {
     fn from(value: Group) -> Self {
         match value {
             Group::Compiler(v) => v,
-            Group::Fallback(v) => proc_macro::Group::new(v.delim.into(), v.tokens.into()),
+            Group::Fallback(v) => {
+                let span = v.span.span();
+                let mut group = proc_macro::Group::new(v.delim.into(), v.tokens.into());
+                group.set_span(span.into());
+                group
+            }
         }
     }
 }
@@ -79,5 +78,14 @@ impl std::fmt::Display for Group {
             Self::Compiler(v) => write!(f, "{}", v),
             Self::Fallback(v) => write!(f, "{}", v),
         }
+    }
+}
+
+#[cfg(nightly)]
+impl proc_macro::ToTokens for Group {
+    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
+        use crate::Token;
+
+        tokens.extend_one(Token::from(self.clone()).to_tree());
     }
 }

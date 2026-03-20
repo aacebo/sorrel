@@ -120,3 +120,12 @@ impl std::fmt::Display for Literal {
         }
     }
 }
+
+#[cfg(nightly)]
+impl proc_macro::ToTokens for Literal {
+    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
+        use crate::Token;
+
+        tokens.extend_one(Token::from(self.clone()).to_tree());
+    }
+}

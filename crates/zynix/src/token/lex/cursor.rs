@@ -64,8 +64,12 @@ impl<'a> Cursor<'a> {
         fallback::Span::new(self.off, end.off).into()
     }
 
+    pub fn span(&self) -> Span {
+        fallback::Span::new(self.off, self.off + 1).into()
+    }
+
     pub fn error(&self) -> super::LexError {
-        super::LexError::new(fallback::Span::new(self.off, self.off + 1).into())
+        super::LexError::new(self.span())
     }
 
     pub fn skip_whitespace(mut self) -> Self {

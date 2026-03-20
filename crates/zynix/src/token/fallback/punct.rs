@@ -85,8 +85,16 @@ impl token::lex::Scan for Punct {
             _ => Spacing::Alone,
         };
 
-        let span = next.span_to(&next);
+        let span = cursor.span_to(&next);
         let token = Self { ch, spacing, span };
         Ok((next, token))
+    }
+}
+
+impl crate::ToTokens for Punct {
+    fn to_tokens(&self, tokens: &mut crate::TokenStream) {
+        use crate::Token;
+
+        tokens.extend_one(Token::from(crate::Punct::from(self.clone())));
     }
 }

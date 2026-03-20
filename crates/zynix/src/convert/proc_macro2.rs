@@ -129,10 +129,7 @@ impl From<Literal> for proc_macro2::Literal {
 
 impl From<proc_macro2::Group> for Group {
     fn from(value: proc_macro2::Group) -> Self {
-        Self::Fallback(crate::token::fallback::Group::new(
-            value.delimiter().into(),
-            value.stream().into(),
-        ))
+        Self::new(value.delimiter().into(), value.stream().into())
     }
 }
 
@@ -140,8 +137,7 @@ impl From<Group> for proc_macro2::Group {
     fn from(value: Group) -> Self {
         let delim: proc_macro2::Delimiter = value.delim().into();
         let stream: proc_macro2::TokenStream = value
-            .as_tokens()
-            .clone()
+            .stream()
             .into_iter()
             .map(proc_macro2::TokenTree::from)
             .collect();

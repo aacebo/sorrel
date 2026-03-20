@@ -1,6 +1,7 @@
 #![cfg_attr(
     nightly,
     feature(
+        extend_one,
         proc_macro_diagnostic,
         proc_macro_span,
         proc_macro_totokens,
