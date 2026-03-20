@@ -1,4 +1,4 @@
-use crate::{Span, span::fallback};
+use crate::{LexError, Span, span::fallback};
 
 /// Zero-copy immutable cursor over source text.
 /// Each parse step returns a new advanced cursor.
@@ -50,12 +50,14 @@ impl<'a> Cursor<'a> {
     /// Advance while predicate holds on chars.
     pub fn skip_while(&self, mut pred: impl FnMut(char) -> bool) -> Self {
         let mut bytes = 0;
+
         for ch in self.rest.chars() {
             if !pred(ch) {
                 break;
             }
             bytes += ch.len_utf8();
         }
+
         self.advance(bytes)
     }
 
@@ -68,8 +70,8 @@ impl<'a> Cursor<'a> {
         fallback::Span::new(self.off, self.off + 1).into()
     }
 
-    pub fn error(&self) -> super::LexError {
-        super::LexError::new(self.span())
+    pub fn error(&self) -> LexError {
+        LexError::new(self.span())
     }
 
     pub fn skip_whitespace(mut self) -> Self {
