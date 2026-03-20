@@ -43,6 +43,7 @@ impl From<proc_macro::Group> for Group {
             value.span_open().into(),
             value.span_close().into(),
         ));
+
         group
     }
 }
