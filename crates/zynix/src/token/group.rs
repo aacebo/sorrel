@@ -1,5 +1,5 @@
 use super::fallback;
-use crate::{Delim, DelimSpan, TokenStream};
+use crate::{Delim, DelimSpan, ToTokens, TokenStream};
 
 #[derive(Debug, Clone)]
 pub enum Group {
@@ -81,11 +81,8 @@ impl std::fmt::Display for Group {
     }
 }
 
-#[cfg(nightly)]
-impl proc_macro::ToTokens for Group {
-    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        use crate::Token;
-
-        tokens.extend_one(Token::from(self.clone()).to_tree());
+impl ToTokens for Group {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(self.clone().into());
     }
 }

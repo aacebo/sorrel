@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use super::fallback;
-use crate::Span;
+use crate::{Span, ToTokens, TokenStream};
 
 #[derive(Debug, Clone)]
 pub enum Ident {
@@ -79,11 +79,8 @@ impl std::fmt::Display for Ident {
     }
 }
 
-#[cfg(nightly)]
-impl proc_macro::ToTokens for Ident {
-    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        use crate::Token;
-
-        tokens.extend_one(Token::from(self.clone()).to_tree());
+impl ToTokens for Ident {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(self.clone().into());
     }
 }

@@ -154,37 +154,9 @@ impl std::fmt::Display for Token {
     }
 }
 
-// On stable: explicit ToTokens impls for zynix's own types.
-// On nightly: blanket ToTokens for any T: proc_macro::ToTokens covers everything,
-//   so zynix types only need proc_macro::ToTokens impls (defined further below).
-
 impl ToTokens for Token {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(self.clone());
-    }
-}
-
-impl ToTokens for Ident {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(self.clone().into());
-    }
-}
-
-impl ToTokens for Group {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(self.clone().into());
-    }
-}
-
-impl ToTokens for Punct {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(self.clone().into());
-    }
-}
-
-impl ToTokens for Literal {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(self.clone().into());
     }
 }
 

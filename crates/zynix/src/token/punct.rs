@@ -1,5 +1,5 @@
 use super::fallback;
-use crate::{Spacing, Span};
+use crate::{Spacing, Span, ToTokens, TokenStream};
 
 #[derive(Debug, Clone)]
 pub enum Punct {
@@ -92,11 +92,8 @@ impl std::fmt::Display for Punct {
     }
 }
 
-#[cfg(nightly)]
-impl proc_macro::ToTokens for Punct {
-    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        use crate::Token;
-
-        tokens.extend_one(Token::from(self.clone()).to_tree());
+impl ToTokens for Punct {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(self.clone().into());
     }
 }

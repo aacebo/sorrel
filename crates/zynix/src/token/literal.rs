@@ -1,5 +1,5 @@
 use super::fallback;
-use crate::Span;
+use crate::{Span, ToTokens, TokenStream};
 
 #[derive(Debug, Clone)]
 pub enum Literal {
@@ -121,11 +121,8 @@ impl std::fmt::Display for Literal {
     }
 }
 
-#[cfg(nightly)]
-impl proc_macro::ToTokens for Literal {
-    fn to_tokens(&self, tokens: &mut proc_macro::TokenStream) {
-        use crate::Token;
-
-        tokens.extend_one(Token::from(self.clone()).to_tree());
+impl ToTokens for Literal {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(self.clone().into());
     }
 }
