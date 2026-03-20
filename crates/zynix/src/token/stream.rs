@@ -27,7 +27,7 @@ impl TokenStream {
 
     pub fn extend_one(&mut self, token: Token) {
         match self {
-            Self::Compiler(v) => v.extend_one(token.to_tree()),
+            Self::Compiler(v) => v.extend_one(proc_macro::TokenTree::from(token)),
             Self::Fallback(v) => v.extend_one(token),
         }
     }

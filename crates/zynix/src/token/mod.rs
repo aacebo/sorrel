@@ -82,10 +82,6 @@ impl Token {
             Self::Group(v) => v.span().into(),
         }
     }
-
-    pub fn to_tree(self) -> proc_macro::TokenTree {
-        proc_macro::TokenTree::from(self)
-    }
 }
 
 impl From<Ident> for Token {
