@@ -42,12 +42,6 @@ pub trait ToTokens {
     }
 }
 
-impl ToTokens for Token {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(TokenTree::Token(self.clone()));
-    }
-}
-
 pub trait Reader {
     /// the remaining token count.
     fn remaining(&self) -> usize;
@@ -116,6 +110,12 @@ impl std::fmt::Display for Token {
     }
 }
 
+impl ToTokens for Token {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(TokenTree::from(self.clone()));
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum TokenTree {
     Token(Token),
@@ -139,19 +139,19 @@ impl From<Token> for TokenTree {
 
 impl From<Ident> for TokenTree {
     fn from(value: Ident) -> Self {
-        Self::Token(Token::Ident(value))
+        Self::Token(Token::from(value))
     }
 }
 
 impl From<Punct> for TokenTree {
     fn from(value: Punct) -> Self {
-        Self::Token(Token::Punct(value))
+        Self::Token(Token::from(value))
     }
 }
 
 impl From<Literal> for TokenTree {
     fn from(value: Literal) -> Self {
-        Self::Token(Token::Literal(value))
+        Self::Token(Token::from(value))
     }
 }
 
