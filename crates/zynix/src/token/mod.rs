@@ -42,18 +42,24 @@ pub trait ToTokens {
     }
 }
 
+impl ToTokens for Token {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(TokenTree::Token(self.clone()));
+    }
+}
+
 pub trait Reader {
     /// the remaining token count.
     fn remaining(&self) -> usize;
 
     /// peek at the next token without moving forward.
-    fn peek(&self) -> Option<&Token>;
+    fn peek(&self) -> Option<&TokenTree>;
 
     /// move the iterator forward by n and return the tokens.
-    fn next_n(&mut self, n: usize) -> Option<&[Token]>;
+    fn next_n(&mut self, n: usize) -> Option<&[TokenTree]>;
 
     /// move the iterator forward and return the token.
-    fn next(&mut self) -> Option<&Token> {
+    fn next(&mut self) -> Option<&TokenTree> {
         self.next_n(1)?.first()
     }
 }
@@ -62,7 +68,7 @@ pub trait Writer {
     type Error: Into<ParseError>;
 
     /// write tokens to a stream.
-    fn write(&mut self, tokens: impl IntoIterator<Item = Token>) -> Result<(), Self::Error>;
+    fn write(&mut self, tokens: impl IntoIterator<Item = TokenTree>) -> Result<(), Self::Error>;
 }
 
 #[derive(Debug, Clone)]
@@ -70,7 +76,6 @@ pub enum Token {
     Ident(Ident),
     Punct(Punct),
     Literal(Literal),
-    Group(Group),
 }
 
 impl Token {
@@ -79,7 +84,6 @@ impl Token {
             Self::Ident(v) => v.span(),
             Self::Punct(v) => v.span(),
             Self::Literal(v) => v.span(),
-            Self::Group(v) => v.span().into(),
         }
     }
 }
@@ -102,55 +106,102 @@ impl From<Literal> for Token {
     }
 }
 
-impl From<Group> for Token {
-    fn from(value: Group) -> Self {
-        Self::Group(value)
-    }
-}
-
-impl From<proc_macro::TokenTree> for Token {
-    fn from(value: proc_macro::TokenTree) -> Self {
-        match value {
-            proc_macro::TokenTree::Ident(v) => Self::Ident(v.into()),
-            proc_macro::TokenTree::Punct(v) => Self::Punct(v.into()),
-            proc_macro::TokenTree::Literal(v) => Self::Literal(v.into()),
-            proc_macro::TokenTree::Group(v) => Self::Group(v.into()),
-        }
-    }
-}
-
-impl From<Token> for proc_macro::TokenTree {
-    fn from(value: Token) -> Self {
-        match value {
-            Token::Ident(v) => proc_macro::TokenTree::Ident(v.into()),
-            Token::Punct(v) => proc_macro::TokenTree::Punct(v.into()),
-            Token::Literal(v) => proc_macro::TokenTree::Literal(v.into()),
-            Token::Group(v) => proc_macro::TokenTree::Group(v.into()),
-        }
-    }
-}
-
-impl IntoIterator for Token {
-    type Item = Token;
-    type IntoIter = std::iter::Once<Token>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        std::iter::once(self)
-    }
-}
-
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Ident(v) => write!(f, "{}", v),
             Self::Punct(v) => write!(f, "{}", v),
             Self::Literal(v) => write!(f, "{}", v),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum TokenTree {
+    Token(Token),
+    Group(Group),
+}
+
+impl TokenTree {
+    pub fn span(&self) -> Span {
+        match self {
+            Self::Token(v) => v.span(),
+            Self::Group(v) => v.span().into(),
+        }
+    }
+}
+
+impl From<Token> for TokenTree {
+    fn from(value: Token) -> Self {
+        Self::Token(value)
+    }
+}
+
+impl From<Ident> for TokenTree {
+    fn from(value: Ident) -> Self {
+        Self::Token(Token::Ident(value))
+    }
+}
+
+impl From<Punct> for TokenTree {
+    fn from(value: Punct) -> Self {
+        Self::Token(Token::Punct(value))
+    }
+}
+
+impl From<Literal> for TokenTree {
+    fn from(value: Literal) -> Self {
+        Self::Token(Token::Literal(value))
+    }
+}
+
+impl From<Group> for TokenTree {
+    fn from(value: Group) -> Self {
+        Self::Group(value)
+    }
+}
+
+impl From<proc_macro::TokenTree> for TokenTree {
+    fn from(value: proc_macro::TokenTree) -> Self {
+        match value {
+            proc_macro::TokenTree::Ident(v) => Self::Token(Token::Ident(v.into())),
+            proc_macro::TokenTree::Punct(v) => Self::Token(Token::Punct(v.into())),
+            proc_macro::TokenTree::Literal(v) => Self::Token(Token::Literal(v.into())),
+            proc_macro::TokenTree::Group(v) => Self::Group(v.into()),
+        }
+    }
+}
+
+impl From<TokenTree> for proc_macro::TokenTree {
+    fn from(value: TokenTree) -> Self {
+        match value {
+            TokenTree::Token(Token::Ident(v)) => Self::Ident(v.into()),
+            TokenTree::Token(Token::Punct(v)) => Self::Punct(v.into()),
+            TokenTree::Token(Token::Literal(v)) => Self::Literal(v.into()),
+            TokenTree::Group(v) => Self::Group(v.into()),
+        }
+    }
+}
+
+impl IntoIterator for TokenTree {
+    type Item = TokenTree;
+    type IntoIter = std::iter::Once<TokenTree>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        std::iter::once(self)
+    }
+}
+
+impl std::fmt::Display for TokenTree {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Token(v) => write!(f, "{}", v),
             Self::Group(v) => write!(f, "{}", v),
         }
     }
 }
 
-impl ToTokens for Token {
+impl ToTokens for TokenTree {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(self.clone());
     }
@@ -341,9 +392,9 @@ mod tests {
     }
 
     #[test]
-    fn token_from_group() {
-        let t: Token = Group::new(Delim::Paren, TokenStream::new()).into();
-        assert!(matches!(t, Token::Group(_)));
+    fn token_tree_from_group() {
+        let t: TokenTree = Group::new(Delim::Paren, TokenStream::new()).into();
+        assert!(matches!(t, TokenTree::Group(_)));
     }
 
     #[test]

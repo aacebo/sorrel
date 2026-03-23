@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use super::fallback;
-use crate::{ParseError, ParseStream, ToTokens, Token};
+use crate::{ParseError, ParseStream, ToTokens, TokenTree};
 
 #[derive(Clone)]
 pub enum TokenStream {
@@ -25,7 +25,7 @@ impl TokenStream {
         }
     }
 
-    pub fn extend_one(&mut self, token: Token) {
+    pub fn extend_one(&mut self, token: TokenTree) {
         match self {
             Self::Compiler(v) => v.extend_one(proc_macro::TokenTree::from(token)),
             Self::Fallback(v) => v.extend_one(token),
@@ -36,10 +36,10 @@ impl TokenStream {
         ParseStream::new(self)
     }
 
-    pub fn to_vec(self) -> Vec<Token> {
+    pub fn to_vec(self) -> Vec<TokenTree> {
         match self {
-            Self::Compiler(v) => v.into_iter().map(Token::from).collect(),
-            Self::Fallback(v) => v.0,
+            Self::Compiler(v) => v.into_iter().map(TokenTree::from).collect(),
+            Self::Fallback(v) => v.into_inner(),
         }
     }
 }
@@ -50,8 +50,8 @@ impl Default for TokenStream {
     }
 }
 
-impl Extend<Token> for TokenStream {
-    fn extend<T: IntoIterator<Item = Token>>(&mut self, iter: T) {
+impl Extend<TokenTree> for TokenStream {
+    fn extend<T: IntoIterator<Item = TokenTree>>(&mut self, iter: T) {
         match self {
             Self::Compiler(v) => v.extend(iter.into_iter().map(proc_macro::TokenTree::from)),
             Self::Fallback(v) => v.extend(iter),
@@ -60,9 +60,9 @@ impl Extend<Token> for TokenStream {
 }
 
 impl std::ops::Deref for TokenStream {
-    type Target = [Token];
+    type Target = [TokenTree];
 
-    fn deref(&self) -> &[Token] {
+    fn deref(&self) -> &[TokenTree] {
         match self {
             Self::Compiler(_) => &[],
             Self::Fallback(v) => v,
@@ -94,38 +94,35 @@ impl From<fallback::TokenStream> for TokenStream {
 impl From<TokenStream> for fallback::TokenStream {
     fn from(value: TokenStream) -> Self {
         match value {
-            TokenStream::Compiler(_) => {
-                let tokens: Vec<Token> = value.to_vec();
-                fallback::TokenStream(tokens)
-            }
+            TokenStream::Compiler(_) => fallback::TokenStream::from(value.to_vec()),
             TokenStream::Fallback(v) => v,
         }
     }
 }
 
-impl From<&[Token]> for TokenStream {
-    fn from(value: &[Token]) -> Self {
-        Self::Fallback(fallback::TokenStream(value.to_vec()))
+impl From<&[TokenTree]> for TokenStream {
+    fn from(value: &[TokenTree]) -> Self {
+        Self::Fallback(fallback::TokenStream::from(value.to_vec()))
     }
 }
 
-impl From<Vec<Token>> for TokenStream {
-    fn from(value: Vec<Token>) -> Self {
-        Self::Fallback(fallback::TokenStream(value))
+impl From<Vec<TokenTree>> for TokenStream {
+    fn from(value: Vec<TokenTree>) -> Self {
+        Self::Fallback(fallback::TokenStream::from(value))
     }
 }
 
-impl From<TokenStream> for Vec<Token> {
+impl From<TokenStream> for Vec<TokenTree> {
     fn from(value: TokenStream) -> Self {
         match value {
-            TokenStream::Compiler(ts) => ts.into_iter().map(Token::from).collect(),
+            TokenStream::Compiler(ts) => ts.into_iter().map(TokenTree::from).collect(),
             TokenStream::Fallback(v) => v.into_iter().collect(),
         }
     }
 }
 
-impl FromIterator<Token> for TokenStream {
-    fn from_iter<T: IntoIterator<Item = Token>>(iter: T) -> Self {
+impl FromIterator<TokenTree> for TokenStream {
+    fn from_iter<T: IntoIterator<Item = TokenTree>>(iter: T) -> Self {
         Self::Fallback(iter.into_iter().collect())
     }
 }
@@ -137,7 +134,7 @@ impl FromIterator<Self> for TokenStream {
 }
 
 impl IntoIterator for TokenStream {
-    type Item = Token;
+    type Item = TokenTree;
     type IntoIter = super::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -182,7 +179,7 @@ impl std::fmt::Display for TokenStream {
 impl ToTokens for TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Self::Compiler(v) => tokens.extend(v.clone().into_iter().map(Token::from)),
+            Self::Compiler(v) => tokens.extend(v.clone().into_iter().map(TokenTree::from)),
             Self::Fallback(v) => v.to_tokens(tokens),
         }
     }

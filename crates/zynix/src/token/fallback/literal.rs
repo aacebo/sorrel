@@ -113,9 +113,7 @@ impl crate::token::lex::Scan for Literal {
 
 impl crate::ToTokens for Literal {
     fn to_tokens(&self, tokens: &mut crate::TokenStream) {
-        use crate::Token;
-
-        tokens.extend_one(Token::from(crate::Literal::from(self.clone())));
+        tokens.extend_one(crate::Literal::from(self.clone()).into());
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::{ParseError, Reader, Token, Writer};
+use crate::{ParseError, Reader, TokenTree, Writer};
 
 #[derive(Debug, Clone)]
 pub struct Limit<T> {
@@ -33,11 +33,11 @@ impl<T: Reader> Reader for Limit<T> {
         std::cmp::min(self.inner.remaining(), self.limit)
     }
 
-    fn peek(&self) -> Option<&Token> {
+    fn peek(&self) -> Option<&TokenTree> {
         self.inner.peek()
     }
 
-    fn next_n(&mut self, n: usize) -> Option<&[Token]> {
+    fn next_n(&mut self, n: usize) -> Option<&[TokenTree]> {
         if n < self.limit {
             return None;
         }
@@ -55,7 +55,7 @@ impl<T: Reader> Reader for Limit<T> {
 impl<T: Writer> Writer for Limit<T> {
     type Error = ParseError;
 
-    fn write(&mut self, tokens: impl IntoIterator<Item = Token>) -> Result<(), Self::Error> {
+    fn write(&mut self, tokens: impl IntoIterator<Item = TokenTree>) -> Result<(), Self::Error> {
         match self.inner.write(tokens) {
             Err(err) => Err(err.into()),
             Ok(v) => Ok(v),

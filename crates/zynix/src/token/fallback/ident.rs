@@ -82,8 +82,6 @@ impl std::fmt::Display for Ident {
 
 impl crate::ToTokens for Ident {
     fn to_tokens(&self, tokens: &mut crate::TokenStream) {
-        use crate::Token;
-
-        tokens.extend_one(Token::from(crate::Ident::from(self.clone())));
+        tokens.extend_one(crate::Ident::from(self.clone()).into());
     }
 }

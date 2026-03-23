@@ -1,5 +1,5 @@
 use crate::token::lex::LexError;
-use crate::{Delim, Group, Ident, Literal, Punct, Spacing, Span, ToTokens, Token, TokenStream};
+use crate::{Delim, Group, Ident, Literal, Punct, Spacing, Span, ToTokens, TokenStream, TokenTree};
 
 #[derive(Debug)]
 pub enum ParseError {
@@ -29,9 +29,14 @@ impl ParseError {
             lit.set_span(span);
         }
 
-        let inner = Token::Literal(lit).into_token_stream();
-        let group = Group::new(Delim::Paren, inner);
-        vec![Token::Ident(ident), Token::Punct(bang), Token::Group(group)].into()
+        let inner: TokenTree = lit.into();
+        let group = Group::new(Delim::Paren, inner.into_token_stream());
+        vec![
+            TokenTree::from(ident),
+            TokenTree::from(bang),
+            TokenTree::from(group),
+        ]
+        .into()
     }
 }
 

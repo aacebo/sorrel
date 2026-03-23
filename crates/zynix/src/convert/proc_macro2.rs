@@ -1,5 +1,6 @@
 use crate::{
     Delim, Group, Ident, LexError, Literal, ParseError, Punct, Spacing, Span, Token, TokenStream,
+    TokenTree,
 };
 
 // --- LexError ---
@@ -145,26 +146,26 @@ impl From<Group> for proc_macro2::Group {
     }
 }
 
-// --- Token / TokenTree ---
+// --- TokenTree ---
 
-impl From<proc_macro2::TokenTree> for Token {
+impl From<proc_macro2::TokenTree> for TokenTree {
     fn from(value: proc_macro2::TokenTree) -> Self {
         match value {
-            proc_macro2::TokenTree::Ident(v) => Self::Ident(v.into()),
-            proc_macro2::TokenTree::Punct(v) => Self::Punct(v.into()),
-            proc_macro2::TokenTree::Literal(v) => Self::Literal(v.into()),
+            proc_macro2::TokenTree::Ident(v) => Self::Token(Token::Ident(v.into())),
+            proc_macro2::TokenTree::Punct(v) => Self::Token(Token::Punct(v.into())),
+            proc_macro2::TokenTree::Literal(v) => Self::Token(Token::Literal(v.into())),
             proc_macro2::TokenTree::Group(v) => Self::Group(v.into()),
         }
     }
 }
 
-impl From<Token> for proc_macro2::TokenTree {
-    fn from(value: Token) -> Self {
+impl From<TokenTree> for proc_macro2::TokenTree {
+    fn from(value: TokenTree) -> Self {
         match value {
-            Token::Ident(v) => proc_macro2::TokenTree::Ident(v.into()),
-            Token::Punct(v) => proc_macro2::TokenTree::Punct(v.into()),
-            Token::Literal(v) => proc_macro2::TokenTree::Literal(v.into()),
-            Token::Group(v) => proc_macro2::TokenTree::Group(v.into()),
+            TokenTree::Token(Token::Ident(v)) => proc_macro2::TokenTree::Ident(v.into()),
+            TokenTree::Token(Token::Punct(v)) => proc_macro2::TokenTree::Punct(v.into()),
+            TokenTree::Token(Token::Literal(v)) => proc_macro2::TokenTree::Literal(v.into()),
+            TokenTree::Group(v) => proc_macro2::TokenTree::Group(v.into()),
         }
     }
 }
@@ -173,7 +174,7 @@ impl From<Token> for proc_macro2::TokenTree {
 
 impl From<proc_macro2::TokenStream> for TokenStream {
     fn from(stream: proc_macro2::TokenStream) -> Self {
-        Self::Fallback(stream.into_iter().map(Token::from).collect())
+        Self::Fallback(stream.into_iter().map(TokenTree::from).collect())
     }
 }
 

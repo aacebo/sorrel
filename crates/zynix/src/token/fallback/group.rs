@@ -99,8 +99,6 @@ impl Scan for Group {
 
 impl crate::ToTokens for Group {
     fn to_tokens(&self, tokens: &mut crate::TokenStream) {
-        use crate::Token;
-
-        tokens.extend_one(Token::from(crate::Group::from(self.clone())));
+        tokens.extend_one(crate::Group::from(self.clone()).into());
     }
 }

@@ -93,8 +93,6 @@ impl token::lex::Scan for Punct {
 
 impl crate::ToTokens for Punct {
     fn to_tokens(&self, tokens: &mut crate::TokenStream) {
-        use crate::Token;
-
-        tokens.extend_one(Token::from(crate::Punct::from(self.clone())));
+        tokens.extend_one(crate::Punct::from(self.clone()).into());
     }
 }

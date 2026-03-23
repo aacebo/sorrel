@@ -1,4 +1,4 @@
-use crate::{Buffer, ParseError, Reader, Span, Token, TokenStream, Writer};
+use crate::{Buffer, ParseError, Reader, Span, TokenStream, TokenTree, Writer};
 
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
@@ -54,11 +54,11 @@ impl<'a> Reader for ParseStream<'a> {
         self.input.len().saturating_sub(self.index)
     }
 
-    fn peek(&self) -> Option<&Token> {
+    fn peek(&self) -> Option<&TokenTree> {
         self.input.get(self.index)
     }
 
-    fn next_n(&mut self, n: usize) -> Option<&[Token]> {
+    fn next_n(&mut self, n: usize) -> Option<&[TokenTree]> {
         if self.index + n > self.input.len() {
             return None;
         }
@@ -72,7 +72,7 @@ impl<'a> Reader for ParseStream<'a> {
 impl<'a> Writer for ParseStream<'a> {
     type Error = ParseError;
 
-    fn write(&mut self, tokens: impl IntoIterator<Item = Token>) -> Result<(), Self::Error> {
+    fn write(&mut self, tokens: impl IntoIterator<Item = TokenTree>) -> Result<(), Self::Error> {
         self.output.extend(tokens);
         Ok(())
     }
@@ -100,9 +100,18 @@ mod tests {
         let stream = "a + b".parse::<TokenStream>().unwrap();
         let mut ps = stream.parse();
 
-        assert!(matches!(ps.next().unwrap(), Token::Ident(_)));
-        assert!(matches!(ps.next().unwrap(), Token::Punct(_)));
-        assert!(matches!(ps.next().unwrap(), Token::Ident(_)));
+        assert!(matches!(
+            ps.next().unwrap(),
+            TokenTree::Token(Token::Ident(_))
+        ));
+        assert!(matches!(
+            ps.next().unwrap(),
+            TokenTree::Token(Token::Punct(_))
+        ));
+        assert!(matches!(
+            ps.next().unwrap(),
+            TokenTree::Token(Token::Ident(_))
+        ));
         assert!(ps.is_empty());
     }
 
@@ -111,9 +120,18 @@ mod tests {
         let stream = "a b".parse::<TokenStream>().unwrap();
         let mut ps = stream.parse();
 
-        assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
-        assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
-        assert!(matches!(ps.next().unwrap(), Token::Ident(_)));
+        assert!(matches!(
+            ps.peek().unwrap(),
+            TokenTree::Token(Token::Ident(_))
+        ));
+        assert!(matches!(
+            ps.peek().unwrap(),
+            TokenTree::Token(Token::Ident(_))
+        ));
+        assert!(matches!(
+            ps.next().unwrap(),
+            TokenTree::Token(Token::Ident(_))
+        ));
         assert!(!ps.is_empty()); // "b" remains
     }
 
@@ -123,8 +141,14 @@ mod tests {
         let ps = stream.parse();
         let mut fork = ps.fork();
 
-        assert!(matches!(fork.next().unwrap(), Token::Ident(_))); // "a"
-        assert!(matches!(ps.peek().unwrap(), Token::Ident(_))); // still "a"
+        assert!(matches!(
+            fork.next().unwrap(),
+            TokenTree::Token(Token::Ident(_))
+        )); // "a"
+        assert!(matches!(
+            ps.peek().unwrap(),
+            TokenTree::Token(Token::Ident(_))
+        )); // still "a"
     }
 
     #[test]
@@ -136,11 +160,17 @@ mod tests {
         fork.next().unwrap(); // advance fork past "a"
 
         // original still at "a"
-        assert!(matches!(ps.peek().unwrap(), Token::Ident(_)));
+        assert!(matches!(
+            ps.peek().unwrap(),
+            TokenTree::Token(Token::Ident(_))
+        ));
 
         // commit fork progress to original
         ps.seek(&fork);
-        assert!(matches!(ps.peek().unwrap(), Token::Ident(_))); // now at "b"
+        assert!(matches!(
+            ps.peek().unwrap(),
+            TokenTree::Token(Token::Ident(_))
+        )); // now at "b"
     }
 
     #[test]
@@ -148,7 +178,7 @@ mod tests {
         let stream = TokenStream::new();
         let mut ps = stream.parse();
         let ident = Ident::new("x", Span::default());
-        ps.write(Token::Ident(ident)).unwrap();
+        ps.write(TokenTree::from(ident)).unwrap();
         assert_eq!(ps.output.freeze().len(), 1);
     }
 
@@ -157,12 +187,15 @@ mod tests {
         let stream = "(a + b) c".parse::<TokenStream>().unwrap();
         let mut ps = stream.parse();
         let group = ps.next().unwrap();
-        assert!(matches!(group, Token::Group(_)));
+        assert!(matches!(group, TokenTree::Group(_)));
 
-        if let Token::Group(g) = group {
+        if let TokenTree::Group(g) = group {
             let tokens = g.stream();
             let mut inner = tokens.parse();
-            debug_assert!(matches!(inner.next().unwrap(), Token::Ident(_))); // "a"
+            debug_assert!(matches!(
+                inner.next().unwrap(),
+                TokenTree::Token(Token::Ident(_))
+            )); // "a"
         }
     }
 }

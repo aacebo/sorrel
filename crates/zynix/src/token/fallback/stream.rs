@@ -1,7 +1,7 @@
-use crate::{DelimSpan, Span, ToTokens, Token};
+use crate::{DelimSpan, Span, ToTokens, TokenTree};
 
 #[derive(Debug, Default, Clone)]
-pub struct TokenStream(pub(crate) Vec<Token>);
+pub struct TokenStream(Vec<TokenTree>);
 
 impl TokenStream {
     pub fn new() -> Self {
@@ -12,7 +12,7 @@ impl TokenStream {
         self.0.is_empty()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &Token> {
+    pub fn iter(&self) -> impl Iterator<Item = &TokenTree> {
         self.0.iter()
     }
 
@@ -32,34 +32,38 @@ impl TokenStream {
         DelimSpan::new(self.first(), self.last())
     }
 
-    pub fn extend_one(&mut self, token: Token) {
+    pub fn extend_one(&mut self, token: TokenTree) {
         self.0.push(token);
+    }
+
+    pub fn into_inner(self) -> Vec<TokenTree> {
+        self.0
     }
 }
 
 impl std::ops::Deref for TokenStream {
-    type Target = [Token];
+    type Target = [TokenTree];
 
-    fn deref(&self) -> &[Token] {
+    fn deref(&self) -> &[TokenTree] {
         self.0.as_slice()
     }
 }
 
-impl Extend<Token> for TokenStream {
-    fn extend<T: IntoIterator<Item = Token>>(&mut self, iter: T) {
+impl Extend<TokenTree> for TokenStream {
+    fn extend<T: IntoIterator<Item = TokenTree>>(&mut self, iter: T) {
         self.0.extend(iter);
     }
 }
 
-impl FromIterator<Token> for TokenStream {
-    fn from_iter<T: IntoIterator<Item = Token>>(iter: T) -> Self {
+impl FromIterator<TokenTree> for TokenStream {
+    fn from_iter<T: IntoIterator<Item = TokenTree>>(iter: T) -> Self {
         Self(iter.into_iter().collect())
     }
 }
 
 impl IntoIterator for TokenStream {
-    type Item = Token;
-    type IntoIter = std::vec::IntoIter<Token>;
+    type Item = TokenTree;
+    type IntoIter = std::vec::IntoIter<TokenTree>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -68,7 +72,7 @@ impl IntoIterator for TokenStream {
 
 impl From<proc_macro::TokenStream> for TokenStream {
     fn from(value: proc_macro::TokenStream) -> Self {
-        Self(value.into_iter().map(Token::from).collect())
+        Self(value.into_iter().map(TokenTree::from).collect())
     }
 }
 
@@ -79,6 +83,12 @@ impl From<TokenStream> for proc_macro::TokenStream {
             .into_iter()
             .map(proc_macro::TokenTree::from)
             .collect()
+    }
+}
+
+impl From<Vec<TokenTree>> for TokenStream {
+    fn from(value: Vec<TokenTree>) -> Self {
+        Self(value)
     }
 }
 
@@ -103,26 +113,26 @@ impl crate::token::lex::Scan for TokenStream {
 
             // Try group first (opening delimiter)
             if let Ok((next, group)) = super::Group::scan(c) {
-                tokens.push(Token::Group(crate::Group::Fallback(group)));
+                tokens.push(crate::Group::Fallback(group).into());
                 c = next;
                 continue;
             }
 
             // Leaf tokens: ident, literal, punct
             if let Ok((next, ident)) = super::Ident::scan(c) {
-                tokens.push(Token::Ident(crate::Ident::Fallback(ident)));
+                tokens.push(crate::Ident::Fallback(ident).into());
                 c = next;
                 continue;
             }
 
             if let Ok((next, lit)) = super::Literal::scan(c) {
-                tokens.push(Token::Literal(crate::Literal::Fallback(lit)));
+                tokens.push(crate::Literal::Fallback(lit).into());
                 c = next;
                 continue;
             }
 
             if let Ok((next, punct)) = super::Punct::scan(c) {
-                tokens.push(Token::Punct(crate::Punct::Fallback(punct)));
+                tokens.push(crate::Punct::Fallback(punct).into());
                 c = next;
                 continue;
             }

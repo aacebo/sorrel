@@ -1,17 +1,17 @@
-use crate::Token;
+use crate::TokenTree;
 
 use super::TokenStream;
 
 /// A mutable collection of tokens
 #[derive(Debug, Default, Clone)]
-pub struct Buffer(Vec<Token>);
+pub struct Buffer(Vec<TokenTree>);
 
 impl Buffer {
     pub fn new() -> Self {
         Self(vec![])
     }
 
-    pub fn push(&mut self, token: Token) {
+    pub fn push(&mut self, token: TokenTree) {
         self.0.push(token);
     }
 
@@ -32,47 +32,47 @@ impl From<Buffer> for TokenStream {
     }
 }
 
-impl From<Vec<Token>> for Buffer {
-    fn from(value: Vec<Token>) -> Self {
+impl From<Vec<TokenTree>> for Buffer {
+    fn from(value: Vec<TokenTree>) -> Self {
         Self(value)
     }
 }
 
-impl From<&[Token]> for Buffer {
-    fn from(value: &[Token]) -> Self {
+impl From<&[TokenTree]> for Buffer {
+    fn from(value: &[TokenTree]) -> Self {
         Self(value.to_vec())
     }
 }
 
-impl From<Buffer> for Vec<Token> {
+impl From<Buffer> for Vec<TokenTree> {
     fn from(value: Buffer) -> Self {
         value.0
     }
 }
 
-impl FromIterator<Token> for Buffer {
-    fn from_iter<T: IntoIterator<Item = Token>>(iter: T) -> Self {
+impl FromIterator<TokenTree> for Buffer {
+    fn from_iter<T: IntoIterator<Item = TokenTree>>(iter: T) -> Self {
         Self(iter.into_iter().collect())
     }
 }
 
 impl IntoIterator for Buffer {
-    type Item = Token;
-    type IntoIter = std::vec::IntoIter<Token>;
+    type Item = TokenTree;
+    type IntoIter = std::vec::IntoIter<TokenTree>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }
 
-impl Extend<Token> for Buffer {
-    fn extend<T: IntoIterator<Item = Token>>(&mut self, iter: T) {
+impl Extend<TokenTree> for Buffer {
+    fn extend<T: IntoIterator<Item = TokenTree>>(&mut self, iter: T) {
         self.0.extend(iter);
     }
 }
 
-impl<'a> Extend<&'a Token> for Buffer {
-    fn extend<T: IntoIterator<Item = &'a Token>>(&mut self, iter: T) {
+impl<'a> Extend<&'a TokenTree> for Buffer {
+    fn extend<T: IntoIterator<Item = &'a TokenTree>>(&mut self, iter: T) {
         self.0.extend(iter.into_iter().cloned());
     }
 }
