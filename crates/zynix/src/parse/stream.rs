@@ -69,15 +69,6 @@ impl<'a> Reader for ParseStream<'a> {
     }
 }
 
-impl<'a> Writer for ParseStream<'a> {
-    type Error = ParseError;
-
-    fn write(&mut self, tokens: impl IntoIterator<Item = TokenTree>) -> Result<(), Self::Error> {
-        self.output.extend(tokens);
-        Ok(())
-    }
-}
-
 impl<'a> From<ParseStream<'a>> for TokenStream {
     fn from(value: ParseStream<'a>) -> Self {
         value.output.freeze()

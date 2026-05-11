@@ -84,3 +84,12 @@ impl ToTokens for Ident {
         tokens.extend_one(self.clone().into());
     }
 }
+
+// impl crate::Parse for Ident {
+//     fn parse(stream: &mut crate::ParseStream<'_>) -> Result<Self, crate::ParseError> {
+//         match stream.next() {
+//             Some(crate::TokenTree::Token(crate::Token::Ident(id))) => Ok(id.clone()),
+//             _ => Err(crate::LexError::new(stream.span()).message("expected Ident").into()),
+//         }
+//     }
+// }

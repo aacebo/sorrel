@@ -5,7 +5,6 @@ mod group;
 mod ident;
 mod iter;
 pub mod lex;
-mod limit;
 mod literal;
 mod punct;
 mod spacing;
@@ -17,7 +16,6 @@ pub use group::*;
 pub use ident::*;
 pub use iter::*;
 pub use lex::{LexError, Scan};
-pub use limit::*;
 pub use literal::*;
 pub use punct::*;
 pub use spacing::*;
@@ -42,28 +40,28 @@ pub trait ToTokens {
     }
 }
 
-pub trait Reader {
-    /// the remaining token count.
-    fn remaining(&self) -> usize;
+// pub trait Reader {
+//     /// the remaining token count.
+//     fn remaining(&self) -> usize;
 
-    /// peek at the next token without moving forward.
-    fn peek(&self) -> Option<&TokenTree>;
+//     /// peek at the next token without moving forward.
+//     fn peek(&self) -> Option<&TokenTree>;
 
-    /// move the iterator forward by n and return the tokens.
-    fn next_n(&mut self, n: usize) -> Option<&[TokenTree]>;
+//     /// move the iterator forward by n and return the tokens.
+//     fn next_n(&mut self, n: usize) -> Option<&[TokenTree]>;
 
-    /// move the iterator forward and return the token.
-    fn next(&mut self) -> Option<&TokenTree> {
-        self.next_n(1)?.first()
-    }
-}
+//     /// move the iterator forward and return the token.
+//     fn next(&mut self) -> Option<&TokenTree> {
+//         self.next_n(1)?.first()
+//     }
+// }
 
-pub trait Writer {
-    type Error: Into<ParseError>;
+// pub trait Writer {
+//     type Error: Into<ParseError>;
 
-    /// write tokens to a stream.
-    fn write(&mut self, tokens: impl IntoIterator<Item = TokenTree>) -> Result<(), Self::Error>;
-}
+//     /// write tokens to a stream.
+//     fn write(&mut self, tokens: impl IntoIterator<Item = TokenTree>) -> Result<(), Self::Error>;
+// }
 
 #[derive(Debug, Clone)]
 pub enum Token {
