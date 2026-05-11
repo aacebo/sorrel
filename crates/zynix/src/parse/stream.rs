@@ -1,9 +1,9 @@
-use crate::{Buffer, ParseError, Reader, Span, TokenStream, TokenTree, Writer};
+use crate::{Span, TokenBuffer, TokenStream, TokenTree};
 
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
     index: usize,
-    output: Buffer,
+    output: TokenBuffer,
 }
 
 impl<'a> ParseStream<'a> {
@@ -11,7 +11,7 @@ impl<'a> ParseStream<'a> {
         Self {
             input,
             index: 0,
-            output: Buffer::new(),
+            output: TokenBuffer::new(),
         }
     }
 
@@ -30,7 +30,7 @@ impl<'a> ParseStream<'a> {
         Self {
             input: self.input,
             index: self.index,
-            output: Buffer::new(),
+            output: TokenBuffer::new(),
         }
     }
 
@@ -49,16 +49,16 @@ impl<'a> ParseStream<'a> {
     }
 }
 
-impl<'a> Reader for ParseStream<'a> {
-    fn remaining(&self) -> usize {
+impl<'a> ParseStream<'a> {
+    pub fn remaining(&self) -> usize {
         self.input.len().saturating_sub(self.index)
     }
 
-    fn peek(&self) -> Option<&TokenTree> {
+    pub fn peek(&self) -> Option<&TokenTree> {
         self.input.get(self.index)
     }
 
-    fn next_n(&mut self, n: usize) -> Option<&[TokenTree]> {
+    pub fn advance_by(&mut self, n: usize) -> Option<&[TokenTree]> {
         if self.index + n > self.input.len() {
             return None;
         }
@@ -66,6 +66,11 @@ impl<'a> Reader for ParseStream<'a> {
         let start = self.index;
         self.index += n;
         Some(&self.input[start..self.index])
+    }
+
+    /// move the iterator forward and return the token.
+    pub fn advance(&mut self) -> Option<&TokenTree> {
+        self.advance_by(1)?.first()
     }
 }
 
@@ -92,15 +97,15 @@ mod tests {
         let mut ps = stream.parse();
 
         assert!(matches!(
-            ps.next().unwrap(),
+            ps.advance().unwrap(),
             TokenTree::Token(Token::Ident(_))
         ));
         assert!(matches!(
-            ps.next().unwrap(),
+            ps.advance().unwrap(),
             TokenTree::Token(Token::Punct(_))
         ));
         assert!(matches!(
-            ps.next().unwrap(),
+            ps.advance().unwrap(),
             TokenTree::Token(Token::Ident(_))
         ));
         assert!(ps.is_empty());
@@ -120,7 +125,7 @@ mod tests {
             TokenTree::Token(Token::Ident(_))
         ));
         assert!(matches!(
-            ps.next().unwrap(),
+            ps.advance().unwrap(),
             TokenTree::Token(Token::Ident(_))
         ));
         assert!(!ps.is_empty()); // "b" remains
@@ -133,7 +138,7 @@ mod tests {
         let mut fork = ps.fork();
 
         assert!(matches!(
-            fork.next().unwrap(),
+            fork.advance().unwrap(),
             TokenTree::Token(Token::Ident(_))
         )); // "a"
         assert!(matches!(
@@ -148,7 +153,7 @@ mod tests {
         let mut ps = stream.parse();
         let mut fork = ps.fork();
 
-        fork.next().unwrap(); // advance fork past "a"
+        fork.advance().unwrap(); // advance fork past "a"
 
         // original still at "a"
         assert!(matches!(
@@ -165,26 +170,17 @@ mod tests {
     }
 
     #[test]
-    fn write_appends() {
-        let stream = TokenStream::new();
-        let mut ps = stream.parse();
-        let ident = Ident::new("x", Span::default());
-        ps.write(TokenTree::from(ident)).unwrap();
-        assert_eq!(ps.output.freeze().len(), 1);
-    }
-
-    #[test]
     fn group_token_accessible() {
         let stream = "(a + b) c".parse::<TokenStream>().unwrap();
         let mut ps = stream.parse();
-        let group = ps.next().unwrap();
+        let group = ps.advance().unwrap();
         assert!(matches!(group, TokenTree::Group(_)));
 
         if let TokenTree::Group(g) = group {
             let tokens = g.stream();
             let mut inner = tokens.parse();
             debug_assert!(matches!(
-                inner.next().unwrap(),
+                inner.advance().unwrap(),
                 TokenTree::Token(Token::Ident(_))
             )); // "a"
         }

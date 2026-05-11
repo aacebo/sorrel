@@ -1,9 +1,6 @@
-mod cursor;
 mod error;
 mod stream;
 
-#[allow(unused)]
-pub use cursor::*;
 pub use error::*;
 pub use stream::*;
 
