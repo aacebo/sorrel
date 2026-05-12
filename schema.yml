@@ -95,36 +95,42 @@ nodes:
       type: String
   LitBool:
     kind: product
+    submodule: lit
     extends: node_base
     fields:
     - name: value
       type: bool
   LitByte:
     kind: product
+    submodule: lit
     extends: node_base
     fields:
     - name: value
       type: u8
   LitByteStr:
     kind: product
+    submodule: lit
     extends: node_base
     fields:
     - name: value
       type: Vec<u8>
   LitCStr:
     kind: product
+    submodule: lit
     extends: node_base
     fields:
     - name: value
       type: Vec<u8>
   LitChar:
     kind: product
+    submodule: lit
     extends: node_base
     fields:
     - name: value
       type: String
   LitStr:
     kind: product
+    submodule: lit
     extends: node_base
     fields:
     - name: value
@@ -189,6 +195,7 @@ nodes:
       type: Ident
   LitFloat:
     kind: product
+    submodule: lit
     extends: node_base
     fields:
     - name: digits
@@ -197,6 +204,7 @@ nodes:
       type: Option<Ident>
   LitInt:
     kind: product
+    submodule: lit
     extends: node_base
     fields:
     - name: digits
@@ -275,6 +283,7 @@ nodes:
       type: 'crate::ast::Punctuated<Lifetime, crate::token::Comma>'
   Lit:
     kind: sum
+    submodule: lit
     doc: "A literal value in source code (string, integer, float, byte, char, or boolean)."
     variants:
     - name: Str

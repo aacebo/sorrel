@@ -13,3 +13,19 @@ pub enum Lit {
     Bool { value: LitBool },
     Verbatim { tokens: crate::TokenStream },
 }
+mod lit_bool;
+pub use lit_bool::*;
+mod lit_byte;
+pub use lit_byte::*;
+mod lit_byte_str;
+pub use lit_byte_str::*;
+mod lit_c_str;
+pub use lit_c_str::*;
+mod lit_char;
+pub use lit_char::*;
+mod lit_float;
+pub use lit_float::*;
+mod lit_int;
+pub use lit_int::*;
+mod lit_str;
+pub use lit_str::*;
