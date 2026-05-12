@@ -1,4 +1,5 @@
 use super::{ParseError, Peek};
+use crate::token::{Delim, LexError};
 use crate::{Parse, Span, TokenStream, TokenTree};
 
 pub struct ParseStream<'a> {
@@ -71,6 +72,23 @@ impl<'a> ParseStream<'a> {
     /// move the iterator forward and return the token.
     pub fn advance(&mut self) -> Option<&TokenTree> {
         self.advance_by(1)?.first()
+    }
+
+    /// Consume a group with the given delimiter and return its inner token stream.
+    /// The caller can then create a new ParseStream over the returned stream.
+    pub fn parse_group(&mut self, delim: Delim) -> Result<TokenStream, ParseError> {
+        let at = self.span();
+
+        match self.curr() {
+            Some(TokenTree::Group(g)) if g.delim() == delim => {
+                let stream = g.stream();
+                self.advance();
+                Ok(stream)
+            }
+            _ => Err(LexError::new(at)
+                .message(format!("expected `{}` delimiter", delim.as_str()))
+                .into()),
+        }
     }
 }
 

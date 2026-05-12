@@ -1,4 +1,3 @@
-use crate::parse::ParseError;
 use crate::report::Level;
 use crate::token::ToTokens;
 use crate::{Span, TokenStream};
@@ -40,10 +39,6 @@ impl Diagnostic {
         }
 
         self.into_token_stream()
-    }
-
-    pub fn into_error(self) -> ParseError {
-        ParseError::Diagnostic(self)
     }
 }
 
@@ -112,10 +107,7 @@ impl PartialEq for Diagnostic {
 
 impl ToTokens for Diagnostic {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.clone()
-            .into_error()
-            .to_compile_error()
-            .to_tokens(tokens);
+        self.clone().emit().to_tokens(tokens);
     }
 }
 
@@ -313,13 +305,6 @@ mod tests {
         let d2 = Diagnostic::new().level(Level::Note).message("b").build();
         // Both have empty spans, so they are equal
         assert_eq!(d1, d2);
-    }
-
-    #[test]
-    fn into_error() {
-        let d = Diagnostic::new().level(Level::Error).message("err").build();
-        let err = d.into_error();
-        assert!(matches!(err, ParseError::Diagnostic(_)));
     }
 
     #[cfg(not(nightly))]

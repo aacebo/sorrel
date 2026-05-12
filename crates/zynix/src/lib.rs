@@ -26,3 +26,18 @@ pub mod ast;
 pub use parse::Parse;
 pub use span::Span;
 pub use token::{Token, TokenStream, TokenTree};
+
+/// Parse a token stream into a typed AST node, emitting a compile error on failure.
+#[macro_export]
+macro_rules! parse {
+    ($tokens:ident as $ty:ty) => {{
+        let mut stream = $tokens.parse();
+
+        match <$ty as $crate::Parse>::parse(&mut stream) {
+            Ok(v) => v,
+            Err(e) => {
+                return e.to_compile_error().into_iter().collect();
+            }
+        }
+    }};
+}

@@ -246,10 +246,7 @@ fn generate_fold_global(nodes: &[&Node]) -> proc_macro2::TokenStream {
 fn folder_method(p: &Product) -> proc_macro2::TokenStream {
     let ident = format_ident!("{}", &p.name);
     let method = format_ident!("fold_{}", convert_case::ccase!(snake, &p.name));
-    let inits: Vec<_> = node_fields(p)
-        .iter()
-        .map(fold_init_product)
-        .collect();
+    let inits: Vec<_> = node_fields(p).iter().map(fold_init_product).collect();
 
     quote! {
         fn #method(&mut self, node: #ident) -> #ident where Self: Sized {

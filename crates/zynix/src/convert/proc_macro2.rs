@@ -6,7 +6,8 @@ use crate::{Span, Token, TokenStream, TokenTree};
 
 impl From<proc_macro2::LexError> for ParseError {
     fn from(value: proc_macro2::LexError) -> Self {
-        Self::Fallback(LexError::new(Span::Fallback(value.span().into())).message(value))
+        let span = Span::Fallback(value.span().into());
+        Self::new(span, value)
     }
 }
 
