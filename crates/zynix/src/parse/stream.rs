@@ -1,18 +1,13 @@
-use crate::{Span, TokenBuffer, TokenStream, TokenTree};
+use crate::{Parse, ParseError, Peek, Span, TokenStream, TokenTree};
 
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
     index: usize,
-    output: TokenBuffer,
 }
 
 impl<'a> ParseStream<'a> {
     pub fn new(input: &'a TokenStream) -> Self {
-        Self {
-            input,
-            index: 0,
-            output: TokenBuffer::new(),
-        }
+        Self { input, index: 0 }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -30,22 +25,11 @@ impl<'a> ParseStream<'a> {
         Self {
             input: self.input,
             index: self.index,
-            output: TokenBuffer::new(),
         }
     }
 
     pub fn seek(&mut self, other: &Self) {
         self.index = other.index;
-    }
-
-    pub fn join(&mut self, other: Self) {
-        assert!(
-            self.index <= other.index,
-            "cannot merge a parser behind the current location."
-        );
-
-        self.index = other.index;
-        self.output.extend(other.output);
     }
 }
 
@@ -54,8 +38,23 @@ impl<'a> ParseStream<'a> {
         self.input.len().saturating_sub(self.index)
     }
 
-    pub fn peek(&self) -> Option<&TokenTree> {
+    pub fn curr(&self) -> Option<&TokenTree> {
         self.input.get(self.index)
+    }
+
+    pub fn prev(&self) -> Option<&TokenTree> {
+        self.input.get(self.index - 1)
+    }
+
+    pub fn peek<T: Peek>(&mut self) -> Option<T> {
+        let index = self.index;
+        let res = T::peek(self);
+        self.index = index;
+        res
+    }
+
+    pub fn parse<T: Parse>(&mut self) -> Result<T, ParseError> {
+        T::parse(self)
     }
 
     pub fn advance_by(&mut self, n: usize) -> Option<&[TokenTree]> {
@@ -71,12 +70,6 @@ impl<'a> ParseStream<'a> {
     /// move the iterator forward and return the token.
     pub fn advance(&mut self) -> Option<&TokenTree> {
         self.advance_by(1)?.first()
-    }
-}
-
-impl<'a> From<ParseStream<'a>> for TokenStream {
-    fn from(value: ParseStream<'a>) -> Self {
-        value.output.freeze()
     }
 }
 
@@ -116,35 +109,20 @@ mod tests {
         let stream = "a b".parse::<TokenStream>().unwrap();
         let mut ps = stream.parse();
 
-        assert!(matches!(
-            ps.peek().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        ));
-        assert!(matches!(
-            ps.peek().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        ));
-        assert!(matches!(
-            ps.advance().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        ));
+        assert!(matches!(ps.peek::<Ident>(), Some(_),));
+        assert!(matches!(ps.peek::<Ident>(), Some(_),));
+        assert!(matches!(ps.parse::<Ident>(), Ok(_)));
         assert!(!ps.is_empty()); // "b" remains
     }
 
     #[test]
     fn fork_does_not_advance_original() {
         let stream = "a b".parse::<TokenStream>().unwrap();
-        let ps = stream.parse();
+        let mut ps = stream.parse();
         let mut fork = ps.fork();
 
-        assert!(matches!(
-            fork.advance().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        )); // "a"
-        assert!(matches!(
-            ps.peek().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        )); // still "a"
+        assert!(matches!(fork.parse::<Ident>(), Ok(_),)); // "a"
+        assert!(matches!(ps.peek::<Ident>(), Some(_),)); // still "a"
     }
 
     #[test]
@@ -156,17 +134,11 @@ mod tests {
         fork.advance().unwrap(); // advance fork past "a"
 
         // original still at "a"
-        assert!(matches!(
-            ps.peek().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        ));
+        assert!(matches!(ps.parse::<Ident>(), Ok(_),));
 
         // commit fork progress to original
         ps.seek(&fork);
-        assert!(matches!(
-            ps.peek().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        )); // now at "b"
+        assert!(matches!(ps.peek::<Ident>(), Some(_),)); // now at "b"
     }
 
     #[test]

@@ -36,6 +36,19 @@ impl<'a> Cursor<'a> {
         self.rest.starts_with(s)
     }
 
+    /// Create a fallback::Span from this cursor to another.
+    pub fn span_to(&self, end: &Cursor<'_>) -> Span {
+        fallback::Span::new(self.off, end.off).into()
+    }
+
+    pub fn span(&self) -> Span {
+        fallback::Span::new(self.off, self.off + 1).into()
+    }
+
+    pub fn error(&self) -> LexError {
+        LexError::new(self.span())
+    }
+
     /// Advance by `n` bytes, counting characters for the offset.
     pub fn advance(&self, n: usize) -> Self {
         let consumed = &self.rest[..n];
@@ -59,19 +72,6 @@ impl<'a> Cursor<'a> {
         }
 
         self.advance(bytes)
-    }
-
-    /// Create a fallback::Span from this cursor to another.
-    pub fn span_to(&self, end: &Cursor<'_>) -> Span {
-        fallback::Span::new(self.off, end.off).into()
-    }
-
-    pub fn span(&self) -> Span {
-        fallback::Span::new(self.off, self.off + 1).into()
-    }
-
-    pub fn error(&self) -> LexError {
-        LexError::new(self.span())
     }
 
     pub fn skip_whitespace(mut self) -> Self {

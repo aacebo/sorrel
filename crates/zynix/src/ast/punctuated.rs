@@ -789,17 +789,6 @@ mod tests {
         ParseError::from(LexError::new(span).message("unexpected token"))
     }
 
-    // Parse impl for Ident — consume one ident token from the stream
-    impl Parse for Ident {
-        fn parse(stream: &mut ParseStream<'_>) -> Result<Self, ParseError> {
-            match stream.advance() {
-                Some(TokenTree::Token(Token::Ident(id))) => Ok(id.clone()),
-                Some(t) => Err(lex_err(t.span())),
-                None => Err(lex_err(Span::default())),
-            }
-        }
-    }
-
     // Parse impl for Punct — consume one punct token from the stream
     impl Parse for Punct {
         fn parse(stream: &mut ParseStream<'_>) -> Result<Self, ParseError> {

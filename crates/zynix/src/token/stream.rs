@@ -20,7 +20,7 @@ impl TokenStream {
 
     pub fn is_empty(&self) -> bool {
         match self {
-            Self::Compiler(ts) => ts.clone().into_iter().next().is_none(),
+            Self::Compiler(v) => v.clone().into_iter().next().is_none(),
             Self::Fallback(v) => v.is_empty(),
         }
     }
@@ -79,7 +79,7 @@ impl From<proc_macro::TokenStream> for TokenStream {
 impl From<TokenStream> for proc_macro::TokenStream {
     fn from(stream: TokenStream) -> Self {
         match stream {
-            TokenStream::Compiler(ts) => ts,
+            TokenStream::Compiler(v) => v,
             TokenStream::Fallback(v) => v.into_iter().map(proc_macro::TokenTree::from).collect(),
         }
     }
@@ -115,7 +115,7 @@ impl From<Vec<TokenTree>> for TokenStream {
 impl From<TokenStream> for Vec<TokenTree> {
     fn from(value: TokenStream) -> Self {
         match value {
-            TokenStream::Compiler(ts) => ts.into_iter().map(TokenTree::from).collect(),
+            TokenStream::Compiler(v) => v.into_iter().map(TokenTree::from).collect(),
             TokenStream::Fallback(v) => v.into_iter().collect(),
         }
     }
@@ -139,7 +139,7 @@ impl IntoIterator for TokenStream {
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            Self::Compiler(ts) => ts.into_iter().into(),
+            Self::Compiler(v) => v.into_iter().into(),
             Self::Fallback(v) => v.into_iter().into(),
         }
     }
@@ -161,7 +161,7 @@ impl FromStr for TokenStream {
 impl std::fmt::Debug for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Compiler(ts) => write!(f, "TokenStream::Compiler({})", ts),
+            Self::Compiler(v) => write!(f, "TokenStream::Compiler({})", v),
             Self::Fallback(v) => write!(f, "TokenStream::Fallback({:?})", v),
         }
     }
@@ -170,7 +170,7 @@ impl std::fmt::Debug for TokenStream {
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Compiler(ts) => write!(f, "{}", ts),
+            Self::Compiler(v) => write!(f, "{}", v),
             Self::Fallback(v) => write!(f, "{}", v),
         }
     }
