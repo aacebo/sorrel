@@ -2,7 +2,9 @@ use std::ops::{Index, IndexMut};
 use std::slice;
 use std::vec;
 
-use crate::{Parse, ParseError, ParseStream, ToTokens, TokenStream};
+use crate::parse::{ParseError, ParseStream};
+use crate::token::ToTokens;
+use crate::{Parse, TokenStream};
 
 pub struct Punctuated<T, P> {
     inner: Vec<(T, P)>,
@@ -821,7 +823,8 @@ impl<T: Clone, P: Clone> Clone for IntoPairs<T, P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Ident, Punct, Spacing, Span};
+    use crate::Span;
+    use crate::token::{Ident, Punct, Spacing};
 
     fn parse_stream(src: &str) -> crate::TokenStream {
         src.parse().unwrap()

@@ -1,5 +1,7 @@
 use super::fallback;
-use crate::{Delim, DelimSpan, ToTokens, TokenStream};
+use super::{Delim, ToTokens};
+use crate::TokenStream;
+use crate::span::DelimSpan;
 
 #[derive(Debug, Clone)]
 pub enum Group {
@@ -88,10 +90,10 @@ impl ToTokens for Group {
 }
 
 impl crate::Parse for Group {
-    fn parse(stream: &mut crate::ParseStream) -> Result<Self, crate::ParseError> {
+    fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
         match stream.advance() {
             Some(crate::TokenTree::Group(v)) => Ok(v.clone()),
-            _ => Err(crate::LexError::new(stream.span())
+            _ => Err(crate::token::lex::LexError::new(stream.span())
                 .message("expected Group")
                 .into()),
         }

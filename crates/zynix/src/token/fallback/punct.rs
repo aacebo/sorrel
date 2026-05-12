@@ -1,4 +1,5 @@
-use crate::{Spacing, Span, token};
+use crate::Span;
+use crate::token::{self as token, Spacing};
 
 #[derive(Debug, Clone)]
 pub struct Punct {
@@ -91,8 +92,8 @@ impl token::lex::Scan for Punct {
     }
 }
 
-impl crate::ToTokens for Punct {
+impl crate::token::ToTokens for Punct {
     fn to_tokens(&self, tokens: &mut crate::TokenStream) {
-        tokens.extend_one(crate::Punct::from(self.clone()).into());
+        tokens.extend_one(crate::token::Punct::from(self.clone()).into());
     }
 }

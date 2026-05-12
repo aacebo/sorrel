@@ -1,4 +1,7 @@
-use crate::{ParseError, Span, ToTokens, TokenStream, report::Level};
+use crate::parse::ParseError;
+use crate::report::Level;
+use crate::token::ToTokens;
+use crate::{Span, TokenStream};
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {

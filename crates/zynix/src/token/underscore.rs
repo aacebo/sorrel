@@ -1,6 +1,7 @@
-use crate::{
-    Ident, LexError, Parse, ParseError, ParseStream, Span, ToTokens, Token, TokenStream, TokenTree,
-};
+use super::lex::LexError;
+use super::{Ident, ToTokens};
+use crate::parse::{ParseError, ParseStream};
+use crate::{Parse, Span, Token, TokenStream, TokenTree};
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Underscore {

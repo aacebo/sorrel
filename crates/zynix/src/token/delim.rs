@@ -1,6 +1,7 @@
-use crate::{
-    Group, LexError, Parse, ParseError, ParseStream, Span, ToTokens, TokenStream, TokenTree,
-};
+use super::lex::LexError;
+use super::{Group, ToTokens};
+use crate::parse::{ParseError, ParseStream};
+use crate::{Parse, Span, TokenStream, TokenTree};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Delim {

@@ -1,7 +1,9 @@
 use std::str::FromStr;
 
+use super::ToTokens;
 use super::fallback;
-use crate::{ParseError, ParseStream, ToTokens, TokenTree};
+use crate::TokenTree;
+use crate::parse::{ParseError, ParseStream};
 
 #[derive(Clone)]
 pub enum TokenStream {

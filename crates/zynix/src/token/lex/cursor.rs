@@ -1,4 +1,6 @@
-use crate::{LexError, Span, span::fallback};
+use super::LexError;
+use crate::Span;
+use crate::span::fallback;
 
 /// Zero-copy immutable cursor over source text.
 /// Each parse step returns a new advanced cursor.

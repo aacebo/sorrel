@@ -1,7 +1,7 @@
-use crate::{
-    LexError, Parse, ParseError, ParseStream, Spacing, Span, ToTokens, Token, TokenStream,
-    TokenTree,
-};
+use super::lex::LexError;
+use super::{Spacing, ToTokens};
+use crate::parse::{ParseError, ParseStream};
+use crate::{Parse, Span, Token, TokenStream, TokenTree};
 
 use super::fallback;
 
@@ -103,10 +103,10 @@ impl ToTokens for Punct {
 }
 
 impl crate::Parse for Punct {
-    fn parse(stream: &mut crate::ParseStream) -> Result<Self, crate::ParseError> {
+    fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
         match stream.advance() {
             Some(crate::TokenTree::Token(crate::Token::Punct(v))) => Ok(v.clone()),
-            _ => Err(crate::LexError::new(stream.span())
+            _ => Err(crate::token::lex::LexError::new(stream.span())
                 .message("expected Punct")
                 .into()),
         }
@@ -302,7 +302,9 @@ define_punct! {
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
+    use super::*;
+    use crate::TokenStream;
+    use crate::token::Underscore;
     use std::str::FromStr;
 
     #[test]

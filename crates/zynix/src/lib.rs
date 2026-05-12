@@ -12,10 +12,10 @@
 extern crate proc_macro;
 
 pub mod convert;
-mod parse;
+pub mod parse;
 pub mod source;
-mod span;
-mod token;
+pub mod span;
+pub mod token;
 
 #[cfg(feature = "report")]
 pub mod report;
@@ -23,6 +23,6 @@ pub mod report;
 #[cfg(feature = "ast")]
 pub mod ast;
 
-pub use parse::*;
-pub use span::*;
-pub use token::*;
+pub use parse::Parse;
+pub use span::Span;
+pub use token::{Token, TokenStream, TokenTree};

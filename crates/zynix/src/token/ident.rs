@@ -1,7 +1,8 @@
 use std::borrow::Cow;
 
 use super::fallback;
-use crate::{Span, ToTokens, TokenStream};
+use super::{ToTokens, TokenStream};
+use crate::Span;
 
 #[derive(Debug, Clone)]
 pub enum Ident {
@@ -86,10 +87,10 @@ impl ToTokens for Ident {
 }
 
 impl crate::Parse for Ident {
-    fn parse(stream: &mut crate::ParseStream) -> Result<Self, crate::ParseError> {
+    fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
         match stream.advance() {
             Some(crate::TokenTree::Token(crate::Token::Ident(v))) => Ok(v.clone()),
-            _ => Err(crate::LexError::new(stream.span())
+            _ => Err(crate::token::lex::LexError::new(stream.span())
                 .message("expected Ident")
                 .into()),
         }

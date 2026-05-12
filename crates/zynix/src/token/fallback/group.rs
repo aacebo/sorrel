@@ -1,6 +1,8 @@
 use super::TokenStream;
+use crate::Span;
+use crate::span::DelimSpan;
+use crate::token::Delim;
 use crate::token::lex::{Cursor, LexError, Scan};
-use crate::{Delim, DelimSpan, Span};
 
 #[derive(Debug, Clone)]
 pub struct Group {
@@ -97,8 +99,8 @@ impl Scan for Group {
     }
 }
 
-impl crate::ToTokens for Group {
+impl crate::token::ToTokens for Group {
     fn to_tokens(&self, tokens: &mut crate::TokenStream) {
-        tokens.extend_one(crate::Group::from(self.clone()).into());
+        tokens.extend_one(crate::token::Group::from(self.clone()).into());
     }
 }

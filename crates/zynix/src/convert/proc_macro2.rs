@@ -1,7 +1,6 @@
-use crate::{
-    Delim, Group, Ident, LexError, Literal, ParseError, Punct, Spacing, Span, Token, TokenStream,
-    TokenTree,
-};
+use crate::parse::ParseError;
+use crate::token::{Delim, Group, Ident, LexError, Literal, Punct, Spacing};
+use crate::{Span, Token, TokenStream, TokenTree};
 
 // --- LexError ---
 

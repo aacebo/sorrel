@@ -1,4 +1,6 @@
-use crate::{DelimSpan, Span, ToTokens, TokenTree};
+use crate::span::DelimSpan;
+use crate::token::ToTokens;
+use crate::{Span, TokenTree};
 
 #[derive(Debug, Default, Clone)]
 pub struct TokenStream(Vec<TokenTree>);
@@ -113,26 +115,26 @@ impl crate::token::lex::Scan for TokenStream {
 
             // Try group first (opening delimiter)
             if let Ok((next, group)) = super::Group::scan(c) {
-                tokens.push(crate::Group::Fallback(group).into());
+                tokens.push(crate::token::Group::Fallback(group).into());
                 c = next;
                 continue;
             }
 
             // Leaf tokens: ident, literal, punct
             if let Ok((next, ident)) = super::Ident::scan(c) {
-                tokens.push(crate::Ident::Fallback(ident).into());
+                tokens.push(crate::token::Ident::Fallback(ident).into());
                 c = next;
                 continue;
             }
 
             if let Ok((next, lit)) = super::Literal::scan(c) {
-                tokens.push(crate::Literal::Fallback(lit).into());
+                tokens.push(crate::token::Literal::Fallback(lit).into());
                 c = next;
                 continue;
             }
 
             if let Ok((next, punct)) = super::Punct::scan(c) {
-                tokens.push(crate::Punct::Fallback(punct).into());
+                tokens.push(crate::token::Punct::Fallback(punct).into());
                 c = next;
                 continue;
             }

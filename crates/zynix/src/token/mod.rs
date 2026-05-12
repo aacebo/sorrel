@@ -1,5 +1,4 @@
-mod buffer;
-mod delim;
+pub mod delim;
 pub(crate) mod fallback;
 mod group;
 mod ident;
@@ -12,7 +11,6 @@ mod spacing;
 mod stream;
 mod underscore;
 
-pub use buffer::*;
 pub use delim::*;
 pub use group::*;
 pub use ident::*;
