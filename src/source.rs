@@ -5,6 +5,7 @@ use quote::{format_ident, quote};
 #[derive(Debug, Default, Clone)]
 pub struct SourceMap {
     sources: BTreeMap<String, Source>,
+    extra: proc_macro2::TokenStream,
 }
 
 impl SourceMap {
@@ -38,6 +39,10 @@ impl SourceMap {
 
     pub fn iter(&self) -> impl Iterator<Item = (&String, &Source)> {
         self.sources.iter()
+    }
+
+    pub fn set_extra(&mut self, extra: proc_macro2::TokenStream) {
+        self.extra = extra;
     }
 
     pub fn save(&self, path: &std::path::Path) -> std::io::Result<()> {
@@ -116,7 +121,11 @@ impl SourceMap {
             }
         }
 
-        std::fs::write(path.join("mod.rs"), quote!(#(#root_decls)*).to_string())
+        let extra = &self.extra;
+        std::fs::write(
+            path.join("mod.rs"),
+            quote!(#![allow(unused)] #(#root_decls)* #extra).to_string(),
+        )
     }
 }
 

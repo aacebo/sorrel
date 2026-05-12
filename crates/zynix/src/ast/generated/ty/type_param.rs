@@ -8,3 +8,13 @@ pub struct TypeParam {
     pub bounds: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
     pub default: Option<Type>,
 }
+impl crate::ast::Visit for TypeParam {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_type_param(self);
+    }
+}
+impl crate::ast::Fold for TypeParam {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_type_param(self)
+    }
+}

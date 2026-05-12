@@ -11,3 +11,13 @@ pub struct ImplItemConst {
     pub ty: Type,
     pub expr: Expr,
 }
+impl crate::ast::Visit for ImplItemConst {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_impl_item_const(self);
+    }
+}
+impl crate::ast::Fold for ImplItemConst {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_impl_item_const(self)
+    }
+}

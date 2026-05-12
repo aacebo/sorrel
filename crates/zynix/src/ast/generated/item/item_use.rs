@@ -7,3 +7,13 @@ pub struct ItemUse {
     pub vis: Visibility,
     pub tree: UseTree,
 }
+impl crate::ast::Visit for ItemUse {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_use(self);
+    }
+}
+impl crate::ast::Fold for ItemUse {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_use(self)
+    }
+}

@@ -5,3 +5,19 @@ pub enum TraitBoundModifier {
     None,
     Maybe,
 }
+impl crate::ast::Visit for TraitBoundModifier {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        match self {
+            TraitBoundModifier::None => {}
+            TraitBoundModifier::Maybe => {}
+        }
+    }
+}
+impl crate::ast::Fold for TraitBoundModifier {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        match self {
+            TraitBoundModifier::None => TraitBoundModifier::None,
+            TraitBoundModifier::Maybe => TraitBoundModifier::Maybe,
+        }
+    }
+}

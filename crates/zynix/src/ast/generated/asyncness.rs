@@ -5,3 +5,19 @@ pub enum Asyncness {
     Sync,
     Async,
 }
+impl crate::ast::Visit for Asyncness {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        match self {
+            Asyncness::Sync => {}
+            Asyncness::Async => {}
+        }
+    }
+}
+impl crate::ast::Fold for Asyncness {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        match self {
+            Asyncness::Sync => Asyncness::Sync,
+            Asyncness::Async => Asyncness::Async,
+        }
+    }
+}

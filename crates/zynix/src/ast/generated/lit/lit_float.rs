@@ -6,3 +6,13 @@ pub struct LitFloat {
     pub digits: String,
     pub suffix: Option<Ident>,
 }
+impl crate::ast::Visit for LitFloat {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_lit_float(self);
+    }
+}
+impl crate::ast::Fold for LitFloat {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_lit_float(self)
+    }
+}

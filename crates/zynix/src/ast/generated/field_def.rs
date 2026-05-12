@@ -9,3 +9,13 @@ pub struct FieldDef {
     pub ident: Option<Ident>,
     pub ty: Type,
 }
+impl crate::ast::Visit for FieldDef {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_field_def(self);
+    }
+}
+impl crate::ast::Fold for FieldDef {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_field_def(self)
+    }
+}

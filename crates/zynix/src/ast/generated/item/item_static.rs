@@ -10,3 +10,13 @@ pub struct ItemStatic {
     pub ty: Type,
     pub expr: Expr,
 }
+impl crate::ast::Visit for ItemStatic {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_static(self);
+    }
+}
+impl crate::ast::Fold for ItemStatic {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_static(self)
+    }
+}

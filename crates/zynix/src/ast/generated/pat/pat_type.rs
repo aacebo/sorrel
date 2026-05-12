@@ -7,3 +7,13 @@ pub struct PatType {
     pub pat: Box<Pattern>,
     pub ty: Box<Type>,
 }
+impl crate::ast::Visit for PatType {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_pat_type(self);
+    }
+}
+impl crate::ast::Fold for PatType {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_pat_type(self)
+    }
+}

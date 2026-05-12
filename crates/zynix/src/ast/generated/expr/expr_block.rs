@@ -7,3 +7,13 @@ pub struct ExprBlock {
     pub label: Option<Label>,
     pub block: Block,
 }
+impl crate::ast::Visit for ExprBlock {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_block(self);
+    }
+}
+impl crate::ast::Fold for ExprBlock {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_block(self)
+    }
+}

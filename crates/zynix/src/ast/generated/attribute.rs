@@ -8,3 +8,13 @@ pub struct Attribute {
     pub path: Path,
     pub args: AttrArgs,
 }
+impl crate::ast::Visit for Attribute {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_attribute(self);
+    }
+}
+impl crate::ast::Fold for Attribute {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_attribute(self)
+    }
+}

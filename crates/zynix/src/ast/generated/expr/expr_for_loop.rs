@@ -9,3 +9,13 @@ pub struct ExprForLoop {
     pub expr: Box<Expr>,
     pub body: Block,
 }
+impl crate::ast::Visit for ExprForLoop {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_for_loop(self);
+    }
+}
+impl crate::ast::Fold for ExprForLoop {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_for_loop(self)
+    }
+}

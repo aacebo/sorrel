@@ -8,3 +8,13 @@ pub struct ExprWhile {
     pub cond: Box<Expr>,
     pub body: Block,
 }
+impl crate::ast::Visit for ExprWhile {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_while(self);
+    }
+}
+impl crate::ast::Fold for ExprWhile {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_while(self)
+    }
+}

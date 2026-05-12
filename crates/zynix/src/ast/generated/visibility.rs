@@ -10,3 +10,30 @@ pub enum Visibility {
     Super {},
     Restricted { in_token: bool, path: Path },
 }
+impl crate::ast::Visit for Visibility {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        match self {
+            Visibility::Inherited {} => {}
+            Visibility::Public {} => {}
+            Visibility::Crate {} => {}
+            Visibility::SelfValue {} => {}
+            Visibility::Super {} => {}
+            Visibility::Restricted { in_token, path } => {
+                let _ = &in_token;
+                let _ = &path;
+            }
+        }
+    }
+}
+impl crate::ast::Fold for Visibility {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        match self {
+            Visibility::Inherited {} => Visibility::Inherited {},
+            Visibility::Public {} => Visibility::Public {},
+            Visibility::Crate {} => Visibility::Crate {},
+            Visibility::SelfValue {} => Visibility::SelfValue {},
+            Visibility::Super {} => Visibility::Super {},
+            Visibility::Restricted { in_token, path } => Visibility::Restricted { in_token, path },
+        }
+    }
+}

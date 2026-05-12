@@ -7,3 +7,13 @@ pub struct ExprAsync {
     pub capture: bool,
     pub block: Block,
 }
+impl crate::ast::Visit for ExprAsync {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_async(self);
+    }
+}
+impl crate::ast::Fold for ExprAsync {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_async(self)
+    }
+}

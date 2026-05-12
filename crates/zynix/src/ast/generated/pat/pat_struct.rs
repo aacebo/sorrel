@@ -9,3 +9,13 @@ pub struct PatStruct {
     pub fields: crate::ast::Punctuated<PatField, crate::token::Comma>,
     pub rest: bool,
 }
+impl crate::ast::Visit for PatStruct {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_pat_struct(self);
+    }
+}
+impl crate::ast::Fold for PatStruct {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_pat_struct(self)
+    }
+}

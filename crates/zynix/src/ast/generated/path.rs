@@ -7,3 +7,13 @@ pub struct Path {
     pub leading_colon: bool,
     pub segments: crate::ast::Punctuated<PathSegment, crate::token::PathSep>,
 }
+impl crate::ast::Visit for Path {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_path(self);
+    }
+}
+impl crate::ast::Fold for Path {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_path(self)
+    }
+}

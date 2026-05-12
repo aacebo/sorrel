@@ -6,3 +6,13 @@ pub struct Block {
     pub span: crate::Span,
     pub stmts: Vec<Stmt>,
 }
+impl crate::ast::Visit for Block {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_block(self);
+    }
+}
+impl crate::ast::Fold for Block {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_block(self)
+    }
+}

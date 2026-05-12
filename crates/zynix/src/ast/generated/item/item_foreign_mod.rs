@@ -8,3 +8,13 @@ pub struct ItemForeignMod {
     pub abi: Abi,
     pub items: Vec<ForeignItem>,
 }
+impl crate::ast::Visit for ItemForeignMod {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_foreign_mod(self);
+    }
+}
+impl crate::ast::Fold for ItemForeignMod {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_foreign_mod(self)
+    }
+}

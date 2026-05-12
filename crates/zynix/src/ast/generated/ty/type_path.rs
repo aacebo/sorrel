@@ -6,3 +6,13 @@ pub struct TypePath {
     pub qself: Option<QSelf>,
     pub path: Path,
 }
+impl crate::ast::Visit for TypePath {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_type_path(self);
+    }
+}
+impl crate::ast::Fold for TypePath {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_type_path(self)
+    }
+}

@@ -7,3 +7,13 @@ pub struct ItemMacroRules {
     pub ident: Ident,
     pub rules: crate::TokenStream,
 }
+impl crate::ast::Visit for ItemMacroRules {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_macro_rules(self);
+    }
+}
+impl crate::ast::Fold for ItemMacroRules {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_macro_rules(self)
+    }
+}

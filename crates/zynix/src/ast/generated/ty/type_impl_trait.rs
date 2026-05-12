@@ -5,3 +5,13 @@ pub struct TypeImplTrait {
     pub span: crate::Span,
     pub bounds: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
 }
+impl crate::ast::Visit for TypeImplTrait {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_type_impl_trait(self);
+    }
+}
+impl crate::ast::Fold for TypeImplTrait {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_type_impl_trait(self)
+    }
+}

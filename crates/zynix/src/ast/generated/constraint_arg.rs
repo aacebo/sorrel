@@ -7,3 +7,13 @@ pub struct ConstraintArg {
     pub generics: Option<AngleArgs>,
     pub bounds: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
 }
+impl crate::ast::Visit for ConstraintArg {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_constraint_arg(self);
+    }
+}
+impl crate::ast::Fold for ConstraintArg {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_constraint_arg(self)
+    }
+}

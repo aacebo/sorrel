@@ -8,3 +8,13 @@ pub struct ForeignItemType {
     pub ident: Ident,
     pub generics: Generics,
 }
+impl crate::ast::Visit for ForeignItemType {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_foreign_item_type(self);
+    }
+}
+impl crate::ast::Fold for ForeignItemType {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_foreign_item_type(self)
+    }
+}

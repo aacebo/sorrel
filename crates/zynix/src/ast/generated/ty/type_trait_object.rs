@@ -6,3 +6,13 @@ pub struct TypeTraitObject {
     pub dyn_token: bool,
     pub bounds: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
 }
+impl crate::ast::Visit for TypeTraitObject {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_type_trait_object(self);
+    }
+}
+impl crate::ast::Fold for TypeTraitObject {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_type_trait_object(self)
+    }
+}

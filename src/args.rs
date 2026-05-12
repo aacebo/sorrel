@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use crate::feature::Feature;
+
 #[derive(clap::Parser, Debug, Default, Clone)]
 #[command(version, about, long_about)]
 pub struct Args {
@@ -14,10 +16,4 @@ pub struct Args {
 
     #[arg(long, default_value_t = false)]
     pub dry_run: bool,
-}
-
-#[derive(clap::ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Feature {
-    Visit,
-    Expand,
 }

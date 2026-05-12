@@ -6,3 +6,13 @@ pub struct PatGroup {
     pub attrs: Vec<Attribute>,
     pub pat: Box<Pattern>,
 }
+impl crate::ast::Visit for PatGroup {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_pat_group(self);
+    }
+}
+impl crate::ast::Fold for PatGroup {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_pat_group(self)
+    }
+}

@@ -7,3 +7,13 @@ pub struct ExprBreak {
     pub label: Option<Label>,
     pub expr: Option<Box<Expr>>,
 }
+impl crate::ast::Visit for ExprBreak {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_break(self);
+    }
+}
+impl crate::ast::Fold for ExprBreak {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_break(self)
+    }
+}

@@ -7,3 +7,13 @@ pub struct ExprRepeat {
     pub elem: Box<Expr>,
     pub len: Box<Expr>,
 }
+impl crate::ast::Visit for ExprRepeat {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_repeat(self);
+    }
+}
+impl crate::ast::Fold for ExprRepeat {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_repeat(self)
+    }
+}

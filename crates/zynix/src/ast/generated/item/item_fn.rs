@@ -9,3 +9,13 @@ pub struct ItemFn {
     pub sig: Signature,
     pub body: Block,
 }
+impl crate::ast::Visit for ItemFn {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_fn(self);
+    }
+}
+impl crate::ast::Fold for ItemFn {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_fn(self)
+    }
+}

@@ -9,3 +9,13 @@ pub struct ItemTraitAlias {
     pub generics: Generics,
     pub bounds: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
 }
+impl crate::ast::Visit for ItemTraitAlias {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_trait_alias(self);
+    }
+}
+impl crate::ast::Fold for ItemTraitAlias {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_trait_alias(self)
+    }
+}

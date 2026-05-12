@@ -4,8 +4,9 @@ use serde_with::{KeyValueMap, serde_as};
 use crate::{Args, Error, Source, SourceMap};
 
 mod node;
+pub use node::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct Schema {
     #[serde(default = "Schema::default_name")]
     pub name: String,
@@ -51,23 +52,39 @@ impl Schema {
                 None => args.output.join(format!("{}.rs", &module)),
             };
 
+            // Base struct/enum content.
+            let mut content = node.run(args)?;
+
+            // Append per-node output for each enabled feature.
+            for feature in &args.features {
+                content.extend(feature.generate(node));
+            }
+
             map.set(
                 node.name(),
                 Source {
                     file,
                     module,
                     submodule,
-                    content: node.run(args)?,
+                    content,
                 },
             );
         }
 
+        // Global trait definitions appended to mod.rs.
+        let mut extra = proc_macro2::TokenStream::new();
+
+        for feature in &args.features {
+            extra.extend(feature.generate_global(self.nodes.iter()));
+        }
+
+        map.set_extra(extra);
         Ok(map)
     }
 }
 
 #[serde_as]
-#[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct Nodes {
     #[serde(flatten)]
     #[serde_as(as = "KeyValueMap<_>")]

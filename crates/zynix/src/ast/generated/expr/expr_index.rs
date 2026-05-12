@@ -7,3 +7,13 @@ pub struct ExprIndex {
     pub base: Box<Expr>,
     pub index: Box<Expr>,
 }
+impl crate::ast::Visit for ExprIndex {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_index(self);
+    }
+}
+impl crate::ast::Fold for ExprIndex {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_index(self)
+    }
+}

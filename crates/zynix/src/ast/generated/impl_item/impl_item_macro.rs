@@ -7,3 +7,13 @@ pub struct ImplItemMacro {
     pub mac: MacroCall,
     pub semi: bool,
 }
+impl crate::ast::Visit for ImplItemMacro {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_impl_item_macro(self);
+    }
+}
+impl crate::ast::Fold for ImplItemMacro {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_impl_item_macro(self)
+    }
+}

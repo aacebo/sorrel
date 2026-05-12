@@ -175,6 +175,8 @@ nodes:
       type: String
     - name: style
       type: AttrStyle
+      meta:
+        node: true
   ItemMacroRules:
     kind: product
     submodule: item
@@ -182,6 +184,8 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: rules
       type: crate::TokenStream
   Lifetime:
@@ -193,6 +197,8 @@ nodes:
       type: crate::Span
     - name: ident
       type: Ident
+      meta:
+        node: true
   LitFloat:
     kind: product
     submodule: lit
@@ -201,7 +207,10 @@ nodes:
     - name: digits
       type: String
     - name: suffix
-      type: Option<Ident>
+      type: Ident
+      meta:
+        node: true
+        wrapper: option
   LitInt:
     kind: product
     submodule: lit
@@ -210,7 +219,10 @@ nodes:
     - name: digits
       type: String
     - name: suffix
-      type: Option<Ident>
+      type: Ident
+      meta:
+        node: true
+        wrapper: option
   Member:
     kind: sum
     variants:
@@ -228,32 +240,45 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
   UseRename:
     kind: product
     extends: node_base
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: rename
       type: Ident
+      meta:
+        node: true
   Variadic:
     kind: product
     extends: attributed_node_base
     fields:
     - name: name
-      type: Option<Ident>
+      type: Ident
+      meta:
+        node: true
+        wrapper: option
   Label:
     kind: product
     extends: node_base
     fields:
     - name: name
       type: Lifetime
+      meta:
+        node: true
   LifetimeParam:
     kind: product
     extends: attributed_node_base
     fields:
     - name: lifetime
       type: Lifetime
+      meta:
+        node: true
     - name: bounds
       type: 'crate::ast::Punctuated<Lifetime, crate::token::Plus>'
   LifetimePredicate:
@@ -262,6 +287,8 @@ nodes:
     fields:
     - name: lifetime
       type: Lifetime
+      meta:
+        node: true
     - name: bounds
       type: 'crate::ast::Punctuated<Lifetime, crate::token::Plus>'
   Receiver:
@@ -272,9 +299,14 @@ nodes:
       type: bool
       default: false
     - name: lifetime
-      type: Option<Lifetime>
+      type: Lifetime
+      meta:
+        node: true
+        wrapper: option
     - name: mutability
       type: Mutability
+      meta:
+        node: true
   UseBound:
     kind: product
     extends: node_base
@@ -328,7 +360,10 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: label
-      type: Option<Label>
+      type: Label
+      meta:
+        node: true
+        wrapper: option
   BoundLifetimes:
     kind: product
     extends: node_base
@@ -342,6 +377,8 @@ nodes:
     fields:
     - name: lit
       type: Lit
+      meta:
+        node: true
   AngleArgs:
     kind: product
     extends: node_base
@@ -354,20 +391,34 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
-      type: Option<AngleArgs>
+      type: AngleArgs
+      meta:
+        node: true
+        wrapper: option
     - name: expr
       type: Expr
+      meta:
+        node: true
   AssocTypeArg:
     kind: product
     extends: node_base
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
-      type: Option<AngleArgs>
+      type: AngleArgs
+      meta:
+        node: true
+        wrapper: option
     - name: ty
       type: Type
+      meta:
+        node: true
   AttrArgs:
     kind: sum
     variants:
@@ -389,25 +440,39 @@ nodes:
     fields:
     - name: style
       type: AttrStyle
+      meta:
+        node: true
     - name: path
       type: Path
+      meta:
+        node: true
     - name: args
       type: AttrArgs
+      meta:
+        node: true
   BareFnArg:
     kind: product
     extends: attributed_node_base
     fields:
     - name: name
-      type: Option<Ident>
+      type: Ident
+      meta:
+        node: true
+        wrapper: option
     - name: ty
       type: Type
+      meta:
+        node: true
   Block:
     kind: product
     doc: "A braced block of statements (`{ stmt; stmt; expr }`)."
     extends: node_base
     fields:
     - name: stmts
-      type: Vec<Stmt>
+      type: Stmt
+      meta:
+        node: true
+        wrapper: vec
   ClosureParam:
     kind: sum
     variants:
@@ -427,18 +492,30 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: ty
       type: Type
+      meta:
+        node: true
     - name: default
-      type: Option<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option
   ConstraintArg:
     kind: product
     extends: node_base
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
-      type: Option<AngleArgs>
+      type: AngleArgs
+      meta:
+        node: true
+        wrapper: option
     - name: bounds
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
   Crate:
@@ -446,9 +523,15 @@ nodes:
     extends: node_base
     fields:
     - name: attrs
-      type: Vec<Attribute>
+      type: Attribute
+      meta:
+        node: true
+        wrapper: vec
     - name: items
-      type: Vec<Item>
+      type: Item
+      meta:
+        node: true
+        wrapper: vec
   Expr:
     kind: sum
     submodule: expr
@@ -628,20 +711,34 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: left
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: right
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprAssignOp:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: left
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: op
       type: AssignOp
+      meta:
+        node: true
     - name: right
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprAsync:
     kind: product
     submodule: expr
@@ -652,13 +749,18 @@ nodes:
       default: false
     - name: block
       type: Block
+      meta:
+        node: true
   ExprAwait:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: base
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprBinary:
     kind: product
     submodule: expr
@@ -666,36 +768,58 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: left
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: op
       type: BinOp
+      meta:
+        node: true
     - name: right
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprBlock:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
-      type: Option<Label>
+      type: Label
+      meta:
+        node: true
+        wrapper: option
     - name: block
       type: Block
+      meta:
+        node: true
   ExprBreak:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
-      type: Option<Label>
+      type: Label
+      meta:
+        node: true
+        wrapper: option
     - name: expr
-      type: Option<Box<Expr>>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option_box
   ExprCall:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: func
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: args
       type: 'crate::ast::Punctuated<Expr, crate::token::Comma>'
   ExprCast:
@@ -704,22 +828,37 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: ty
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
   ExprClosure:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: lifetimes
-      type: Option<BoundLifetimes>
+      type: BoundLifetimes
+      meta:
+        node: true
+        wrapper: option
     - name: constness
       type: Constness
+      meta:
+        node: true
     - name: movability
       type: Movability
+      meta:
+        node: true
     - name: asyncness
       type: Asyncness
+      meta:
+        node: true
     - name: capture
       type: bool
       default: false
@@ -727,8 +866,13 @@ nodes:
       type: 'crate::ast::Punctuated<ClosureParam, crate::token::Comma>'
     - name: output
       type: ReturnType
+      meta:
+        node: true
     - name: body
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprConst:
     kind: product
     submodule: expr
@@ -736,93 +880,153 @@ nodes:
     fields:
     - name: block
       type: Block
+      meta:
+        node: true
   ExprField:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: base
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: member
       type: Member
+      meta:
+        node: true
   ExprForLoop:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
-      type: Option<Label>
+      type: Label
+      meta:
+        node: true
+        wrapper: option
     - name: pat
-      type: Box<Pattern>
+      type: Pattern
+      meta:
+        node: true
+        wrapper: box
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: body
       type: Block
+      meta:
+        node: true
   ExprGroup:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprIf:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: cond
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: then_branch
       type: Block
+      meta:
+        node: true
     - name: else_branch
-      type: Option<Box<Expr>>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option_box
   ExprIndex:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: base
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: index
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprLet:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: pat
-      type: Box<Pattern>
+      type: Pattern
+      meta:
+        node: true
+        wrapper: box
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprLoop:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
-      type: Option<Label>
+      type: Label
+      meta:
+        node: true
+        wrapper: option
     - name: body
       type: Block
+      meta:
+        node: true
   ExprMatch:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: arms
-      type: Vec<MatchArm>
+      type: MatchArm
+      meta:
+        node: true
+        wrapper: vec
   ExprMethodCall:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: receiver
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: method
       type: Ident
+      meta:
+        node: true
     - name: turbofish
-      type: Option<AngleArgs>
+      type: AngleArgs
+      meta:
+        node: true
+        wrapper: option
     - name: args
       type: 'crate::ast::Punctuated<Expr, crate::token::Comma>'
   ExprParen:
@@ -831,27 +1035,43 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprPath:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: qself
-      type: Option<QSelf>
+      type: QSelf
+      meta:
+        node: true
+        wrapper: option
     - name: path
       type: Path
+      meta:
+        node: true
   ExprRange:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: start
-      type: Option<Box<Expr>>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option_box
     - name: limits
       type: RangeLimits
+      meta:
+        node: true
     - name: end
-      type: Option<Box<Expr>>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option_box
   ExprReference:
     kind: product
     submodule: expr
@@ -859,44 +1079,69 @@ nodes:
     fields:
     - name: mutability
       type: Mutability
+      meta:
+        node: true
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprRepeat:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: elem
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: len
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprReturn:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
-      type: Option<Box<Expr>>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option_box
   ExprStruct:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: qself
-      type: Option<QSelf>
+      type: QSelf
+      meta:
+        node: true
+        wrapper: option
     - name: path
       type: Path
+      meta:
+        node: true
     - name: fields
       type: 'crate::ast::Punctuated<FieldValue, crate::token::Comma>'
     - name: rest
-      type: Option<Box<Expr>>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option_box
   ExprTry:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprTryBlock:
     kind: product
     submodule: expr
@@ -904,6 +1149,8 @@ nodes:
     fields:
     - name: block
       type: Block
+      meta:
+        node: true
   ExprTuple:
     kind: product
     submodule: expr
@@ -917,9 +1164,15 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: ty
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
   ExprUnary:
     kind: product
     submodule: expr
@@ -927,8 +1180,13 @@ nodes:
     fields:
     - name: op
       type: UnOp
+      meta:
+        node: true
     - name: expr
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
   ExprUnsafe:
     kind: product
     submodule: expr
@@ -936,44 +1194,70 @@ nodes:
     fields:
     - name: block
       type: Block
+      meta:
+        node: true
   ExprWhile:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
-      type: Option<Label>
+      type: Label
+      meta:
+        node: true
+        wrapper: option
     - name: cond
-      type: Box<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: box
     - name: body
       type: Block
+      meta:
+        node: true
   ExprYield:
     kind: product
     submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
-      type: Option<Box<Expr>>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option_box
   FieldDef:
     kind: product
     extends: attributed_node_base
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: mutability
       type: Mutability
+      meta:
+        node: true
     - name: ident
-      type: Option<Ident>
+      type: Ident
+      meta:
+        node: true
+        wrapper: option
     - name: ty
       type: Type
+      meta:
+        node: true
   FieldValue:
     kind: product
     extends: attributed_node_base
     fields:
     - name: member
       type: Member
+      meta:
+        node: true
     - name: expr
       type: Expr
+      meta:
+        node: true
     - name: shorthand
       type: bool
       default: false
@@ -1039,8 +1323,12 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: sig
       type: Signature
+      meta:
+        node: true
   ForeignItemMacro:
     kind: product
     submodule: foreign_item
@@ -1048,6 +1336,8 @@ nodes:
     fields:
     - name: mac
       type: MacroCall
+      meta:
+        node: true
     - name: semi
       type: bool
       default: false
@@ -1058,12 +1348,20 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: mutability
       type: Mutability
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: ty
       type: Type
+      meta:
+        node: true
   ForeignItemType:
     kind: product
     submodule: foreign_item
@@ -1071,10 +1369,16 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
   GenericArgument:
     kind: sum
     variants:
@@ -1124,7 +1428,10 @@ nodes:
     - name: params
       type: 'crate::ast::Punctuated<GenericParam, crate::token::Comma>'
     - name: where_clause
-      type: Option<WhereClause>
+      type: WhereClause
+      meta:
+        node: true
+        wrapper: option
   ImplItem:
     kind: sum
     submodule: impl_item
@@ -1152,16 +1459,28 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: defaultness
       type: Defaultness
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: ty
       type: Type
+      meta:
+        node: true
     - name: expr
       type: Expr
+      meta:
+        node: true
   ImplItemFn:
     kind: product
     submodule: impl_item
@@ -1169,12 +1488,20 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: defaultness
       type: Defaultness
+      meta:
+        node: true
     - name: sig
       type: Signature
+      meta:
+        node: true
     - name: body
       type: Block
+      meta:
+        node: true
   ImplItemMacro:
     kind: product
     submodule: impl_item
@@ -1182,6 +1509,8 @@ nodes:
     fields:
     - name: mac
       type: MacroCall
+      meta:
+        node: true
     - name: semi
       type: bool
       default: false
@@ -1192,14 +1521,24 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: defaultness
       type: Defaultness
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: ty
       type: Type
+      meta:
+        node: true
   Item:
     kind: sum
     submodule: item
@@ -1280,14 +1619,24 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: ty
       type: Type
+      meta:
+        node: true
     - name: expr
       type: Expr
+      meta:
+        node: true
   ItemEnum:
     kind: product
     submodule: item
@@ -1295,10 +1644,16 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: variants
       type: 'crate::ast::Punctuated<Variant, crate::token::Comma>'
   ItemExternCrate:
@@ -1308,10 +1663,17 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: rename
-      type: Option<Ident>
+      type: Ident
+      meta:
+        node: true
+        wrapper: option
   ItemFn:
     kind: product
     submodule: item
@@ -1319,12 +1681,20 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: defaultness
       type: Defaultness
+      meta:
+        node: true
     - name: sig
       type: Signature
+      meta:
+        node: true
     - name: body
       type: Block
+      meta:
+        node: true
   ItemForeignMod:
     kind: product
     submodule: item
@@ -1332,10 +1702,17 @@ nodes:
     fields:
     - name: unsafety
       type: Unsafety
+      meta:
+        node: true
     - name: abi
       type: Abi
+      meta:
+        node: true
     - name: items
-      type: Vec<ForeignItem>
+      type: ForeignItem
+      meta:
+        node: true
+        wrapper: vec
   ItemImpl:
     kind: product
     submodule: item
@@ -1343,25 +1720,44 @@ nodes:
     fields:
     - name: defaultness
       type: Defaultness
+      meta:
+        node: true
     - name: unsafety
       type: Unsafety
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: trait_ref
-      type: Option<TraitRef>
+      type: TraitRef
+      meta:
+        node: true
+        wrapper: option
     - name: self_ty
       type: Type
+      meta:
+        node: true
     - name: items
-      type: Vec<ImplItem>
+      type: ImplItem
+      meta:
+        node: true
+        wrapper: vec
   ItemMacro:
     kind: product
     submodule: item
     extends: attributed_node_base
     fields:
     - name: ident
-      type: Option<Ident>
+      type: Ident
+      meta:
+        node: true
+        wrapper: option
     - name: mac
       type: MacroCall
+      meta:
+        node: true
     - name: semi
       type: bool
       default: false
@@ -1372,12 +1768,21 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: unsafety
       type: Unsafety
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: content
-      type: Option<Vec<Item>>
+      type: Item
+      meta:
+        node: true
+        wrapper: option_vec
   ItemStatic:
     kind: product
     submodule: item
@@ -1385,14 +1790,24 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: mutability
       type: Mutability
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: ty
       type: Type
+      meta:
+        node: true
     - name: expr
       type: Expr
+      meta:
+        node: true
   ItemStruct:
     kind: product
     submodule: item
@@ -1400,12 +1815,20 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: fields
       type: Fields
+      meta:
+        node: true
   ItemTrait:
     kind: product
     submodule: item
@@ -1413,19 +1836,30 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: unsafety
       type: Unsafety
+      meta:
+        node: true
     - name: auto
       type: bool
       default: false
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: supertraits
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
     - name: items
-      type: Vec<TraitItem>
+      type: TraitItem
+      meta:
+        node: true
+        wrapper: vec
   ItemTraitAlias:
     kind: product
     submodule: item
@@ -1433,10 +1867,16 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: bounds
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
   ItemTypeAlias:
@@ -1446,12 +1886,20 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: ty
       type: Type
+      meta:
+        node: true
   ItemUnion:
     kind: product
     submodule: item
@@ -1459,12 +1907,20 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: fields
       type: FieldsNamed
+      meta:
+        node: true
   ItemUse:
     kind: product
     submodule: item
@@ -1472,8 +1928,12 @@ nodes:
     fields:
     - name: vis
       type: Visibility
+      meta:
+        node: true
     - name: tree
       type: UseTree
+      meta:
+        node: true
   Local:
     kind: product
     submodule: stmt
@@ -1481,10 +1941,18 @@ nodes:
     fields:
     - name: pat
       type: Pattern
+      meta:
+        node: true
     - name: ty
-      type: Option<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: option
     - name: init
-      type: Option<LocalInit>
+      type: LocalInit
+      meta:
+        node: true
+        wrapper: option
   LocalInit:
     kind: product
     submodule: stmt
@@ -1492,16 +1960,25 @@ nodes:
     fields:
     - name: expr
       type: Expr
+      meta:
+        node: true
     - name: diverge
-      type: Option<Box<Expr>>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option_box
   MacroCall:
     kind: product
     extends: attributed_node_base
     fields:
     - name: path
       type: Path
+      meta:
+        node: true
     - name: delimiter
       type: DelimiterKind
+      meta:
+        node: true
     - name: tokens
       type: crate::TokenStream
   MatchArm:
@@ -1510,10 +1987,17 @@ nodes:
     fields:
     - name: pat
       type: Pattern
+      meta:
+        node: true
     - name: guard
-      type: Option<Box<Expr>>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option_box
     - name: body
       type: Expr
+      meta:
+        node: true
   Meta:
     kind: sum
     variants:
@@ -1535,8 +2019,12 @@ nodes:
     fields:
     - name: path
       type: Path
+      meta:
+        node: true
     - name: delimiter
       type: DelimiterKind
+      meta:
+        node: true
     - name: tokens
       type: crate::TokenStream
   MetaNameValue:
@@ -1545,8 +2033,12 @@ nodes:
     fields:
     - name: path
       type: Path
+      meta:
+        node: true
     - name: value
       type: Expr
+      meta:
+        node: true
   PatField:
     kind: product
     submodule: pat
@@ -1554,8 +2046,12 @@ nodes:
     fields:
     - name: member
       type: Member
+      meta:
+        node: true
     - name: pat
       type: Pattern
+      meta:
+        node: true
     - name: shorthand
       type: bool
       default: false
@@ -1565,7 +2061,10 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: pat
-      type: Box<Pattern>
+      type: Pattern
+      meta:
+        node: true
+        wrapper: box
   PatIdent:
     kind: product
     submodule: pat
@@ -1576,10 +2075,17 @@ nodes:
       default: false
     - name: mutability
       type: Mutability
+      meta:
+        node: true
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: subpat
-      type: Option<Box<Pattern>>
+      type: Pattern
+      meta:
+        node: true
+        wrapper: option_box
   PatLit:
     kind: product
     submodule: pat
@@ -1587,6 +2093,8 @@ nodes:
     fields:
     - name: expr
       type: Expr
+      meta:
+        node: true
   PatOr:
     kind: product
     submodule: pat
@@ -1600,27 +2108,43 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: pat
-      type: Box<Pattern>
+      type: Pattern
+      meta:
+        node: true
+        wrapper: box
   PatPath:
     kind: product
     submodule: pat
     extends: attributed_node_base
     fields:
     - name: qself
-      type: Option<QSelf>
+      type: QSelf
+      meta:
+        node: true
+        wrapper: option
     - name: path
       type: Path
+      meta:
+        node: true
   PatRange:
     kind: product
     submodule: pat
     extends: attributed_node_base
     fields:
     - name: start
-      type: Option<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option
     - name: limits
       type: RangeLimits
+      meta:
+        node: true
     - name: end
-      type: Option<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option
   PatReference:
     kind: product
     submodule: pat
@@ -1628,8 +2152,13 @@ nodes:
     fields:
     - name: mutability
       type: Mutability
+      meta:
+        node: true
     - name: pat
-      type: Box<Pattern>
+      type: Pattern
+      meta:
+        node: true
+        wrapper: box
   PatSlice:
     kind: product
     submodule: pat
@@ -1643,9 +2172,14 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: qself
-      type: Option<QSelf>
+      type: QSelf
+      meta:
+        node: true
+        wrapper: option
     - name: path
       type: Path
+      meta:
+        node: true
     - name: fields
       type: 'crate::ast::Punctuated<PatField, crate::token::Comma>'
     - name: rest
@@ -1664,9 +2198,14 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: qself
-      type: Option<QSelf>
+      type: QSelf
+      meta:
+        node: true
+        wrapper: option
     - name: path
       type: Path
+      meta:
+        node: true
     - name: elems
       type: 'crate::ast::Punctuated<Pattern, crate::token::Comma>'
   PatType:
@@ -1675,9 +2214,15 @@ nodes:
     extends: attributed_node_base
     fields:
     - name: pat
-      type: Box<Pattern>
+      type: Pattern
+      meta:
+        node: true
+        wrapper: box
     - name: ty
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
   Path:
     kind: product
     doc: "A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`)."
@@ -1708,8 +2253,12 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: args
       type: PathArguments
+      meta:
+        node: true
   Pattern:
     kind: sum
     submodule: pat
@@ -1777,7 +2326,10 @@ nodes:
     extends: node_base
     fields:
     - name: ty
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
     - name: position
       type: usize
   ReturnType:
@@ -1794,22 +2346,40 @@ nodes:
     fields:
     - name: constness
       type: Constness
+      meta:
+        node: true
     - name: asyncness
       type: Asyncness
+      meta:
+        node: true
     - name: unsafety
       type: Unsafety
+      meta:
+        node: true
     - name: abi
-      type: Option<Abi>
+      type: Abi
+      meta:
+        node: true
+        wrapper: option
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: inputs
       type: 'crate::ast::Punctuated<FnParam, crate::token::Comma>'
     - name: variadic
-      type: Option<Variadic>
+      type: Variadic
+      meta:
+        node: true
+        wrapper: option
     - name: output
       type: ReturnType
+      meta:
+        node: true
   Stmt:
     kind: sum
     submodule: stmt
@@ -1841,6 +2411,8 @@ nodes:
     fields:
     - name: mac
       type: MacroCall
+      meta:
+        node: true
     - name: semi
       type: bool
       default: false
@@ -1850,12 +2422,21 @@ nodes:
     fields:
     - name: polarity
       type: BoundPolarity
+      meta:
+        node: true
     - name: lifetimes
-      type: Option<BoundLifetimes>
+      type: BoundLifetimes
+      meta:
+        node: true
+        wrapper: option
     - name: modifier
       type: TraitBoundModifier
+      meta:
+        node: true
     - name: path
       type: Path
+      meta:
+        node: true
   TraitItem:
     kind: sum
     submodule: trait_item
@@ -1884,12 +2465,21 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: ty
       type: Type
+      meta:
+        node: true
     - name: default
-      type: Option<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option
   TraitItemFn:
     kind: product
     submodule: trait_item
@@ -1897,8 +2487,13 @@ nodes:
     fields:
     - name: sig
       type: Signature
+      meta:
+        node: true
     - name: default_body
-      type: Option<Block>
+      type: Block
+      meta:
+        node: true
+        wrapper: option
   TraitItemMacro:
     kind: product
     submodule: trait_item
@@ -1906,6 +2501,8 @@ nodes:
     fields:
     - name: mac
       type: MacroCall
+      meta:
+        node: true
     - name: semi
       type: bool
       default: false
@@ -1916,20 +2513,31 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: generics
       type: Generics
+      meta:
+        node: true
     - name: bounds
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
     - name: default
-      type: Option<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: option
   TraitRef:
     kind: product
     extends: node_base
     fields:
     - name: polarity
       type: BoundPolarity
+      meta:
+        node: true
     - name: path
       type: Path
+      meta:
+        node: true
   Type:
     kind: sum
     submodule: ty
@@ -1991,26 +2599,44 @@ nodes:
     extends: node_base
     fields:
     - name: elem
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
     - name: len
       type: Expr
+      meta:
+        node: true
   TypeBareFn:
     kind: product
     submodule: ty
     extends: node_base
     fields:
     - name: lifetimes
-      type: Option<BoundLifetimes>
+      type: BoundLifetimes
+      meta:
+        node: true
+        wrapper: option
     - name: unsafety
       type: Unsafety
+      meta:
+        node: true
     - name: abi
-      type: Option<Abi>
+      type: Abi
+      meta:
+        node: true
+        wrapper: option
     - name: inputs
       type: 'crate::ast::Punctuated<BareFnArg, crate::token::Comma>'
     - name: variadic
-      type: Option<Variadic>
+      type: Variadic
+      meta:
+        node: true
+        wrapper: option
     - name: output
       type: ReturnType
+      meta:
+        node: true
   TypeBound:
     kind: sum
     variants:
@@ -2032,7 +2658,10 @@ nodes:
     extends: node_base
     fields:
     - name: elem
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
   TypeImplTrait:
     kind: product
     submodule: ty
@@ -2047,26 +2676,39 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: bounds
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
     - name: default
-      type: Option<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: option
   TypeParen:
     kind: product
     submodule: ty
     extends: node_base
     fields:
     - name: elem
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
   TypePath:
     kind: product
     submodule: ty
     extends: node_base
     fields:
     - name: qself
-      type: Option<QSelf>
+      type: QSelf
+      meta:
+        node: true
+        wrapper: option
     - name: path
       type: Path
+      meta:
+        node: true
   TypePointer:
     kind: product
     submodule: ty
@@ -2074,17 +2716,27 @@ nodes:
     fields:
     - name: mutability
       type: Mutability
+      meta:
+        node: true
     - name: elem
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
   TypePredicate:
     kind: product
     submodule: ty
     extends: node_base
     fields:
     - name: lifetimes
-      type: Option<BoundLifetimes>
+      type: BoundLifetimes
+      meta:
+        node: true
+        wrapper: option
     - name: bounded_ty
       type: Type
+      meta:
+        node: true
     - name: bounds
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
   TypeReference:
@@ -2093,18 +2745,29 @@ nodes:
     extends: node_base
     fields:
     - name: lifetime
-      type: Option<Lifetime>
+      type: Lifetime
+      meta:
+        node: true
+        wrapper: option
     - name: mutability
       type: Mutability
+      meta:
+        node: true
     - name: elem
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
   TypeSlice:
     kind: product
     submodule: ty
     extends: node_base
     fields:
     - name: elem
-      type: Box<Type>
+      type: Type
+      meta:
+        node: true
+        wrapper: box
   TypeTraitObject:
     kind: product
     submodule: ty
@@ -2129,8 +2792,12 @@ nodes:
     fields:
     - name: pat
       type: Pattern
+      meta:
+        node: true
     - name: ty
       type: Type
+      meta:
+        node: true
   UseGroup:
     kind: product
     extends: node_base
@@ -2143,8 +2810,13 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: tree
-      type: Box<UseTree>
+      type: UseTree
+      meta:
+        node: true
+        wrapper: box
   UseTree:
     kind: sum
     variants:
@@ -2171,10 +2843,17 @@ nodes:
     fields:
     - name: ident
       type: Ident
+      meta:
+        node: true
     - name: fields
       type: Fields
+      meta:
+        node: true
     - name: discriminant
-      type: Option<Expr>
+      type: Expr
+      meta:
+        node: true
+        wrapper: option
   Visibility:
     kind: sum
     doc: "The visibility of an item — controls whether it is accessible outside its defining module."

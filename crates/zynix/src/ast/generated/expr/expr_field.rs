@@ -7,3 +7,13 @@ pub struct ExprField {
     pub base: Box<Expr>,
     pub member: Member,
 }
+impl crate::ast::Visit for ExprField {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_field(self);
+    }
+}
+impl crate::ast::Fold for ExprField {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_field(self)
+    }
+}

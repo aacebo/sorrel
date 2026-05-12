@@ -5,3 +5,13 @@ pub struct Label {
     pub span: crate::Span,
     pub name: Lifetime,
 }
+impl crate::ast::Visit for Label {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_label(self);
+    }
+}
+impl crate::ast::Fold for Label {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_label(self)
+    }
+}

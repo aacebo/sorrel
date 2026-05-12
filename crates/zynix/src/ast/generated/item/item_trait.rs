@@ -12,3 +12,13 @@ pub struct ItemTrait {
     pub supertraits: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
     pub items: Vec<TraitItem>,
 }
+impl crate::ast::Visit for ItemTrait {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_trait(self);
+    }
+}
+impl crate::ast::Fold for ItemTrait {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_trait(self)
+    }
+}

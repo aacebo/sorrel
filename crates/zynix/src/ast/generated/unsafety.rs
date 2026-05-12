@@ -5,3 +5,19 @@ pub enum Unsafety {
     Safe,
     Unsafe,
 }
+impl crate::ast::Visit for Unsafety {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        match self {
+            Unsafety::Safe => {}
+            Unsafety::Unsafe => {}
+        }
+    }
+}
+impl crate::ast::Fold for Unsafety {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        match self {
+            Unsafety::Safe => Unsafety::Safe,
+            Unsafety::Unsafe => Unsafety::Unsafe,
+        }
+    }
+}

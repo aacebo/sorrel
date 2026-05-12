@@ -9,3 +9,13 @@ pub struct ExprStruct {
     pub fields: crate::ast::Punctuated<FieldValue, crate::token::Comma>,
     pub rest: Option<Box<Expr>>,
 }
+impl crate::ast::Visit for ExprStruct {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_struct(self);
+    }
+}
+impl crate::ast::Fold for ExprStruct {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_struct(self)
+    }
+}

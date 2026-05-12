@@ -9,3 +9,13 @@ pub struct ItemEnum {
     pub generics: Generics,
     pub variants: crate::ast::Punctuated<Variant, crate::token::Comma>,
 }
+impl crate::ast::Visit for ItemEnum {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_enum(self);
+    }
+}
+impl crate::ast::Fold for ItemEnum {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_enum(self)
+    }
+}

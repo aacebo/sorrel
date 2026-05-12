@@ -5,3 +5,13 @@ pub struct LifetimeName {
     pub span: crate::Span,
     pub text: String,
 }
+impl crate::ast::Visit for LifetimeName {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_lifetime_name(self);
+    }
+}
+impl crate::ast::Fold for LifetimeName {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_lifetime_name(self)
+    }
+}

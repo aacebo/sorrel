@@ -5,3 +5,13 @@ pub struct LitByteStr {
     pub span: crate::Span,
     pub value: Vec<u8>,
 }
+impl crate::ast::Visit for LitByteStr {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_lit_byte_str(self);
+    }
+}
+impl crate::ast::Fold for LitByteStr {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_lit_byte_str(self)
+    }
+}

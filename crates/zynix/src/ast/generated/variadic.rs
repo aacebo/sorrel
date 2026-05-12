@@ -6,3 +6,13 @@ pub struct Variadic {
     pub attrs: Vec<Attribute>,
     pub name: Option<Ident>,
 }
+impl crate::ast::Visit for Variadic {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_variadic(self);
+    }
+}
+impl crate::ast::Fold for Variadic {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_variadic(self)
+    }
+}

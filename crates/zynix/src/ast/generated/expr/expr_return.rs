@@ -6,3 +6,13 @@ pub struct ExprReturn {
     pub attrs: Vec<Attribute>,
     pub expr: Option<Box<Expr>>,
 }
+impl crate::ast::Visit for ExprReturn {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_return(self);
+    }
+}
+impl crate::ast::Fold for ExprReturn {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_return(self)
+    }
+}

@@ -45,6 +45,180 @@ pub enum Expr {
     Infer {},
     Verbatim { tokens: crate::TokenStream },
 }
+impl crate::ast::Visit for Expr {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        match self {
+            Expr::Lit { value } => {
+                let _ = &value;
+            }
+            Expr::Path { value } => {
+                let _ = &value;
+            }
+            Expr::Block { value } => {
+                let _ = &value;
+            }
+            Expr::Unsafe { value } => {
+                let _ = &value;
+            }
+            Expr::Const { value } => {
+                let _ = &value;
+            }
+            Expr::If { value } => {
+                let _ = &value;
+            }
+            Expr::While { value } => {
+                let _ = &value;
+            }
+            Expr::ForLoop { value } => {
+                let _ = &value;
+            }
+            Expr::Loop { value } => {
+                let _ = &value;
+            }
+            Expr::Match { value } => {
+                let _ = &value;
+            }
+            Expr::Closure { value } => {
+                let _ = &value;
+            }
+            Expr::Async { value } => {
+                let _ = &value;
+            }
+            Expr::Await { value } => {
+                let _ = &value;
+            }
+            Expr::Try { value } => {
+                let _ = &value;
+            }
+            Expr::TryBlock { value } => {
+                let _ = &value;
+            }
+            Expr::Yield { value } => {
+                let _ = &value;
+            }
+            Expr::Return { value } => {
+                let _ = &value;
+            }
+            Expr::Break { value } => {
+                let _ = &value;
+            }
+            Expr::Continue { value } => {
+                let _ = &value;
+            }
+            Expr::Call { value } => {
+                let _ = &value;
+            }
+            Expr::MethodCall { value } => {
+                let _ = &value;
+            }
+            Expr::Field { value } => {
+                let _ = &value;
+            }
+            Expr::Index { value } => {
+                let _ = &value;
+            }
+            Expr::Reference { value } => {
+                let _ = &value;
+            }
+            Expr::Unary { value } => {
+                let _ = &value;
+            }
+            Expr::Binary { value } => {
+                let _ = &value;
+            }
+            Expr::Assign { value } => {
+                let _ = &value;
+            }
+            Expr::AssignOp { value } => {
+                let _ = &value;
+            }
+            Expr::Cast { value } => {
+                let _ = &value;
+            }
+            Expr::Type { value } => {
+                let _ = &value;
+            }
+            Expr::Let { value } => {
+                let _ = &value;
+            }
+            Expr::Struct { value } => {
+                let _ = &value;
+            }
+            Expr::Tuple { value } => {
+                let _ = &value;
+            }
+            Expr::Array { value } => {
+                let _ = &value;
+            }
+            Expr::Repeat { value } => {
+                let _ = &value;
+            }
+            Expr::Range { value } => {
+                let _ = &value;
+            }
+            Expr::Macro { value } => {
+                let _ = &value;
+            }
+            Expr::Group { value } => {
+                let _ = &value;
+            }
+            Expr::Paren { value } => {
+                let _ = &value;
+            }
+            Expr::Infer {} => {}
+            Expr::Verbatim { tokens } => {
+                let _ = &tokens;
+            }
+        }
+    }
+}
+impl crate::ast::Fold for Expr {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        match self {
+            Expr::Lit { value } => Expr::Lit { value },
+            Expr::Path { value } => Expr::Path { value },
+            Expr::Block { value } => Expr::Block { value },
+            Expr::Unsafe { value } => Expr::Unsafe { value },
+            Expr::Const { value } => Expr::Const { value },
+            Expr::If { value } => Expr::If { value },
+            Expr::While { value } => Expr::While { value },
+            Expr::ForLoop { value } => Expr::ForLoop { value },
+            Expr::Loop { value } => Expr::Loop { value },
+            Expr::Match { value } => Expr::Match { value },
+            Expr::Closure { value } => Expr::Closure { value },
+            Expr::Async { value } => Expr::Async { value },
+            Expr::Await { value } => Expr::Await { value },
+            Expr::Try { value } => Expr::Try { value },
+            Expr::TryBlock { value } => Expr::TryBlock { value },
+            Expr::Yield { value } => Expr::Yield { value },
+            Expr::Return { value } => Expr::Return { value },
+            Expr::Break { value } => Expr::Break { value },
+            Expr::Continue { value } => Expr::Continue { value },
+            Expr::Call { value } => Expr::Call { value },
+            Expr::MethodCall { value } => Expr::MethodCall { value },
+            Expr::Field { value } => Expr::Field { value },
+            Expr::Index { value } => Expr::Index { value },
+            Expr::Reference { value } => Expr::Reference { value },
+            Expr::Unary { value } => Expr::Unary { value },
+            Expr::Binary { value } => Expr::Binary { value },
+            Expr::Assign { value } => Expr::Assign { value },
+            Expr::AssignOp { value } => Expr::AssignOp { value },
+            Expr::Cast { value } => Expr::Cast { value },
+            Expr::Type { value } => Expr::Type { value },
+            Expr::Let { value } => Expr::Let { value },
+            Expr::Struct { value } => Expr::Struct { value },
+            Expr::Tuple { value } => Expr::Tuple { value },
+            Expr::Array { value } => Expr::Array { value },
+            Expr::Repeat { value } => Expr::Repeat { value },
+            Expr::Range { value } => Expr::Range { value },
+            Expr::Macro { value } => Expr::Macro { value },
+            Expr::Group { value } => Expr::Group { value },
+            Expr::Paren { value } => Expr::Paren { value },
+            Expr::Infer {} => Expr::Infer {},
+            Expr::Verbatim { tokens } => Expr::Verbatim { tokens },
+        }
+    }
+}
 mod expr_array;
 pub use expr_array::*;
 mod expr_assign;

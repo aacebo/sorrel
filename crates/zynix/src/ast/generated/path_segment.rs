@@ -6,3 +6,13 @@ pub struct PathSegment {
     pub ident: Ident,
     pub args: PathArguments,
 }
+impl crate::ast::Visit for PathSegment {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_path_segment(self);
+    }
+}
+impl crate::ast::Fold for PathSegment {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_path_segment(self)
+    }
+}

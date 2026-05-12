@@ -8,3 +8,13 @@ pub struct FieldValue {
     pub expr: Expr,
     pub shorthand: bool,
 }
+impl crate::ast::Visit for FieldValue {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_field_value(self);
+    }
+}
+impl crate::ast::Fold for FieldValue {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_field_value(self)
+    }
+}

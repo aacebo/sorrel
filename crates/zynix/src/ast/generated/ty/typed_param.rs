@@ -7,3 +7,13 @@ pub struct TypedParam {
     pub pat: Pattern,
     pub ty: Type,
 }
+impl crate::ast::Visit for TypedParam {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_typed_param(self);
+    }
+}
+impl crate::ast::Fold for TypedParam {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_typed_param(self)
+    }
+}

@@ -8,3 +8,13 @@ pub struct ExprAssignOp {
     pub op: AssignOp,
     pub right: Box<Expr>,
 }
+impl crate::ast::Visit for ExprAssignOp {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_assign_op(self);
+    }
+}
+impl crate::ast::Fold for ExprAssignOp {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_assign_op(self)
+    }
+}

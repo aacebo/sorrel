@@ -13,3 +13,13 @@ pub struct ExprClosure {
     pub output: ReturnType,
     pub body: Box<Expr>,
 }
+impl crate::ast::Visit for ExprClosure {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_closure(self);
+    }
+}
+impl crate::ast::Fold for ExprClosure {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_closure(self)
+    }
+}

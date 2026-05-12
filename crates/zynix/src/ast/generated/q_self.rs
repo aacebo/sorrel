@@ -6,3 +6,13 @@ pub struct QSelf {
     pub ty: Box<Type>,
     pub position: usize,
 }
+impl crate::ast::Visit for QSelf {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_q_self(self);
+    }
+}
+impl crate::ast::Fold for QSelf {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_q_self(self)
+    }
+}

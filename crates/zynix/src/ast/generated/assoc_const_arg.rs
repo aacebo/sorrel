@@ -7,3 +7,13 @@ pub struct AssocConstArg {
     pub generics: Option<AngleArgs>,
     pub expr: Expr,
 }
+impl crate::ast::Visit for AssocConstArg {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_assoc_const_arg(self);
+    }
+}
+impl crate::ast::Fold for AssocConstArg {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_assoc_const_arg(self)
+    }
+}

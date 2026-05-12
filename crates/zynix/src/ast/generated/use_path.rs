@@ -6,3 +6,13 @@ pub struct UsePath {
     pub ident: Ident,
     pub tree: Box<UseTree>,
 }
+impl crate::ast::Visit for UsePath {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_use_path(self);
+    }
+}
+impl crate::ast::Fold for UsePath {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_use_path(self)
+    }
+}

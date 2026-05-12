@@ -13,3 +13,35 @@ pub enum AssignOp {
     ShlAssign,
     ShrAssign,
 }
+impl crate::ast::Visit for AssignOp {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        match self {
+            AssignOp::AddAssign => {}
+            AssignOp::SubAssign => {}
+            AssignOp::MulAssign => {}
+            AssignOp::DivAssign => {}
+            AssignOp::RemAssign => {}
+            AssignOp::BitXorAssign => {}
+            AssignOp::BitAndAssign => {}
+            AssignOp::BitOrAssign => {}
+            AssignOp::ShlAssign => {}
+            AssignOp::ShrAssign => {}
+        }
+    }
+}
+impl crate::ast::Fold for AssignOp {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        match self {
+            AssignOp::AddAssign => AssignOp::AddAssign,
+            AssignOp::SubAssign => AssignOp::SubAssign,
+            AssignOp::MulAssign => AssignOp::MulAssign,
+            AssignOp::DivAssign => AssignOp::DivAssign,
+            AssignOp::RemAssign => AssignOp::RemAssign,
+            AssignOp::BitXorAssign => AssignOp::BitXorAssign,
+            AssignOp::BitAndAssign => AssignOp::BitAndAssign,
+            AssignOp::BitOrAssign => AssignOp::BitOrAssign,
+            AssignOp::ShlAssign => AssignOp::ShlAssign,
+            AssignOp::ShrAssign => AssignOp::ShrAssign,
+        }
+    }
+}

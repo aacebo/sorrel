@@ -21,3 +21,51 @@ pub enum BinOp {
     Ge,
     Gt,
 }
+impl crate::ast::Visit for BinOp {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        match self {
+            BinOp::Add => {}
+            BinOp::Sub => {}
+            BinOp::Mul => {}
+            BinOp::Div => {}
+            BinOp::Rem => {}
+            BinOp::And => {}
+            BinOp::Or => {}
+            BinOp::BitXor => {}
+            BinOp::BitAnd => {}
+            BinOp::BitOr => {}
+            BinOp::Shl => {}
+            BinOp::Shr => {}
+            BinOp::Eq => {}
+            BinOp::Lt => {}
+            BinOp::Le => {}
+            BinOp::Ne => {}
+            BinOp::Ge => {}
+            BinOp::Gt => {}
+        }
+    }
+}
+impl crate::ast::Fold for BinOp {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        match self {
+            BinOp::Add => BinOp::Add,
+            BinOp::Sub => BinOp::Sub,
+            BinOp::Mul => BinOp::Mul,
+            BinOp::Div => BinOp::Div,
+            BinOp::Rem => BinOp::Rem,
+            BinOp::And => BinOp::And,
+            BinOp::Or => BinOp::Or,
+            BinOp::BitXor => BinOp::BitXor,
+            BinOp::BitAnd => BinOp::BitAnd,
+            BinOp::BitOr => BinOp::BitOr,
+            BinOp::Shl => BinOp::Shl,
+            BinOp::Shr => BinOp::Shr,
+            BinOp::Eq => BinOp::Eq,
+            BinOp::Lt => BinOp::Lt,
+            BinOp::Le => BinOp::Le,
+            BinOp::Ne => BinOp::Ne,
+            BinOp::Ge => BinOp::Ge,
+            BinOp::Gt => BinOp::Gt,
+        }
+    }
+}

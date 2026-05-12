@@ -9,3 +9,13 @@ pub struct ItemStruct {
     pub generics: Generics,
     pub fields: Fields,
 }
+impl crate::ast::Visit for ItemStruct {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_struct(self);
+    }
+}
+impl crate::ast::Fold for ItemStruct {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_struct(self)
+    }
+}

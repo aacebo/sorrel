@@ -2,15 +2,15 @@ use quote::{format_ident, quote};
 
 use crate::{Args, Error};
 
-use super::{Field, Variant};
+use super::{TypeMeta, Variant};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct SumVariant {
     #[serde(default)]
     pub name: String,
 
     #[serde(default)]
-    pub fields: Vec<Field>,
+    pub fields: Vec<super::Field>,
 }
 
 impl SumVariant {
@@ -26,7 +26,7 @@ impl SumVariant {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct Sum {
     #[serde(rename = "$key$")]
     pub name: String,
@@ -39,6 +39,9 @@ pub struct Sum {
 
     #[serde(default)]
     pub submodule: Option<String>,
+
+    #[serde(default)]
+    pub meta: Option<TypeMeta>,
 }
 
 impl Sum {

@@ -7,3 +7,13 @@ pub struct ExprReference {
     pub mutability: Mutability,
     pub expr: Box<Expr>,
 }
+impl crate::ast::Visit for ExprReference {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_reference(self);
+    }
+}
+impl crate::ast::Fold for ExprReference {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_reference(self)
+    }
+}

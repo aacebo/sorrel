@@ -9,3 +9,13 @@ pub struct ItemMod {
     pub ident: Ident,
     pub content: Option<Vec<Item>>,
 }
+impl crate::ast::Visit for ItemMod {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_mod(self);
+    }
+}
+impl crate::ast::Fold for ItemMod {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_mod(self)
+    }
+}

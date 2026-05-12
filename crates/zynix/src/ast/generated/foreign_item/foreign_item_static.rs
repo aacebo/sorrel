@@ -9,3 +9,13 @@ pub struct ForeignItemStatic {
     pub ident: Ident,
     pub ty: Type,
 }
+impl crate::ast::Visit for ForeignItemStatic {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_foreign_item_static(self);
+    }
+}
+impl crate::ast::Fold for ForeignItemStatic {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_foreign_item_static(self)
+    }
+}

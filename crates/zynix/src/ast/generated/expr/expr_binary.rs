@@ -9,3 +9,13 @@ pub struct ExprBinary {
     pub op: BinOp,
     pub right: Box<Expr>,
 }
+impl crate::ast::Visit for ExprBinary {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_binary(self);
+    }
+}
+impl crate::ast::Fold for ExprBinary {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_binary(self)
+    }
+}

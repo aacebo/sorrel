@@ -8,3 +8,13 @@ pub struct ConstParam {
     pub ty: Type,
     pub default: Option<Expr>,
 }
+impl crate::ast::Visit for ConstParam {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_const_param(self);
+    }
+}
+impl crate::ast::Fold for ConstParam {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_const_param(self)
+    }
+}

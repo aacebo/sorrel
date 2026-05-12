@@ -6,3 +6,21 @@ pub enum DelimiterKind {
     Bracket,
     Brace,
 }
+impl crate::ast::Visit for DelimiterKind {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        match self {
+            DelimiterKind::Paren => {}
+            DelimiterKind::Bracket => {}
+            DelimiterKind::Brace => {}
+        }
+    }
+}
+impl crate::ast::Fold for DelimiterKind {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        match self {
+            DelimiterKind::Paren => DelimiterKind::Paren,
+            DelimiterKind::Bracket => DelimiterKind::Bracket,
+            DelimiterKind::Brace => DelimiterKind::Brace,
+        }
+    }
+}

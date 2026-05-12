@@ -9,3 +9,13 @@ pub struct ItemUnion {
     pub generics: Generics,
     pub fields: FieldsNamed,
 }
+impl crate::ast::Visit for ItemUnion {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_union(self);
+    }
+}
+impl crate::ast::Fold for ItemUnion {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_union(self)
+    }
+}

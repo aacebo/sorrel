@@ -8,3 +8,13 @@ pub struct PatRange {
     pub limits: RangeLimits,
     pub end: Option<Expr>,
 }
+impl crate::ast::Visit for PatRange {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_pat_range(self);
+    }
+}
+impl crate::ast::Fold for PatRange {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_pat_range(self)
+    }
+}

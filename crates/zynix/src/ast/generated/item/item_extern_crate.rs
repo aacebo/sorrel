@@ -8,3 +8,13 @@ pub struct ItemExternCrate {
     pub ident: Ident,
     pub rename: Option<Ident>,
 }
+impl crate::ast::Visit for ItemExternCrate {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_extern_crate(self);
+    }
+}
+impl crate::ast::Fold for ItemExternCrate {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_extern_crate(self)
+    }
+}

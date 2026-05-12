@@ -2,9 +2,9 @@ use quote::{format_ident, quote};
 
 use crate::{Args, Error};
 
-use super::{Base, Field};
+use super::{Base, TypeMeta};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct Product {
     #[serde(rename = "$key$")]
     pub name: String,
@@ -13,13 +13,16 @@ pub struct Product {
     pub extends: Base,
 
     #[serde(default)]
-    pub fields: Vec<Field>,
+    pub fields: Vec<super::Field>,
 
     #[serde(default)]
     pub doc: Option<String>,
 
     #[serde(default)]
     pub submodule: Option<String>,
+
+    #[serde(default)]
+    pub meta: Option<TypeMeta>,
 }
 
 impl Product {

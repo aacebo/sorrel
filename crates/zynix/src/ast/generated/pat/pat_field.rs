@@ -8,3 +8,13 @@ pub struct PatField {
     pub pat: Pattern,
     pub shorthand: bool,
 }
+impl crate::ast::Visit for PatField {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_pat_field(self);
+    }
+}
+impl crate::ast::Fold for PatField {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_pat_field(self)
+    }
+}

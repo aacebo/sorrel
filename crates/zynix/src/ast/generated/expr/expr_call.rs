@@ -7,3 +7,13 @@ pub struct ExprCall {
     pub func: Box<Expr>,
     pub args: crate::ast::Punctuated<Expr, crate::token::Comma>,
 }
+impl crate::ast::Visit for ExprCall {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_expr_call(self);
+    }
+}
+impl crate::ast::Fold for ExprCall {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_expr_call(self)
+    }
+}

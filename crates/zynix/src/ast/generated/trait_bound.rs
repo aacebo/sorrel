@@ -8,3 +8,13 @@ pub struct TraitBound {
     pub modifier: TraitBoundModifier,
     pub path: Path,
 }
+impl crate::ast::Visit for TraitBound {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_trait_bound(self);
+    }
+}
+impl crate::ast::Fold for TraitBound {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_trait_bound(self)
+    }
+}

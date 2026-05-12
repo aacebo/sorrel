@@ -11,3 +11,13 @@ pub struct ItemImpl {
     pub self_ty: Type,
     pub items: Vec<ImplItem>,
 }
+impl crate::ast::Visit for ItemImpl {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_item_impl(self);
+    }
+}
+impl crate::ast::Fold for ItemImpl {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_item_impl(self)
+    }
+}

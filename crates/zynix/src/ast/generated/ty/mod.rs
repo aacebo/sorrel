@@ -18,6 +18,70 @@ pub enum Type {
     Group { value: TypeGroup },
     Macro { value: MacroCall },
 }
+impl crate::ast::Visit for Type {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        match self {
+            Type::Never {} => {}
+            Type::Infer {} => {}
+            Type::Path { value } => {
+                let _ = &value;
+            }
+            Type::Tuple { value } => {
+                let _ = &value;
+            }
+            Type::Array { value } => {
+                let _ = &value;
+            }
+            Type::Slice { value } => {
+                let _ = &value;
+            }
+            Type::Reference { value } => {
+                let _ = &value;
+            }
+            Type::Pointer { value } => {
+                let _ = &value;
+            }
+            Type::BareFn { value } => {
+                let _ = &value;
+            }
+            Type::ImplTrait { value } => {
+                let _ = &value;
+            }
+            Type::TraitObject { value } => {
+                let _ = &value;
+            }
+            Type::Paren { value } => {
+                let _ = &value;
+            }
+            Type::Group { value } => {
+                let _ = &value;
+            }
+            Type::Macro { value } => {
+                let _ = &value;
+            }
+        }
+    }
+}
+impl crate::ast::Fold for Type {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        match self {
+            Type::Never {} => Type::Never {},
+            Type::Infer {} => Type::Infer {},
+            Type::Path { value } => Type::Path { value },
+            Type::Tuple { value } => Type::Tuple { value },
+            Type::Array { value } => Type::Array { value },
+            Type::Slice { value } => Type::Slice { value },
+            Type::Reference { value } => Type::Reference { value },
+            Type::Pointer { value } => Type::Pointer { value },
+            Type::BareFn { value } => Type::BareFn { value },
+            Type::ImplTrait { value } => Type::ImplTrait { value },
+            Type::TraitObject { value } => Type::TraitObject { value },
+            Type::Paren { value } => Type::Paren { value },
+            Type::Group { value } => Type::Group { value },
+            Type::Macro { value } => Type::Macro { value },
+        }
+    }
+}
 mod type_array;
 pub use type_array::*;
 mod type_bare_fn;

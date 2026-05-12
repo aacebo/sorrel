@@ -5,3 +5,13 @@ pub struct BoundLifetimes {
     pub span: crate::Span,
     pub params: crate::ast::Punctuated<LifetimeParam, crate::token::Comma>,
 }
+impl crate::ast::Visit for BoundLifetimes {
+    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
+        visitor.visit_bound_lifetimes(self);
+    }
+}
+impl crate::ast::Fold for BoundLifetimes {
+    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
+        folder.fold_bound_lifetimes(self)
+    }
+}
