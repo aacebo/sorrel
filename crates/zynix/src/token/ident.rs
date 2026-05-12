@@ -88,7 +88,7 @@ impl ToTokens for Ident {
 impl crate::Parse for Ident {
     fn parse(stream: &mut crate::ParseStream) -> Result<Self, crate::ParseError> {
         match stream.advance() {
-            Some(crate::TokenTree::Token(crate::Token::Ident(id))) => Ok(id.clone()),
+            Some(crate::TokenTree::Token(crate::Token::Ident(v))) => Ok(v.clone()),
             _ => Err(crate::LexError::new(stream.span())
                 .message("expected Ident")
                 .into()),

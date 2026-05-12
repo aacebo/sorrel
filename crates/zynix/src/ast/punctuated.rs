@@ -783,22 +783,7 @@ impl<T: Clone, P: Clone> Clone for IntoPairs<T, P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Ident, LexError, Punct, Spacing, Span, Token, TokenTree};
-
-    fn lex_err(span: Span) -> ParseError {
-        ParseError::from(LexError::new(span).message("unexpected token"))
-    }
-
-    // Parse impl for Punct — consume one punct token from the stream
-    impl Parse for Punct {
-        fn parse(stream: &mut ParseStream<'_>) -> Result<Self, ParseError> {
-            match stream.advance() {
-                Some(TokenTree::Token(Token::Punct(p))) => Ok(p.clone()),
-                Some(t) => Err(lex_err(t.span())),
-                None => Err(lex_err(Span::default())),
-            }
-        }
-    }
+    use crate::{Ident, Punct, Spacing, Span};
 
     fn parse_stream(src: &str) -> crate::TokenStream {
         src.parse().unwrap()
