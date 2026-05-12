@@ -248,7 +248,7 @@ fn folder_method(p: &Product) -> proc_macro2::TokenStream {
     let method = format_ident!("fold_{}", convert_case::ccase!(snake, &p.name));
     let inits: Vec<_> = node_fields(p)
         .iter()
-        .map(|f| fold_init_product(f))
+        .map(fold_init_product)
         .collect();
 
     quote! {
