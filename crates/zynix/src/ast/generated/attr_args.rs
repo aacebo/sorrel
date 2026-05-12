@@ -1,3 +1,4 @@
+#[allow(unused)]
 use super::*;
 #[derive(Debug, Clone)]
 pub enum AttrArgs {
@@ -7,6 +8,6 @@ pub enum AttrArgs {
         tokens: crate::TokenStream,
     },
     Meta {
-        meta: Meta,
+        meta: Box<Meta>,
     },
 }

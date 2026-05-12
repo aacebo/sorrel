@@ -171,6 +171,7 @@ nodes:
       type: AttrStyle
   ItemMacroRules:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: ident
@@ -314,6 +315,7 @@ nodes:
         type: crate::TokenStream
   ExprContinue:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
@@ -326,6 +328,7 @@ nodes:
       type: 'crate::ast::Punctuated<LifetimeParam, crate::token::Comma>'
   ExprLit:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: lit
@@ -369,7 +372,7 @@ nodes:
     - name: Meta
       fields:
       - name: meta
-        type: Meta
+        type: Box<Meta>
   Attribute:
     kind: product
     doc: "A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement."
@@ -402,13 +405,13 @@ nodes:
     - name: Typed
       fields:
       - name: pat
-        type: Pattern
+        type: Box<Pattern>
       - name: ty
-        type: Type
+        type: Box<Type>
     - name: Inferred
       fields:
       - name: pat
-        type: Pattern
+        type: Box<Pattern>
   ConstParam:
     kind: product
     extends: attributed_node_base
@@ -439,6 +442,7 @@ nodes:
       type: Vec<Item>
   Expr:
     kind: sum
+    submodule: expr
     doc: "A Rust expression. The primary recursive node covering all expression forms."
     variants:
     - name: Lit
@@ -604,12 +608,14 @@ nodes:
         type: crate::TokenStream
   ExprArray:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: elems
       type: 'crate::ast::Punctuated<Expr, crate::token::Comma>'
   ExprAssign:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: left
@@ -618,6 +624,7 @@ nodes:
       type: Box<Expr>
   ExprAssignOp:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: left
@@ -628,6 +635,7 @@ nodes:
       type: Box<Expr>
   ExprAsync:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: capture
@@ -637,12 +645,14 @@ nodes:
       type: Block
   ExprAwait:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: base
       type: Box<Expr>
   ExprBinary:
     kind: product
+    submodule: expr
     doc: "A binary operation expression (e.g. `a + b`, `x == y`)."
     extends: attributed_node_base
     fields:
@@ -654,6 +664,7 @@ nodes:
       type: Box<Expr>
   ExprBlock:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
@@ -662,6 +673,7 @@ nodes:
       type: Block
   ExprBreak:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
@@ -670,6 +682,7 @@ nodes:
       type: Option<Box<Expr>>
   ExprCall:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: func
@@ -678,6 +691,7 @@ nodes:
       type: 'crate::ast::Punctuated<Expr, crate::token::Comma>'
   ExprCast:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
@@ -686,6 +700,7 @@ nodes:
       type: Box<Type>
   ExprClosure:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: lifetimes
@@ -707,12 +722,14 @@ nodes:
       type: Box<Expr>
   ExprConst:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: block
       type: Block
   ExprField:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: base
@@ -721,6 +738,7 @@ nodes:
       type: Member
   ExprForLoop:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
@@ -733,12 +751,14 @@ nodes:
       type: Block
   ExprGroup:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
       type: Box<Expr>
   ExprIf:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: cond
@@ -749,6 +769,7 @@ nodes:
       type: Option<Box<Expr>>
   ExprIndex:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: base
@@ -757,6 +778,7 @@ nodes:
       type: Box<Expr>
   ExprLet:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: pat
@@ -765,6 +787,7 @@ nodes:
       type: Box<Expr>
   ExprLoop:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
@@ -773,6 +796,7 @@ nodes:
       type: Block
   ExprMatch:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
@@ -781,6 +805,7 @@ nodes:
       type: Vec<MatchArm>
   ExprMethodCall:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: receiver
@@ -793,12 +818,14 @@ nodes:
       type: 'crate::ast::Punctuated<Expr, crate::token::Comma>'
   ExprParen:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
       type: Box<Expr>
   ExprPath:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: qself
@@ -807,6 +834,7 @@ nodes:
       type: Path
   ExprRange:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: start
@@ -817,6 +845,7 @@ nodes:
       type: Option<Box<Expr>>
   ExprReference:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: mutability
@@ -825,6 +854,7 @@ nodes:
       type: Box<Expr>
   ExprRepeat:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: elem
@@ -833,12 +863,14 @@ nodes:
       type: Box<Expr>
   ExprReturn:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
       type: Option<Box<Expr>>
   ExprStruct:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: qself
@@ -851,24 +883,28 @@ nodes:
       type: Option<Box<Expr>>
   ExprTry:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
       type: Box<Expr>
   ExprTryBlock:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: block
       type: Block
   ExprTuple:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: elems
       type: 'crate::ast::Punctuated<Expr, crate::token::Comma>'
   ExprType:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
@@ -877,6 +913,7 @@ nodes:
       type: Box<Type>
   ExprUnary:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: op
@@ -885,12 +922,14 @@ nodes:
       type: Box<Expr>
   ExprUnsafe:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: block
       type: Block
   ExprWhile:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: label
@@ -901,6 +940,7 @@ nodes:
       type: Block
   ExprYield:
     kind: product
+    submodule: expr
     extends: attributed_node_base
     fields:
     - name: expr
@@ -958,13 +998,14 @@ nodes:
     - name: Receiver
       fields:
       - name: value
-        type: Receiver
+        type: Box<Receiver>
     - name: Typed
       fields:
       - name: value
-        type: TypedParam
+        type: Box<TypedParam>
   ForeignItem:
     kind: sum
+    submodule: foreign_item
     variants:
     - name: Fn
       fields:
@@ -984,6 +1025,7 @@ nodes:
         type: ForeignItemMacro
   ForeignItemFn:
     kind: product
+    submodule: foreign_item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -992,6 +1034,7 @@ nodes:
       type: Signature
   ForeignItemMacro:
     kind: product
+    submodule: foreign_item
     extends: attributed_node_base
     fields:
     - name: mac
@@ -1001,6 +1044,7 @@ nodes:
       default: false
   ForeignItemStatic:
     kind: product
+    submodule: foreign_item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1013,6 +1057,7 @@ nodes:
       type: Type
   ForeignItemType:
     kind: product
+    submodule: foreign_item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1073,6 +1118,7 @@ nodes:
       type: Option<WhereClause>
   ImplItem:
     kind: sum
+    submodule: impl_item
     variants:
     - name: Fn
       fields:
@@ -1092,6 +1138,7 @@ nodes:
         type: ImplItemMacro
   ImplItemConst:
     kind: product
+    submodule: impl_item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1108,6 +1155,7 @@ nodes:
       type: Expr
   ImplItemFn:
     kind: product
+    submodule: impl_item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1120,6 +1168,7 @@ nodes:
       type: Block
   ImplItemMacro:
     kind: product
+    submodule: impl_item
     extends: attributed_node_base
     fields:
     - name: mac
@@ -1129,6 +1178,7 @@ nodes:
       default: false
   ImplItemType:
     kind: product
+    submodule: impl_item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1143,6 +1193,7 @@ nodes:
       type: Type
   Item:
     kind: sum
+    submodule: item
     variants:
     - name: Use
       fields:
@@ -1214,6 +1265,7 @@ nodes:
         type: ItemForeignMod
   ItemConst:
     kind: product
+    submodule: item
     doc: "A top-level constant item (`const NAME: Type = value;`)."
     extends: attributed_node_base
     fields:
@@ -1229,6 +1281,7 @@ nodes:
       type: Expr
   ItemEnum:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1241,6 +1294,7 @@ nodes:
       type: 'crate::ast::Punctuated<Variant, crate::token::Comma>'
   ItemExternCrate:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1251,6 +1305,7 @@ nodes:
       type: Option<Ident>
   ItemFn:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1263,6 +1318,7 @@ nodes:
       type: Block
   ItemForeignMod:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: unsafety
@@ -1273,6 +1329,7 @@ nodes:
       type: Vec<ForeignItem>
   ItemImpl:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: defaultness
@@ -1289,6 +1346,7 @@ nodes:
       type: Vec<ImplItem>
   ItemMacro:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: ident
@@ -1300,6 +1358,7 @@ nodes:
       default: false
   ItemMod:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1312,6 +1371,7 @@ nodes:
       type: Option<Vec<Item>>
   ItemStatic:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1326,6 +1386,7 @@ nodes:
       type: Expr
   ItemStruct:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1338,6 +1399,7 @@ nodes:
       type: Fields
   ItemTrait:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1357,6 +1419,7 @@ nodes:
       type: Vec<TraitItem>
   ItemTraitAlias:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1369,6 +1432,7 @@ nodes:
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
   ItemTypeAlias:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1381,6 +1445,7 @@ nodes:
       type: Type
   ItemUnion:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1393,6 +1458,7 @@ nodes:
       type: FieldsNamed
   ItemUse:
     kind: product
+    submodule: item
     extends: attributed_node_base
     fields:
     - name: vis
@@ -1401,6 +1467,7 @@ nodes:
       type: UseTree
   Local:
     kind: product
+    submodule: stmt
     extends: attributed_node_base
     fields:
     - name: pat
@@ -1411,6 +1478,7 @@ nodes:
       type: Option<LocalInit>
   LocalInit:
     kind: product
+    submodule: stmt
     extends: node_base
     fields:
     - name: expr
@@ -1472,6 +1540,7 @@ nodes:
       type: Expr
   PatField:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: member
@@ -1483,12 +1552,14 @@ nodes:
       default: false
   PatGroup:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: pat
       type: Box<Pattern>
   PatIdent:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: by_ref
@@ -1502,24 +1573,28 @@ nodes:
       type: Option<Box<Pattern>>
   PatLit:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: expr
       type: Expr
   PatOr:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: cases
       type: 'crate::ast::Punctuated<Pattern, crate::token::Or>'
   PatParen:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: pat
       type: Box<Pattern>
   PatPath:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: qself
@@ -1528,6 +1603,7 @@ nodes:
       type: Path
   PatRange:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: start
@@ -1538,6 +1614,7 @@ nodes:
       type: Option<Expr>
   PatReference:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: mutability
@@ -1546,12 +1623,14 @@ nodes:
       type: Box<Pattern>
   PatSlice:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: elems
       type: 'crate::ast::Punctuated<Pattern, crate::token::Comma>'
   PatStruct:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: qself
@@ -1565,12 +1644,14 @@ nodes:
       default: false
   PatTuple:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: elems
       type: 'crate::ast::Punctuated<Pattern, crate::token::Comma>'
   PatTupleStruct:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: qself
@@ -1581,6 +1662,7 @@ nodes:
       type: 'crate::ast::Punctuated<Pattern, crate::token::Comma>'
   PatType:
     kind: product
+    submodule: pat
     extends: attributed_node_base
     fields:
     - name: pat
@@ -1610,7 +1692,7 @@ nodes:
       - name: inputs
         type: 'crate::ast::Punctuated<Type, crate::token::Comma>'
       - name: output
-        type: Option<Type>
+        type: Option<Box<Type>>
   PathSegment:
     kind: product
     extends: node_base
@@ -1621,6 +1703,7 @@ nodes:
       type: PathArguments
   Pattern:
     kind: sum
+    submodule: pat
     variants:
     - name: Wild
     - name: Rest
@@ -1720,29 +1803,31 @@ nodes:
       type: ReturnType
   Stmt:
     kind: sum
+    submodule: stmt
     variants:
     - name: Local
       fields:
       - name: value
-        type: Local
+        type: Box<Local>
     - name: Item
       fields:
       - name: value
-        type: Item
+        type: Box<Item>
     - name: Expr
       fields:
       - name: value
-        type: Expr
+        type: Box<Expr>
     - name: Semi
       fields:
       - name: value
-        type: Expr
+        type: Box<Expr>
     - name: Macro
       fields:
       - name: value
         type: StmtMacro
   StmtMacro:
     kind: product
+    submodule: stmt
     extends: attributed_node_base
     fields:
     - name: mac
@@ -1764,6 +1849,7 @@ nodes:
       type: Path
   TraitItem:
     kind: sum
+    submodule: trait_item
     variants:
     - name: Fn
       fields:
@@ -1783,6 +1869,7 @@ nodes:
         type: TraitItemMacro
   TraitItemConst:
     kind: product
+    submodule: trait_item
     doc: "An associated constant declaration inside a trait or impl block (`const NAME: Type;` or `const NAME: Type = value;`)."
     extends: attributed_node_base
     fields:
@@ -1796,6 +1883,7 @@ nodes:
       type: Option<Expr>
   TraitItemFn:
     kind: product
+    submodule: trait_item
     extends: attributed_node_base
     fields:
     - name: sig
@@ -1804,6 +1892,7 @@ nodes:
       type: Option<Block>
   TraitItemMacro:
     kind: product
+    submodule: trait_item
     extends: attributed_node_base
     fields:
     - name: mac
@@ -1813,6 +1902,7 @@ nodes:
       default: false
   TraitItemType:
     kind: product
+    submodule: trait_item
     extends: attributed_node_base
     fields:
     - name: ident
@@ -1833,6 +1923,7 @@ nodes:
       type: Path
   Type:
     kind: sum
+    submodule: ty
     doc: "A Rust type expression. Covers all positions where a type can appear in source code."
     variants:
     - name: Never
@@ -1887,6 +1978,7 @@ nodes:
         type: MacroCall
   TypeArray:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: elem
@@ -1895,6 +1987,7 @@ nodes:
       type: Expr
   TypeBareFn:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: lifetimes
@@ -1926,18 +2019,21 @@ nodes:
         type: UseBound
   TypeGroup:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: elem
       type: Box<Type>
   TypeImplTrait:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: bounds
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
   TypeParam:
     kind: product
+    submodule: ty
     extends: attributed_node_base
     fields:
     - name: ident
@@ -1948,12 +2044,14 @@ nodes:
       type: Option<Type>
   TypeParen:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: elem
       type: Box<Type>
   TypePath:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: qself
@@ -1962,6 +2060,7 @@ nodes:
       type: Path
   TypePointer:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: mutability
@@ -1970,6 +2069,7 @@ nodes:
       type: Box<Type>
   TypePredicate:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: lifetimes
@@ -1980,6 +2080,7 @@ nodes:
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
   TypeReference:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: lifetime
@@ -1990,12 +2091,14 @@ nodes:
       type: Box<Type>
   TypeSlice:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: elem
       type: Box<Type>
   TypeTraitObject:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: dyn_token
@@ -2005,12 +2108,14 @@ nodes:
       type: 'crate::ast::Punctuated<TypeBound, crate::token::Plus>'
   TypeTuple:
     kind: product
+    submodule: ty
     extends: node_base
     fields:
     - name: elems
       type: 'crate::ast::Punctuated<Type, crate::token::Comma>'
   TypedParam:
     kind: product
+    submodule: ty
     extends: attributed_node_base
     fields:
     - name: pat
@@ -2093,4 +2198,4 @@ nodes:
     - name: Type
       fields:
       - name: value
-        type: TypePredicate
+        type: Box<TypePredicate>

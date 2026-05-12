@@ -1,3 +1,4 @@
+#[allow(unused)]
 use super::*;
 #[doc = "The visibility of an item — controls whether it is accessible outside its defining module."]
 #[derive(Debug, Clone)]

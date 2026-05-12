@@ -36,6 +36,9 @@ pub struct Sum {
 
     #[serde(default)]
     pub doc: Option<String>,
+
+    #[serde(default)]
+    pub submodule: Option<String>,
 }
 
 impl Sum {
@@ -45,6 +48,7 @@ impl Sum {
         let variants: Vec<_> = self.variants.iter().map(|v| v.run(args)).try_collect()?;
 
         Ok(quote! {
+            #[allow(unused)]
             use super::*;
 
             #doc

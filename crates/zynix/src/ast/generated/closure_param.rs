@@ -1,6 +1,7 @@
+#[allow(unused)]
 use super::*;
 #[derive(Debug, Clone)]
 pub enum ClosureParam {
-    Typed { pat: Pattern, ty: Type },
-    Inferred { pat: Pattern },
+    Typed { pat: Box<Pattern>, ty: Box<Type> },
+    Inferred { pat: Box<Pattern> },
 }

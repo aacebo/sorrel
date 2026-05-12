@@ -41,11 +41,22 @@ impl Schema {
                 module = format!("_{}", &module);
             }
 
+            let submodule = node.submodule().map(|s| s.to_string());
+
+            let file = match &submodule {
+                Some(sub) if node.submodule().is_some() && matches!(node, node::Node::Sum(_)) => {
+                    args.output.join(sub).join("mod.rs")
+                }
+                Some(sub) => args.output.join(sub).join(format!("{}.rs", &module)),
+                None => args.output.join(format!("{}.rs", &module)),
+            };
+
             map.set(
                 node.name(),
                 Source {
-                    file: args.output.join(format!("{}.rs", &module)),
+                    file,
                     module,
+                    submodule,
                     content: node.run(args)?,
                 },
             );

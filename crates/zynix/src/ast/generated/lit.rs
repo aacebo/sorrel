@@ -1,3 +1,4 @@
+#[allow(unused)]
 use super::*;
 #[doc = "A literal value in source code (string, integer, float, byte, char, or boolean)."]
 #[derive(Debug, Clone)]

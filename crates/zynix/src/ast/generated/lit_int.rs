@@ -1,3 +1,4 @@
+#[allow(unused)]
 use super::*;
 #[derive(Debug, Clone)]
 pub struct LitInt {

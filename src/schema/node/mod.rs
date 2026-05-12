@@ -131,6 +131,13 @@ impl Node {
         }
     }
 
+    pub fn submodule(&self) -> Option<&str> {
+        match self {
+            Self::Product(v) => v.submodule.as_deref(),
+            Self::Sum(v) => v.submodule.as_deref(),
+        }
+    }
+
     pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         match self {
             Self::Product(v) => v.run(args),

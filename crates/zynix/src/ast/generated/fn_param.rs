@@ -1,6 +1,7 @@
+#[allow(unused)]
 use super::*;
 #[derive(Debug, Clone)]
 pub enum FnParam {
-    Receiver { value: Receiver },
-    Typed { value: TypedParam },
+    Receiver { value: Box<Receiver> },
+    Typed { value: Box<TypedParam> },
 }

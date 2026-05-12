@@ -1,3 +1,4 @@
+#[allow(unused)]
 use super::*;
 #[derive(Debug, Clone)]
 pub enum PathArguments {
@@ -7,6 +8,6 @@ pub enum PathArguments {
     },
     Parenthesized {
         inputs: crate::ast::Punctuated<Type, crate::token::Comma>,
-        output: Option<Type>,
+        output: Option<Box<Type>>,
     },
 }

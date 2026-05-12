@@ -1,3 +1,4 @@
+#[allow(unused)]
 use super::*;
 #[doc = "A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`)."]
 #[derive(Debug, Clone)]

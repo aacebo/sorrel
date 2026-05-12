@@ -17,6 +17,9 @@ pub struct Product {
 
     #[serde(default)]
     pub doc: Option<String>,
+
+    #[serde(default)]
+    pub submodule: Option<String>,
 }
 
 impl Product {
@@ -32,6 +35,7 @@ impl Product {
             .try_collect()?;
 
         Ok(quote! {
+            #[allow(unused)]
             use super::*;
 
             #doc
