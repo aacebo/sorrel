@@ -1,0 +1,8 @@
+use super::*;
+#[doc = "A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`)."]
+#[derive(Debug, Clone)]
+pub struct Path {
+    pub span: crate::Span,
+    pub leading_colon: bool,
+    pub segments: crate::ast::Punctuated<PathSegment, crate::token::PathSep>,
+}

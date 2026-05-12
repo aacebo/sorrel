@@ -45,7 +45,7 @@ impl Field {
     pub fn span() -> Self {
         Self {
             name: "span".to_string(),
-            kind: "Span".to_string(),
+            kind: "crate::Span".to_string(),
             doc: None,
             default: None,
         }
@@ -78,7 +78,7 @@ impl Field {
 
         Ok(quote! {
             #doc
-            pub #ident: #kind
+            #ident: #kind
         })
     }
 }

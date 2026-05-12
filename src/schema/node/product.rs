@@ -32,13 +32,13 @@ impl Product {
             .try_collect()?;
 
         Ok(quote! {
-            use crate::*;
+            use super::*;
 
             #doc
             #[derive(Debug, Clone)]
             pub struct #ident {
-                #(#base_fields,)*
-                #(#fields,)*
+                #(pub #base_fields,)*
+                #(pub #fields,)*
             }
         })
     }

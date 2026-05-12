@@ -52,10 +52,7 @@ impl SourceMap {
             ));
         }
 
-        std::fs::write(
-            path.join("mod.rs"),
-            quote!(#(#root)*).to_string(),
-        )
+        std::fs::write(path.join("mod.rs"), quote!(#(#root)*).to_string())
     }
 }
 

@@ -1,0 +1,7 @@
+use super::*;
+#[derive(Debug, Clone)]
+pub struct UseRename {
+    pub span: crate::Span,
+    pub ident: Ident,
+    pub rename: Ident,
+}

@@ -45,7 +45,7 @@ impl Sum {
         let variants: Vec<_> = self.variants.iter().map(|v| v.run(args)).try_collect()?;
 
         Ok(quote! {
-            use crate::*;
+            use super::*;
 
             #doc
             #[derive(Debug, Clone)]
