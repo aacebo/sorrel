@@ -74,8 +74,11 @@ impl Field {
             Ok(v) => v,
         };
 
+        let doc = self.doc.as_deref().map(|d| quote!(#[doc = #d]));
+
         Ok(quote! {
-            #ident: #kind
+            #doc
+            pub #ident: #kind
         })
     }
 }
@@ -121,7 +124,6 @@ impl Node {
         }
     }
 
-    #[allow(unused)]
     pub fn doc(&self) -> Option<&str> {
         match self {
             Self::Product(v) => v.doc.as_deref(),

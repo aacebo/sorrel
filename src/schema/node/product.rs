@@ -22,6 +22,7 @@ pub struct Product {
 impl Product {
     pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         let ident = format_ident!("{}", &self.name);
+        let doc = self.doc.as_deref().map(|d| quote!(#[doc = #d]));
         let fields: Vec<_> = self.fields.iter().map(|f| f.run(args)).try_collect()?;
         let base_fields: Vec<_> = self
             .extends
@@ -33,6 +34,8 @@ impl Product {
         Ok(quote! {
             use crate::*;
 
+            #doc
+            #[derive(Debug, Clone)]
             pub struct #ident {
                 #(#base_fields,)*
                 #(#fields,)*

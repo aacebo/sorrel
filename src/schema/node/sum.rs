@@ -41,11 +41,14 @@ pub struct Sum {
 impl Sum {
     pub fn run(&self, args: &Args) -> Result<proc_macro2::TokenStream, Error> {
         let ident = format_ident!("{}", &self.name);
+        let doc = self.doc.as_deref().map(|d| quote!(#[doc = #d]));
         let variants: Vec<_> = self.variants.iter().map(|v| v.run(args)).try_collect()?;
 
         Ok(quote! {
             use crate::*;
 
+            #doc
+            #[derive(Debug, Clone)]
             pub enum #ident {
                 #(#variants,)*
             }
