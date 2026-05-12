@@ -15,3 +15,28 @@ impl crate::ast::Fold for LifetimeName {
         folder.fold_lifetime_name(self)
     }
 }
+
+impl crate::Parse for LifetimeName {
+    fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
+        let span = stream.span();
+        match stream.advance() {
+            Some(crate::TokenTree::Token(crate::Token::Punct(p))) if p.as_char() == '\'' => {
+                let tok_span = p.span();
+                match stream.advance() {
+                    Some(crate::TokenTree::Token(crate::Token::Ident(id))) => Ok(Self {
+                        span: tok_span,
+                        text: id.name().into_owned(),
+                    }),
+                    _ => Err(crate::parse::ParseError::new(
+                        span,
+                        "expected lifetime name",
+                    )),
+                }
+            }
+            _ => Err(crate::parse::ParseError::new(
+                span,
+                "expected lifetime name",
+            )),
+        }
+    }
+}

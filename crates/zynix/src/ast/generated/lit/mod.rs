@@ -61,6 +61,59 @@ impl crate::ast::Fold for Lit {
         }
     }
 }
+impl crate::Parse for Lit {
+    fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
+        let span = stream.span();
+        match stream.curr() {
+            Some(crate::TokenTree::Token(crate::Token::Literal(lit))) => {
+                let repr = format!("{}", lit);
+                if repr.starts_with("b\"") {
+                    Ok(Lit::ByteStr {
+                        value: stream.parse()?,
+                    })
+                } else if repr.starts_with("c\"") {
+                    Ok(Lit::CStr {
+                        value: stream.parse()?,
+                    })
+                } else if repr.starts_with('"') {
+                    Ok(Lit::Str {
+                        value: stream.parse()?,
+                    })
+                } else if repr.starts_with("b'") {
+                    Ok(Lit::Byte {
+                        value: stream.parse()?,
+                    })
+                } else if repr.starts_with('\'') {
+                    Ok(Lit::Char {
+                        value: stream.parse()?,
+                    })
+                } else if repr.chars().next().is_some_and(|c| c.is_ascii_digit()) {
+                    let lower = repr.to_ascii_lowercase();
+                    if repr.contains('.') || (lower.contains('e') && !lower.starts_with("0x")) {
+                        Ok(Lit::Float {
+                            value: stream.parse()?,
+                        })
+                    } else {
+                        Ok(Lit::Int {
+                            value: stream.parse()?,
+                        })
+                    }
+                } else {
+                    Err(crate::parse::ParseError::new(span, "expected literal"))
+                }
+            }
+            Some(crate::TokenTree::Token(crate::Token::Ident(id)))
+                if matches!(id.name().as_ref(), "true" | "false") =>
+            {
+                Ok(Lit::Bool {
+                    value: stream.parse()?,
+                })
+            }
+            _ => Err(crate::parse::ParseError::new(span, "expected literal")),
+        }
+    }
+}
+
 mod lit_bool;
 pub use lit_bool::*;
 mod lit_byte;

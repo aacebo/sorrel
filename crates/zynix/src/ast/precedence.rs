@@ -1,5 +1,6 @@
 use crate::ast::BinOp;
 
+#[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Precedence {
     Min = 0,
@@ -16,6 +17,7 @@ pub(crate) enum Precedence {
     Cast,    // as
 }
 
+#[allow(dead_code)]
 impl Precedence {
     pub(crate) fn of(op: &BinOp) -> Self {
         match op {
