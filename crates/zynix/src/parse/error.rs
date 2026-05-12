@@ -1,5 +1,6 @@
-use crate::token::lex::LexError;
-use crate::{Delim, Group, Ident, Literal, Punct, Spacing, Span, ToTokens, TokenStream, TokenTree};
+use crate::{
+    Delim, Group, Ident, LexError, Literal, Punct, Spacing, Span, ToTokens, TokenStream, TokenTree,
+};
 
 #[derive(Debug)]
 pub enum ParseError {

@@ -4,26 +4,28 @@ pub(crate) mod fallback;
 mod group;
 mod ident;
 mod iter;
+pub mod keyword;
 pub mod lex;
-mod limit;
 mod literal;
-mod punct;
+pub mod punct;
 mod spacing;
 mod stream;
+mod underscore;
 
 pub use buffer::*;
 pub use delim::*;
 pub use group::*;
 pub use ident::*;
 pub use iter::*;
+pub use keyword::*;
 pub use lex::{LexError, Scan};
-pub use limit::*;
 pub use literal::*;
 pub use punct::*;
 pub use spacing::*;
 pub use stream::*;
+pub use underscore::*;
 
-use crate::{ParseError, Span};
+use crate::Span;
 
 pub trait ToTokens {
     fn to_tokens(&self, tokens: &mut TokenStream);
@@ -40,29 +42,6 @@ pub trait ToTokens {
     {
         self.to_token_stream()
     }
-}
-
-pub trait Reader {
-    /// the remaining token count.
-    fn remaining(&self) -> usize;
-
-    /// peek at the next token without moving forward.
-    fn peek(&self) -> Option<&TokenTree>;
-
-    /// move the iterator forward by n and return the tokens.
-    fn next_n(&mut self, n: usize) -> Option<&[TokenTree]>;
-
-    /// move the iterator forward and return the token.
-    fn next(&mut self) -> Option<&TokenTree> {
-        self.next_n(1)?.first()
-    }
-}
-
-pub trait Writer {
-    type Error: Into<ParseError>;
-
-    /// write tokens to a stream.
-    fn write(&mut self, tokens: impl IntoIterator<Item = TokenTree>) -> Result<(), Self::Error>;
 }
 
 #[derive(Debug, Clone)]

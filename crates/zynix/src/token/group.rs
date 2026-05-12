@@ -86,3 +86,14 @@ impl ToTokens for Group {
         tokens.extend_one(self.clone().into());
     }
 }
+
+impl crate::Parse for Group {
+    fn parse(stream: &mut crate::ParseStream) -> Result<Self, crate::ParseError> {
+        match stream.advance() {
+            Some(crate::TokenTree::Group(v)) => Ok(v.clone()),
+            _ => Err(crate::LexError::new(stream.span())
+                .message("expected Group")
+                .into()),
+        }
+    }
+}

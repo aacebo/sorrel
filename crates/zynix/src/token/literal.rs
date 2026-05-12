@@ -126,3 +126,14 @@ impl ToTokens for Literal {
         tokens.extend_one(self.clone().into());
     }
 }
+
+impl crate::Parse for Literal {
+    fn parse(stream: &mut crate::ParseStream) -> Result<Self, crate::ParseError> {
+        match stream.advance() {
+            Some(crate::TokenTree::Token(crate::Token::Literal(v))) => Ok(v.clone()),
+            _ => Err(crate::LexError::new(stream.span())
+                .message("expected Literal")
+                .into()),
+        }
+    }
+}

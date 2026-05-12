@@ -154,8 +154,8 @@ impl std::str::FromStr for TokenStream {
         use crate::source::SourceMap;
         use crate::token::lex::{Cursor, Scan};
 
-        let offset = SourceMap::with_mut(|sm| sm.push(s));
-        let cursor = Cursor::new(s, offset.byte_range().start as u32);
+        let span = SourceMap::with_mut(|sm| sm.push(s));
+        let cursor = Cursor::new(s, span.byte_range().start as u32);
         let (rest, stream) = Self::scan(cursor)?;
         let rest = rest.skip_whitespace();
 
