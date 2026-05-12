@@ -1,18 +1,1 @@
-#[allow(unused)]
-use super::*;
-#[derive(Debug, Clone)]
-pub struct ExprGroup {
-    pub span: crate::Span,
-    pub attrs: Vec<Attribute>,
-    pub expr: Box<Expr>,
-}
-impl crate::ast::Visit for ExprGroup {
-    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
-        visitor.visit_expr_group(self);
-    }
-}
-impl crate::ast::Fold for ExprGroup {
-    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
-        folder.fold_expr_group(self)
-    }
-}
+# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ExprGroup { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub expr : Box < Expr > , } impl crate :: ast :: Visit for ExprGroup { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_expr_group (self) ; } } impl crate :: ast :: Fold for ExprGroup { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_expr_group (self) } }

@@ -1,17 +1,1 @@
-#[allow(unused)]
-use super::*;
-#[derive(Debug, Clone)]
-pub struct TypeSlice {
-    pub span: crate::Span,
-    pub elem: Box<Type>,
-}
-impl crate::ast::Visit for TypeSlice {
-    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
-        visitor.visit_type_slice(self);
-    }
-}
-impl crate::ast::Fold for TypeSlice {
-    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
-        folder.fold_type_slice(self)
-    }
-}
+# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct TypeSlice { pub span : crate :: Span , pub elem : Box < Type > , } impl crate :: ast :: Visit for TypeSlice { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_type_slice (self) ; } } impl crate :: ast :: Fold for TypeSlice { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_type_slice (self) } }

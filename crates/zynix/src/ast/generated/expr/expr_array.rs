@@ -1,18 +1,1 @@
-#[allow(unused)]
-use super::*;
-#[derive(Debug, Clone)]
-pub struct ExprArray {
-    pub span: crate::Span,
-    pub attrs: Vec<Attribute>,
-    pub elems: crate::ast::Punctuated<Expr, crate::token::Comma>,
-}
-impl crate::ast::Visit for ExprArray {
-    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
-        visitor.visit_expr_array(self);
-    }
-}
-impl crate::ast::Fold for ExprArray {
-    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
-        folder.fold_expr_array(self)
-    }
-}
+# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ExprArray { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub elems : crate :: ast :: Punctuated < Expr , crate :: token :: Comma > , } impl crate :: ast :: Visit for ExprArray { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_expr_array (self) ; } } impl crate :: ast :: Fold for ExprArray { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_expr_array (self) } }

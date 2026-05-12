@@ -230,6 +230,8 @@ nodes:
       fields:
       - name: ident
         type: Ident
+        meta:
+          node: true
     - name: Unnamed
       fields:
       - name: index
@@ -322,34 +324,50 @@ nodes:
       fields:
       - name: value
         type: LitStr
+        meta:
+          node: true
     - name: ByteStr
       fields:
       - name: value
         type: LitByteStr
+        meta:
+          node: true
     - name: CStr
       fields:
       - name: value
         type: LitCStr
+        meta:
+          node: true
     - name: Byte
       fields:
       - name: value
         type: LitByte
+        meta:
+          node: true
     - name: Char
       fields:
       - name: value
         type: LitChar
+        meta:
+          node: true
     - name: Int
       fields:
       - name: value
         type: LitInt
+        meta:
+          node: true
     - name: Float
       fields:
       - name: value
         type: LitFloat
+        meta:
+          node: true
     - name: Bool
       fields:
       - name: value
         type: LitBool
+        meta:
+          node: true
     - name: Verbatim
       fields:
       - name: tokens
@@ -427,12 +445,16 @@ nodes:
       fields:
       - name: delim
         type: DelimiterKind
+        meta:
+          node: true
       - name: tokens
         type: crate::TokenStream
     - name: Meta
       fields:
       - name: meta
         type: Box<Meta>
+        meta:
+          node: true
   Attribute:
     kind: product
     doc: "A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement."
@@ -480,12 +502,18 @@ nodes:
       fields:
       - name: pat
         type: Box<Pattern>
+        meta:
+          node: true
       - name: ty
         type: Box<Type>
+        meta:
+          node: true
     - name: Inferred
       fields:
       - name: pat
         type: Box<Pattern>
+        meta:
+          node: true
   ConstParam:
     kind: product
     extends: attributed_node_base
@@ -541,158 +569,236 @@ nodes:
       fields:
       - name: value
         type: ExprLit
+        meta:
+          node: true
     - name: Path
       fields:
       - name: value
         type: ExprPath
+        meta:
+          node: true
     - name: Block
       fields:
       - name: value
         type: ExprBlock
+        meta:
+          node: true
     - name: Unsafe
       fields:
       - name: value
         type: ExprUnsafe
+        meta:
+          node: true
     - name: Const
       fields:
       - name: value
         type: ExprConst
+        meta:
+          node: true
     - name: If
       fields:
       - name: value
         type: ExprIf
+        meta:
+          node: true
     - name: While
       fields:
       - name: value
         type: ExprWhile
+        meta:
+          node: true
     - name: ForLoop
       fields:
       - name: value
         type: ExprForLoop
+        meta:
+          node: true
     - name: Loop
       fields:
       - name: value
         type: ExprLoop
+        meta:
+          node: true
     - name: Match
       fields:
       - name: value
         type: ExprMatch
+        meta:
+          node: true
     - name: Closure
       fields:
       - name: value
         type: ExprClosure
+        meta:
+          node: true
     - name: Async
       fields:
       - name: value
         type: ExprAsync
+        meta:
+          node: true
     - name: Await
       fields:
       - name: value
         type: ExprAwait
+        meta:
+          node: true
     - name: Try
       fields:
       - name: value
         type: ExprTry
+        meta:
+          node: true
     - name: TryBlock
       fields:
       - name: value
         type: ExprTryBlock
+        meta:
+          node: true
     - name: Yield
       fields:
       - name: value
         type: ExprYield
+        meta:
+          node: true
     - name: Return
       fields:
       - name: value
         type: ExprReturn
+        meta:
+          node: true
     - name: Break
       fields:
       - name: value
         type: ExprBreak
+        meta:
+          node: true
     - name: Continue
       fields:
       - name: value
         type: ExprContinue
+        meta:
+          node: true
     - name: Call
       fields:
       - name: value
         type: ExprCall
+        meta:
+          node: true
     - name: MethodCall
       fields:
       - name: value
         type: ExprMethodCall
+        meta:
+          node: true
     - name: Field
       fields:
       - name: value
         type: ExprField
+        meta:
+          node: true
     - name: Index
       fields:
       - name: value
         type: ExprIndex
+        meta:
+          node: true
     - name: Reference
       fields:
       - name: value
         type: ExprReference
+        meta:
+          node: true
     - name: Unary
       fields:
       - name: value
         type: ExprUnary
+        meta:
+          node: true
     - name: Binary
       fields:
       - name: value
         type: ExprBinary
+        meta:
+          node: true
     - name: Assign
       fields:
       - name: value
         type: ExprAssign
+        meta:
+          node: true
     - name: AssignOp
       fields:
       - name: value
         type: ExprAssignOp
+        meta:
+          node: true
     - name: Cast
       fields:
       - name: value
         type: ExprCast
+        meta:
+          node: true
     - name: Type
       fields:
       - name: value
         type: ExprType
+        meta:
+          node: true
     - name: Let
       fields:
       - name: value
         type: ExprLet
+        meta:
+          node: true
     - name: Struct
       fields:
       - name: value
         type: ExprStruct
+        meta:
+          node: true
     - name: Tuple
       fields:
       - name: value
         type: ExprTuple
+        meta:
+          node: true
     - name: Array
       fields:
       - name: value
         type: ExprArray
+        meta:
+          node: true
     - name: Repeat
       fields:
       - name: value
         type: ExprRepeat
+        meta:
+          node: true
     - name: Range
       fields:
       - name: value
         type: ExprRange
+        meta:
+          node: true
     - name: Macro
       fields:
       - name: value
         type: MacroCall
+        meta:
+          node: true
     - name: Group
       fields:
       - name: value
         type: ExprGroup
+        meta:
+          node: true
     - name: Paren
       fields:
       - name: value
         type: ExprParen
+        meta:
+          node: true
     - name: Infer
     - name: Verbatim
       fields:
@@ -1268,10 +1374,14 @@ nodes:
       fields:
       - name: value
         type: FieldsNamed
+        meta:
+          node: true
     - name: Unnamed
       fields:
       - name: value
         type: FieldsUnnamed
+        meta:
+          node: true
     - name: Unit
   FieldsNamed:
     kind: product
@@ -1292,10 +1402,14 @@ nodes:
       fields:
       - name: value
         type: Box<Receiver>
+        meta:
+          node: true
     - name: Typed
       fields:
       - name: value
         type: Box<TypedParam>
+        meta:
+          node: true
   ForeignItem:
     kind: sum
     submodule: foreign_item
@@ -1304,18 +1418,26 @@ nodes:
       fields:
       - name: value
         type: ForeignItemFn
+        meta:
+          node: true
     - name: Static
       fields:
       - name: value
         type: ForeignItemStatic
+        meta:
+          node: true
     - name: Type
       fields:
       - name: value
         type: ForeignItemType
+        meta:
+          node: true
     - name: Macro
       fields:
       - name: value
         type: ForeignItemMacro
+        meta:
+          node: true
   ForeignItemFn:
     kind: product
     submodule: foreign_item
@@ -1386,26 +1508,38 @@ nodes:
       fields:
       - name: value
         type: Lifetime
+        meta:
+          node: true
     - name: Type
       fields:
       - name: value
         type: Type
+        meta:
+          node: true
     - name: Const
       fields:
       - name: value
         type: Expr
+        meta:
+          node: true
     - name: AssocType
       fields:
       - name: value
         type: AssocTypeArg
+        meta:
+          node: true
     - name: AssocConst
       fields:
       - name: value
         type: AssocConstArg
+        meta:
+          node: true
     - name: Constraint
       fields:
       - name: value
         type: ConstraintArg
+        meta:
+          node: true
   GenericParam:
     kind: sum
     variants:
@@ -1413,14 +1547,20 @@ nodes:
       fields:
       - name: value
         type: LifetimeParam
+        meta:
+          node: true
     - name: Type
       fields:
       - name: value
         type: TypeParam
+        meta:
+          node: true
     - name: Const
       fields:
       - name: value
         type: ConstParam
+        meta:
+          node: true
   Generics:
     kind: product
     extends: node_base
@@ -1440,18 +1580,26 @@ nodes:
       fields:
       - name: value
         type: ImplItemFn
+        meta:
+          node: true
     - name: Const
       fields:
       - name: value
         type: ImplItemConst
+        meta:
+          node: true
     - name: Type
       fields:
       - name: value
         type: ImplItemType
+        meta:
+          node: true
     - name: Macro
       fields:
       - name: value
         type: ImplItemMacro
+        meta:
+          node: true
   ImplItemConst:
     kind: product
     submodule: impl_item
@@ -1547,70 +1695,104 @@ nodes:
       fields:
       - name: value
         type: ItemUse
+        meta:
+          node: true
     - name: ExternCrate
       fields:
       - name: value
         type: ItemExternCrate
+        meta:
+          node: true
     - name: Mod
       fields:
       - name: value
         type: ItemMod
+        meta:
+          node: true
     - name: Fn
       fields:
       - name: value
         type: ItemFn
+        meta:
+          node: true
     - name: Struct
       fields:
       - name: value
         type: ItemStruct
+        meta:
+          node: true
     - name: Enum
       fields:
       - name: value
         type: ItemEnum
+        meta:
+          node: true
     - name: Union
       fields:
       - name: value
         type: ItemUnion
+        meta:
+          node: true
     - name: Trait
       fields:
       - name: value
         type: ItemTrait
+        meta:
+          node: true
     - name: TraitAlias
       fields:
       - name: value
         type: ItemTraitAlias
+        meta:
+          node: true
     - name: Impl
       fields:
       - name: value
         type: ItemImpl
+        meta:
+          node: true
     - name: TypeAlias
       fields:
       - name: value
         type: ItemTypeAlias
+        meta:
+          node: true
     - name: Const
       fields:
       - name: value
         type: ItemConst
+        meta:
+          node: true
     - name: Static
       fields:
       - name: value
         type: ItemStatic
+        meta:
+          node: true
     - name: Macro
       fields:
       - name: value
         type: ItemMacro
+        meta:
+          node: true
     - name: Macro2
       fields:
       - name: value
         type: ItemMacroRules
+        meta:
+          node: true
     - name: ForeignMod
       fields:
       - name: value
         type: ItemForeignMod
+        meta:
+          node: true
     - name: ExternBlock
       fields:
       - name: value
         type: ItemForeignMod
+        meta:
+          node: true
   ItemConst:
     kind: product
     submodule: item
@@ -2005,14 +2187,20 @@ nodes:
       fields:
       - name: path
         type: Path
+        meta:
+          node: true
     - name: List
       fields:
       - name: value
         type: MetaList
+        meta:
+          node: true
     - name: NameValue
       fields:
       - name: value
         type: MetaNameValue
+        meta:
+          node: true
   MetaList:
     kind: product
     extends: node_base
@@ -2247,6 +2435,8 @@ nodes:
         type: 'crate::ast::Punctuated<Type, crate::token::Comma>'
       - name: output
         type: Option<Box<Type>>
+        meta:
+          node: true
   PathSegment:
     kind: product
     extends: node_base
@@ -2269,58 +2459,86 @@ nodes:
       fields:
       - name: value
         type: PatIdent
+        meta:
+          node: true
     - name: Path
       fields:
       - name: value
         type: PatPath
+        meta:
+          node: true
     - name: Tuple
       fields:
       - name: value
         type: PatTuple
+        meta:
+          node: true
     - name: TupleStruct
       fields:
       - name: value
         type: PatTupleStruct
+        meta:
+          node: true
     - name: Struct
       fields:
       - name: value
         type: PatStruct
+        meta:
+          node: true
     - name: Slice
       fields:
       - name: value
         type: PatSlice
+        meta:
+          node: true
     - name: Reference
       fields:
       - name: value
         type: PatReference
+        meta:
+          node: true
     - name: Or
       fields:
       - name: value
         type: PatOr
+        meta:
+          node: true
     - name: Lit
       fields:
       - name: value
         type: PatLit
+        meta:
+          node: true
     - name: Range
       fields:
       - name: value
         type: PatRange
+        meta:
+          node: true
     - name: Macro
       fields:
       - name: value
         type: MacroCall
+        meta:
+          node: true
     - name: Type
       fields:
       - name: value
         type: PatType
+        meta:
+          node: true
     - name: Group
       fields:
       - name: value
         type: PatGroup
+        meta:
+          node: true
     - name: Paren
       fields:
       - name: value
         type: PatParen
+        meta:
+          node: true
   QSelf:
     kind: product
     extends: node_base
@@ -2340,6 +2558,8 @@ nodes:
       fields:
       - name: value
         type: Box<Type>
+        meta:
+          node: true
   Signature:
     kind: product
     extends: node_base
@@ -2388,22 +2608,32 @@ nodes:
       fields:
       - name: value
         type: Box<Local>
+        meta:
+          node: true
     - name: Item
       fields:
       - name: value
         type: Box<Item>
+        meta:
+          node: true
     - name: Expr
       fields:
       - name: value
         type: Box<Expr>
+        meta:
+          node: true
     - name: Semi
       fields:
       - name: value
         type: Box<Expr>
+        meta:
+          node: true
     - name: Macro
       fields:
       - name: value
         type: StmtMacro
+        meta:
+          node: true
   StmtMacro:
     kind: product
     submodule: stmt
@@ -2445,18 +2675,26 @@ nodes:
       fields:
       - name: value
         type: TraitItemFn
+        meta:
+          node: true
     - name: Const
       fields:
       - name: value
         type: TraitItemConst
+        meta:
+          node: true
     - name: Type
       fields:
       - name: value
         type: TraitItemType
+        meta:
+          node: true
     - name: Macro
       fields:
       - name: value
         type: TraitItemMacro
+        meta:
+          node: true
   TraitItemConst:
     kind: product
     submodule: trait_item
@@ -2549,50 +2787,74 @@ nodes:
       fields:
       - name: value
         type: TypePath
+        meta:
+          node: true
     - name: Tuple
       fields:
       - name: value
         type: TypeTuple
+        meta:
+          node: true
     - name: Array
       fields:
       - name: value
         type: TypeArray
+        meta:
+          node: true
     - name: Slice
       fields:
       - name: value
         type: TypeSlice
+        meta:
+          node: true
     - name: Reference
       fields:
       - name: value
         type: TypeReference
+        meta:
+          node: true
     - name: Pointer
       fields:
       - name: value
         type: TypePointer
+        meta:
+          node: true
     - name: BareFn
       fields:
       - name: value
         type: TypeBareFn
+        meta:
+          node: true
     - name: ImplTrait
       fields:
       - name: value
         type: TypeImplTrait
+        meta:
+          node: true
     - name: TraitObject
       fields:
       - name: value
         type: TypeTraitObject
+        meta:
+          node: true
     - name: Paren
       fields:
       - name: value
         type: TypeParen
+        meta:
+          node: true
     - name: Group
       fields:
       - name: value
         type: TypeGroup
+        meta:
+          node: true
     - name: Macro
       fields:
       - name: value
         type: MacroCall
+        meta:
+          node: true
   TypeArray:
     kind: product
     submodule: ty
@@ -2644,14 +2906,20 @@ nodes:
       fields:
       - name: value
         type: TraitBound
+        meta:
+          node: true
     - name: Lifetime
       fields:
       - name: value
         type: Lifetime
+        meta:
+          node: true
     - name: Use
       fields:
       - name: value
         type: UseBound
+        meta:
+          node: true
   TypeGroup:
     kind: product
     submodule: ty
@@ -2824,19 +3092,27 @@ nodes:
       fields:
       - name: value
         type: UsePath
+        meta:
+          node: true
     - name: Name
       fields:
       - name: value
         type: UseName
+        meta:
+          node: true
     - name: Rename
       fields:
       - name: value
         type: UseRename
+        meta:
+          node: true
     - name: Glob
     - name: Group
       fields:
       - name: value
         type: UseGroup
+        meta:
+          node: true
   Variant:
     kind: product
     extends: attributed_node_base
@@ -2870,6 +3146,8 @@ nodes:
         default: false
       - name: path
         type: Path
+        meta:
+          node: true
   WhereClause:
     kind: product
     extends: node_base
@@ -2883,7 +3161,11 @@ nodes:
       fields:
       - name: value
         type: LifetimePredicate
+        meta:
+          node: true
     - name: Type
       fields:
       - name: value
         type: Box<TypePredicate>
+        meta:
+          node: true

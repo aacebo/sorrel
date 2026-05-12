@@ -1,17 +1,1 @@
-#[allow(unused)]
-use super::*;
-#[derive(Debug, Clone)]
-pub struct Abi {
-    pub span: crate::Span,
-    pub name: Option<String>,
-}
-impl crate::ast::Visit for Abi {
-    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
-        visitor.visit_abi(self);
-    }
-}
-impl crate::ast::Fold for Abi {
-    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
-        folder.fold_abi(self)
-    }
-}
+# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct Abi { pub span : crate :: Span , pub name : Option < String > , } impl crate :: ast :: Visit for Abi { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_abi (self) ; } } impl crate :: ast :: Fold for Abi { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_abi (self) } }

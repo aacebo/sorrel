@@ -120,15 +120,14 @@ impl crate::token::lex::Scan for TokenStream {
                 continue;
             }
 
-            // Leaf tokens: ident, literal, punct
-            if let Ok((next, ident)) = super::Ident::scan(c) {
-                tokens.push(crate::token::Ident::Fallback(ident).into());
+            if let Ok((next, lit)) = super::Literal::scan(c) {
+                tokens.push(crate::token::Literal::Fallback(lit).into());
                 c = next;
                 continue;
             }
 
-            if let Ok((next, lit)) = super::Literal::scan(c) {
-                tokens.push(crate::token::Literal::Fallback(lit).into());
+            if let Ok((next, ident)) = super::Ident::scan(c) {
+                tokens.push(crate::token::Ident::Fallback(ident).into());
                 c = next;
                 continue;
             }

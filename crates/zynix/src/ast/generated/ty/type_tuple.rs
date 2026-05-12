@@ -1,17 +1,1 @@
-#[allow(unused)]
-use super::*;
-#[derive(Debug, Clone)]
-pub struct TypeTuple {
-    pub span: crate::Span,
-    pub elems: crate::ast::Punctuated<Type, crate::token::Comma>,
-}
-impl crate::ast::Visit for TypeTuple {
-    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
-        visitor.visit_type_tuple(self);
-    }
-}
-impl crate::ast::Fold for TypeTuple {
-    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
-        folder.fold_type_tuple(self)
-    }
-}
+# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct TypeTuple { pub span : crate :: Span , pub elems : crate :: ast :: Punctuated < Type , crate :: token :: Comma > , } impl crate :: ast :: Visit for TypeTuple { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_type_tuple (self) ; } } impl crate :: ast :: Fold for TypeTuple { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_type_tuple (self) } }

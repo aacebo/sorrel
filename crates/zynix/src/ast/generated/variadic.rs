@@ -1,18 +1,1 @@
-#[allow(unused)]
-use super::*;
-#[derive(Debug, Clone)]
-pub struct Variadic {
-    pub span: crate::Span,
-    pub attrs: Vec<Attribute>,
-    pub name: Option<Ident>,
-}
-impl crate::ast::Visit for Variadic {
-    fn visit(&self, visitor: &mut impl crate::ast::Visitor) {
-        visitor.visit_variadic(self);
-    }
-}
-impl crate::ast::Fold for Variadic {
-    fn fold(self, folder: &mut impl crate::ast::Folder) -> Self {
-        folder.fold_variadic(self)
-    }
-}
+# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct Variadic { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub name : Option < Ident > , } impl crate :: ast :: Visit for Variadic { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_variadic (self) ; } } impl crate :: ast :: Fold for Variadic { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_variadic (self) } }
