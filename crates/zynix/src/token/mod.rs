@@ -4,22 +4,26 @@ pub(crate) mod fallback;
 mod group;
 mod ident;
 mod iter;
+pub mod keyword;
 pub mod lex;
 mod literal;
-mod punct;
+pub mod punct;
 mod spacing;
 mod stream;
+mod underscore;
 
 pub use buffer::*;
 pub use delim::*;
 pub use group::*;
 pub use ident::*;
 pub use iter::*;
+pub use keyword::*;
 pub use lex::{LexError, Scan};
 pub use literal::*;
 pub use punct::*;
 pub use spacing::*;
 pub use stream::*;
+pub use underscore::*;
 
 use crate::Span;
 
