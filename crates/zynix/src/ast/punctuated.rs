@@ -94,6 +94,7 @@ impl<T, P> Punctuated<T, P> {
         if !self.empty_or_trailing() {
             self.push_punct(P::default());
         }
+
         self.push_value(value);
     }
 
@@ -105,6 +106,7 @@ impl<T, P> Punctuated<T, P> {
             index <= self.len(),
             "Punctuated::insert: index out of range"
         );
+
         if index == self.len() {
             self.push(value);
         } else {
@@ -182,28 +184,35 @@ impl<T: Parse, P: Parse> Punctuated<T, P> {
             if stream.is_empty() {
                 break;
             }
+
             punctuated.push_value(T::parse(stream)?);
+
             if stream.is_empty() {
                 break;
             }
+
             punctuated.push_punct(P::parse(stream)?);
         }
+
         Ok(punctuated)
     }
 
     pub fn parse_separated_nonempty(stream: &mut ParseStream<'_>) -> Result<Self, ParseError> {
         let mut punctuated = Punctuated::new();
+
         loop {
             punctuated.push_value(T::parse(stream)?);
             let mut fork = stream.fork();
+
             match P::parse(&mut fork) {
+                Err(_) => break,
                 Ok(p) => {
                     stream.seek(&fork);
                     punctuated.push_punct(p);
                 }
-                Err(_) => break,
             }
         }
+
         Ok(punctuated)
     }
 }
@@ -228,13 +237,16 @@ impl<T, P> Default for Punctuated<T, P> {
 impl<T: std::fmt::Debug, P: std::fmt::Debug> std::fmt::Debug for Punctuated<T, P> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut list = f.debug_list();
+
         for (t, p) in &self.inner {
             list.entry(t);
             list.entry(p);
         }
+
         if let Some(last) = &self.last {
             list.entry(last);
         }
+
         list.finish()
     }
 }
@@ -302,8 +314,10 @@ impl<T, P> FromIterator<Pair<T, P>> for Punctuated<T, P> {
     fn from_iter<I: IntoIterator<Item = Pair<T, P>>>(i: I) -> Self {
         let mut ret = Punctuated::new();
         let mut nomore = false;
+
         for pair in i {
             assert!(!nomore, "Punctuated extended with items after a Pair::End");
+
             match pair {
                 Pair::Punctuated(t, p) => ret.inner.push((t, p)),
                 Pair::End(t) => {
@@ -312,6 +326,7 @@ impl<T, P> FromIterator<Pair<T, P>> for Punctuated<T, P> {
                 }
             }
         }
+
         ret
     }
 }
@@ -321,9 +336,12 @@ impl<T, P: Default> Extend<Pair<T, P>> for Punctuated<T, P> {
         if !self.empty_or_trailing() {
             self.push_punct(P::default());
         }
+
         let mut nomore = false;
+
         for pair in i {
             assert!(!nomore, "Punctuated extended with items after a Pair::End");
+
             match pair {
                 Pair::Punctuated(t, p) => self.inner.push((t, p)),
                 Pair::End(t) => {
@@ -341,12 +359,15 @@ impl<T, P> IntoIterator for Punctuated<T, P> {
 
     fn into_iter(self) -> Self::IntoIter {
         let mut elements = Vec::with_capacity(self.len());
+
         for (t, _) in self.inner {
             elements.push(t);
         }
+
         if let Some(t) = self.last {
             elements.push(*t);
         }
+
         IntoIter {
             inner: elements.into_iter(),
         }
@@ -377,6 +398,7 @@ impl<T: ToTokens, P: ToTokens> ToTokens for Punctuated<T, P> {
             t.to_tokens(tokens);
             p.to_tokens(tokens);
         }
+
         if let Some(last) = &self.last {
             last.to_tokens(tokens);
         }
@@ -467,9 +489,11 @@ pub struct IntoIter<T> {
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
+
     fn next(&mut self) -> Option<T> {
         self.inner.next()
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len(), Some(self.len()))
     }
@@ -508,12 +532,14 @@ struct PrivateIter<'a, T: 'a, P: 'a> {
 
 impl<'a, T, P> Iterator for PrivateIter<'a, T, P> {
     type Item = &'a T;
+
     fn next(&mut self) -> Option<&'a T> {
         self.inner
             .next()
             .map(|(t, _)| t)
             .or_else(|| self.last.next())
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len(), Some(self.len()))
     }
@@ -565,9 +591,11 @@ impl<'a, T> Clone for Iter<'a, T> {
 
 impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
+
     fn next(&mut self) -> Option<&'a T> {
         self.inner.next()
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len(), Some(self.len()))
     }
@@ -599,12 +627,14 @@ struct PrivateIterMut<'a, T: 'a, P: 'a> {
 
 impl<'a, T, P> Iterator for PrivateIterMut<'a, T, P> {
     type Item = &'a mut T;
+
     fn next(&mut self) -> Option<&'a mut T> {
         self.inner
             .next()
             .map(|(t, _)| t)
             .or_else(|| self.last.next())
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len(), Some(self.len()))
     }
@@ -635,9 +665,11 @@ pub struct IterMut<'a, T: 'a> {
 
 impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
+
     fn next(&mut self) -> Option<&'a mut T> {
         self.inner.next()
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len(), Some(self.len()))
     }
@@ -664,12 +696,14 @@ pub struct Pairs<'a, T: 'a, P: 'a> {
 
 impl<'a, T, P> Iterator for Pairs<'a, T, P> {
     type Item = Pair<&'a T, &'a P>;
+
     fn next(&mut self) -> Option<Self::Item> {
         self.inner
             .next()
             .map(|(t, p)| Pair::Punctuated(t, p))
             .or_else(|| self.last.next().map(Pair::End))
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len(), Some(self.len()))
     }
@@ -708,12 +742,14 @@ pub struct PairsMut<'a, T: 'a, P: 'a> {
 
 impl<'a, T, P> Iterator for PairsMut<'a, T, P> {
     type Item = Pair<&'a mut T, &'a mut P>;
+
     fn next(&mut self) -> Option<Self::Item> {
         self.inner
             .next()
             .map(|(t, p)| Pair::Punctuated(t, p))
             .or_else(|| self.last.next().map(Pair::End))
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len(), Some(self.len()))
     }
@@ -743,12 +779,14 @@ pub struct IntoPairs<T, P> {
 
 impl<T, P> Iterator for IntoPairs<T, P> {
     type Item = Pair<T, P>;
+
     fn next(&mut self) -> Option<Self::Item> {
         self.inner
             .next()
             .map(|(t, p)| Pair::Punctuated(t, p))
             .or_else(|| self.last.next().map(Pair::End))
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.len(), Some(self.len()))
     }
