@@ -1,1 +1,9 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct TypePredicate { pub span : crate :: Span , pub lifetimes : Option < BoundLifetimes > , pub bounded_ty : Type , pub bounds : crate :: ast :: Punctuated < TypeBound , crate :: token :: Plus > , } impl crate :: ast :: Visit for TypePredicate { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_type_predicate (self) ; } } impl crate :: ast :: Fold for TypePredicate { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_type_predicate (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct TypePredicate {
+    pub span: crate::Span,
+    pub lifetimes: Option<BoundLifetimes>,
+    pub bounded_ty: Type,
+    pub bounds: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
+}

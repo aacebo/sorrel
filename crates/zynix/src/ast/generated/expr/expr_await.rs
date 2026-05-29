@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ExprAwait { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub base : Box < Expr > , } impl crate :: ast :: Visit for ExprAwait { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_expr_await (self) ; } } impl crate :: ast :: Fold for ExprAwait { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_expr_await (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ExprAwait {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub base: Box<Expr>,
+}

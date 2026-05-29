@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub enum Meta { Path { path : Path , } , List { value : MetaList , } , NameValue { value : MetaNameValue , } , } impl crate :: ast :: Visit for Meta { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { Meta :: Path { path , } => { path . visit (visitor) ; } , Meta :: List { value , } => { value . visit (visitor) ; } , Meta :: NameValue { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for Meta { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { Meta :: Path { path , } => Meta :: Path { path . fold (folder) , } , Meta :: List { value , } => Meta :: List { value . fold (folder) , } , Meta :: NameValue { value , } => Meta :: NameValue { value . fold (folder) , } , } } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub enum Meta {
+    Path { path: Path },
+    List { value: MetaList },
+    NameValue { value: MetaNameValue },
+}

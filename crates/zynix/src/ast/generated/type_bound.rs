@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub enum TypeBound { Trait { value : TraitBound , } , Lifetime { value : Lifetime , } , Use { value : UseBound , } , } impl crate :: ast :: Visit for TypeBound { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { TypeBound :: Trait { value , } => { value . visit (visitor) ; } , TypeBound :: Lifetime { value , } => { value . visit (visitor) ; } , TypeBound :: Use { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for TypeBound { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { TypeBound :: Trait { value , } => TypeBound :: Trait { value . fold (folder) , } , TypeBound :: Lifetime { value , } => TypeBound :: Lifetime { value . fold (folder) , } , TypeBound :: Use { value , } => TypeBound :: Use { value . fold (folder) , } , } } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub enum TypeBound {
+    Trait { value: TraitBound },
+    Lifetime { value: Lifetime },
+    Use { value: UseBound },
+}

@@ -1,1 +1,12 @@
-# [allow (unused)] use super :: * ; # [doc = "The visibility of an item — controls whether it is accessible outside its defining module."] # [derive (Debug , Clone)] pub enum Visibility { Inherited { } , Public { } , Crate { } , SelfValue { } , Super { } , Restricted { in_token : bool , path : Path , } , } impl crate :: ast :: Visit for Visibility { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { Visibility :: Inherited { } => { } , Visibility :: Public { } => { } , Visibility :: Crate { } => { } , Visibility :: SelfValue { } => { } , Visibility :: Super { } => { } , Visibility :: Restricted { in_token , path , } => { let _ = & in_token ; path . visit (visitor) ; } , } } } impl crate :: ast :: Fold for Visibility { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { Visibility :: Inherited { } => Visibility :: Inherited { } , Visibility :: Public { } => Visibility :: Public { } , Visibility :: Crate { } => Visibility :: Crate { } , Visibility :: SelfValue { } => Visibility :: SelfValue { } , Visibility :: Super { } => Visibility :: Super { } , Visibility :: Restricted { in_token , path , } => Visibility :: Restricted { in_token , path . fold (folder) , } , } } }
+#[allow(unused)]
+use super::*;
+#[doc = "The visibility of an item — controls whether it is accessible outside its defining module."]
+#[derive(Debug, Clone)]
+pub enum Visibility {
+    Inherited {},
+    Public {},
+    Crate {},
+    SelfValue {},
+    Super {},
+    Restricted { in_token: bool, path: Path },
+}

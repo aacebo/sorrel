@@ -1,1 +1,48 @@
-# [allow (unused)] use super :: * ; # [doc = "A Rust type expression. Covers all positions where a type can appear in source code."] # [derive (Debug , Clone)] pub enum Type { Never { } , Infer { } , Path { value : TypePath , } , Tuple { value : TypeTuple , } , Array { value : TypeArray , } , Slice { value : TypeSlice , } , Reference { value : TypeReference , } , Pointer { value : TypePointer , } , BareFn { value : TypeBareFn , } , ImplTrait { value : TypeImplTrait , } , TraitObject { value : TypeTraitObject , } , Paren { value : TypeParen , } , Group { value : TypeGroup , } , Macro { value : MacroCall , } , } impl crate :: ast :: Visit for Type { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { Type :: Never { } => { } , Type :: Infer { } => { } , Type :: Path { value , } => { value . visit (visitor) ; } , Type :: Tuple { value , } => { value . visit (visitor) ; } , Type :: Array { value , } => { value . visit (visitor) ; } , Type :: Slice { value , } => { value . visit (visitor) ; } , Type :: Reference { value , } => { value . visit (visitor) ; } , Type :: Pointer { value , } => { value . visit (visitor) ; } , Type :: BareFn { value , } => { value . visit (visitor) ; } , Type :: ImplTrait { value , } => { value . visit (visitor) ; } , Type :: TraitObject { value , } => { value . visit (visitor) ; } , Type :: Paren { value , } => { value . visit (visitor) ; } , Type :: Group { value , } => { value . visit (visitor) ; } , Type :: Macro { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for Type { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { Type :: Never { } => Type :: Never { } , Type :: Infer { } => Type :: Infer { } , Type :: Path { value , } => Type :: Path { value . fold (folder) , } , Type :: Tuple { value , } => Type :: Tuple { value . fold (folder) , } , Type :: Array { value , } => Type :: Array { value . fold (folder) , } , Type :: Slice { value , } => Type :: Slice { value . fold (folder) , } , Type :: Reference { value , } => Type :: Reference { value . fold (folder) , } , Type :: Pointer { value , } => Type :: Pointer { value . fold (folder) , } , Type :: BareFn { value , } => Type :: BareFn { value . fold (folder) , } , Type :: ImplTrait { value , } => Type :: ImplTrait { value . fold (folder) , } , Type :: TraitObject { value , } => Type :: TraitObject { value . fold (folder) , } , Type :: Paren { value , } => Type :: Paren { value . fold (folder) , } , Type :: Group { value , } => Type :: Group { value . fold (folder) , } , Type :: Macro { value , } => Type :: Macro { value . fold (folder) , } , } } } mod type_array ; pub use type_array :: * ; mod type_bare_fn ; pub use type_bare_fn :: * ; mod type_group ; pub use type_group :: * ; mod type_impl_trait ; pub use type_impl_trait :: * ; mod type_param ; pub use type_param :: * ; mod type_paren ; pub use type_paren :: * ; mod type_path ; pub use type_path :: * ; mod type_pointer ; pub use type_pointer :: * ; mod type_predicate ; pub use type_predicate :: * ; mod type_reference ; pub use type_reference :: * ; mod type_slice ; pub use type_slice :: * ; mod type_trait_object ; pub use type_trait_object :: * ; mod type_tuple ; pub use type_tuple :: * ; mod typed_param ; pub use typed_param :: * ;
+#[allow(unused)]
+use super::*;
+#[doc = "A Rust type expression. Covers all positions where a type can appear in source code."]
+#[derive(Debug, Clone)]
+pub enum Type {
+    Never {},
+    Infer {},
+    Path { value: TypePath },
+    Tuple { value: TypeTuple },
+    Array { value: TypeArray },
+    Slice { value: TypeSlice },
+    Reference { value: TypeReference },
+    Pointer { value: TypePointer },
+    BareFn { value: TypeBareFn },
+    ImplTrait { value: TypeImplTrait },
+    TraitObject { value: TypeTraitObject },
+    Paren { value: TypeParen },
+    Group { value: TypeGroup },
+    Macro { value: MacroCall },
+}
+mod type_array;
+pub use type_array::*;
+mod type_bare_fn;
+pub use type_bare_fn::*;
+mod type_group;
+pub use type_group::*;
+mod type_impl_trait;
+pub use type_impl_trait::*;
+mod type_param;
+pub use type_param::*;
+mod type_paren;
+pub use type_paren::*;
+mod type_path;
+pub use type_path::*;
+mod type_pointer;
+pub use type_pointer::*;
+mod type_predicate;
+pub use type_predicate::*;
+mod type_reference;
+pub use type_reference::*;
+mod type_slice;
+pub use type_slice::*;
+mod type_trait_object;
+pub use type_trait_object::*;
+mod type_tuple;
+pub use type_tuple::*;
+mod typed_param;
+pub use typed_param::*;

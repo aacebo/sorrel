@@ -1,1 +1,15 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ExprClosure { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub lifetimes : Option < BoundLifetimes > , pub constness : Constness , pub movability : Movability , pub asyncness : Asyncness , pub capture : bool , pub inputs : crate :: ast :: Punctuated < ClosureParam , crate :: token :: Comma > , pub output : ReturnType , pub body : Box < Expr > , } impl crate :: ast :: Visit for ExprClosure { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_expr_closure (self) ; } } impl crate :: ast :: Fold for ExprClosure { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_expr_closure (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ExprClosure {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub lifetimes: Option<BoundLifetimes>,
+    pub constness: Constness,
+    pub movability: Movability,
+    pub asyncness: Asyncness,
+    pub capture: bool,
+    pub inputs: crate::ast::Punctuated<ClosureParam, crate::token::Comma>,
+    pub output: ReturnType,
+    pub body: Box<Expr>,
+}

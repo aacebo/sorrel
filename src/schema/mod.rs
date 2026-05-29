@@ -53,12 +53,7 @@ impl Schema {
             };
 
             // Base struct/enum content.
-            let mut content = node.run(args)?;
-
-            // Append per-node output for each enabled feature.
-            for feature in &args.features {
-                content.extend(feature.generate(node));
-            }
+            let content = node.run(args)?;
 
             map.set(
                 node.name(),
@@ -71,14 +66,6 @@ impl Schema {
             );
         }
 
-        // Global trait definitions appended to mod.rs.
-        let mut extra = proc_macro2::TokenStream::new();
-
-        for feature in &args.features {
-            extra.extend(feature.generate_global(self.nodes.iter()));
-        }
-
-        map.set_extra(extra);
         Ok(map)
     }
 }

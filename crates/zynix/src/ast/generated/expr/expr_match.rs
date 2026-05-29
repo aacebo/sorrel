@@ -1,1 +1,9 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ExprMatch { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub expr : Box < Expr > , pub arms : Vec < MatchArm > , } impl crate :: ast :: Visit for ExprMatch { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_expr_match (self) ; } } impl crate :: ast :: Fold for ExprMatch { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_expr_match (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ExprMatch {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub expr: Box<Expr>,
+    pub arms: Vec<MatchArm>,
+}

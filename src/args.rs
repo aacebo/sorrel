@@ -1,7 +1,5 @@
 use std::path::PathBuf;
 
-use crate::feature::Feature;
-
 #[derive(clap::Parser, Debug, Default, Clone)]
 #[command(version, about, long_about)]
 pub struct Args {
@@ -10,9 +8,6 @@ pub struct Args {
 
     #[arg(long, short, default_value = "output", value_name = "DIR", value_hint = clap::ValueHint::DirPath)]
     pub output: PathBuf,
-
-    #[arg(long, short, value_enum, value_delimiter = ' ', num_args = 0..)]
-    pub features: Vec<Feature>,
 
     #[arg(long, default_value_t = false)]
     pub dry_run: bool,

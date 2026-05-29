@@ -1,1 +1,123 @@
-# [allow (unused)] use super :: * ; # [doc = "A Rust expression. The primary recursive node covering all expression forms."] # [derive (Debug , Clone)] pub enum Expr { Lit { value : ExprLit , } , Path { value : ExprPath , } , Block { value : ExprBlock , } , Unsafe { value : ExprUnsafe , } , Const { value : ExprConst , } , If { value : ExprIf , } , While { value : ExprWhile , } , ForLoop { value : ExprForLoop , } , Loop { value : ExprLoop , } , Match { value : ExprMatch , } , Closure { value : ExprClosure , } , Async { value : ExprAsync , } , Await { value : ExprAwait , } , Try { value : ExprTry , } , TryBlock { value : ExprTryBlock , } , Yield { value : ExprYield , } , Return { value : ExprReturn , } , Break { value : ExprBreak , } , Continue { value : ExprContinue , } , Call { value : ExprCall , } , MethodCall { value : ExprMethodCall , } , Field { value : ExprField , } , Index { value : ExprIndex , } , Reference { value : ExprReference , } , Unary { value : ExprUnary , } , Binary { value : ExprBinary , } , Assign { value : ExprAssign , } , AssignOp { value : ExprAssignOp , } , Cast { value : ExprCast , } , Type { value : ExprType , } , Let { value : ExprLet , } , Struct { value : ExprStruct , } , Tuple { value : ExprTuple , } , Array { value : ExprArray , } , Repeat { value : ExprRepeat , } , Range { value : ExprRange , } , Macro { value : MacroCall , } , Group { value : ExprGroup , } , Paren { value : ExprParen , } , Infer { } , Verbatim { tokens : crate :: TokenStream , } , } impl crate :: ast :: Visit for Expr { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { Expr :: Lit { value , } => { value . visit (visitor) ; } , Expr :: Path { value , } => { value . visit (visitor) ; } , Expr :: Block { value , } => { value . visit (visitor) ; } , Expr :: Unsafe { value , } => { value . visit (visitor) ; } , Expr :: Const { value , } => { value . visit (visitor) ; } , Expr :: If { value , } => { value . visit (visitor) ; } , Expr :: While { value , } => { value . visit (visitor) ; } , Expr :: ForLoop { value , } => { value . visit (visitor) ; } , Expr :: Loop { value , } => { value . visit (visitor) ; } , Expr :: Match { value , } => { value . visit (visitor) ; } , Expr :: Closure { value , } => { value . visit (visitor) ; } , Expr :: Async { value , } => { value . visit (visitor) ; } , Expr :: Await { value , } => { value . visit (visitor) ; } , Expr :: Try { value , } => { value . visit (visitor) ; } , Expr :: TryBlock { value , } => { value . visit (visitor) ; } , Expr :: Yield { value , } => { value . visit (visitor) ; } , Expr :: Return { value , } => { value . visit (visitor) ; } , Expr :: Break { value , } => { value . visit (visitor) ; } , Expr :: Continue { value , } => { value . visit (visitor) ; } , Expr :: Call { value , } => { value . visit (visitor) ; } , Expr :: MethodCall { value , } => { value . visit (visitor) ; } , Expr :: Field { value , } => { value . visit (visitor) ; } , Expr :: Index { value , } => { value . visit (visitor) ; } , Expr :: Reference { value , } => { value . visit (visitor) ; } , Expr :: Unary { value , } => { value . visit (visitor) ; } , Expr :: Binary { value , } => { value . visit (visitor) ; } , Expr :: Assign { value , } => { value . visit (visitor) ; } , Expr :: AssignOp { value , } => { value . visit (visitor) ; } , Expr :: Cast { value , } => { value . visit (visitor) ; } , Expr :: Type { value , } => { value . visit (visitor) ; } , Expr :: Let { value , } => { value . visit (visitor) ; } , Expr :: Struct { value , } => { value . visit (visitor) ; } , Expr :: Tuple { value , } => { value . visit (visitor) ; } , Expr :: Array { value , } => { value . visit (visitor) ; } , Expr :: Repeat { value , } => { value . visit (visitor) ; } , Expr :: Range { value , } => { value . visit (visitor) ; } , Expr :: Macro { value , } => { value . visit (visitor) ; } , Expr :: Group { value , } => { value . visit (visitor) ; } , Expr :: Paren { value , } => { value . visit (visitor) ; } , Expr :: Infer { } => { } , Expr :: Verbatim { tokens , } => { let _ = & tokens ; } , } } } impl crate :: ast :: Fold for Expr { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { Expr :: Lit { value , } => Expr :: Lit { value . fold (folder) , } , Expr :: Path { value , } => Expr :: Path { value . fold (folder) , } , Expr :: Block { value , } => Expr :: Block { value . fold (folder) , } , Expr :: Unsafe { value , } => Expr :: Unsafe { value . fold (folder) , } , Expr :: Const { value , } => Expr :: Const { value . fold (folder) , } , Expr :: If { value , } => Expr :: If { value . fold (folder) , } , Expr :: While { value , } => Expr :: While { value . fold (folder) , } , Expr :: ForLoop { value , } => Expr :: ForLoop { value . fold (folder) , } , Expr :: Loop { value , } => Expr :: Loop { value . fold (folder) , } , Expr :: Match { value , } => Expr :: Match { value . fold (folder) , } , Expr :: Closure { value , } => Expr :: Closure { value . fold (folder) , } , Expr :: Async { value , } => Expr :: Async { value . fold (folder) , } , Expr :: Await { value , } => Expr :: Await { value . fold (folder) , } , Expr :: Try { value , } => Expr :: Try { value . fold (folder) , } , Expr :: TryBlock { value , } => Expr :: TryBlock { value . fold (folder) , } , Expr :: Yield { value , } => Expr :: Yield { value . fold (folder) , } , Expr :: Return { value , } => Expr :: Return { value . fold (folder) , } , Expr :: Break { value , } => Expr :: Break { value . fold (folder) , } , Expr :: Continue { value , } => Expr :: Continue { value . fold (folder) , } , Expr :: Call { value , } => Expr :: Call { value . fold (folder) , } , Expr :: MethodCall { value , } => Expr :: MethodCall { value . fold (folder) , } , Expr :: Field { value , } => Expr :: Field { value . fold (folder) , } , Expr :: Index { value , } => Expr :: Index { value . fold (folder) , } , Expr :: Reference { value , } => Expr :: Reference { value . fold (folder) , } , Expr :: Unary { value , } => Expr :: Unary { value . fold (folder) , } , Expr :: Binary { value , } => Expr :: Binary { value . fold (folder) , } , Expr :: Assign { value , } => Expr :: Assign { value . fold (folder) , } , Expr :: AssignOp { value , } => Expr :: AssignOp { value . fold (folder) , } , Expr :: Cast { value , } => Expr :: Cast { value . fold (folder) , } , Expr :: Type { value , } => Expr :: Type { value . fold (folder) , } , Expr :: Let { value , } => Expr :: Let { value . fold (folder) , } , Expr :: Struct { value , } => Expr :: Struct { value . fold (folder) , } , Expr :: Tuple { value , } => Expr :: Tuple { value . fold (folder) , } , Expr :: Array { value , } => Expr :: Array { value . fold (folder) , } , Expr :: Repeat { value , } => Expr :: Repeat { value . fold (folder) , } , Expr :: Range { value , } => Expr :: Range { value . fold (folder) , } , Expr :: Macro { value , } => Expr :: Macro { value . fold (folder) , } , Expr :: Group { value , } => Expr :: Group { value . fold (folder) , } , Expr :: Paren { value , } => Expr :: Paren { value . fold (folder) , } , Expr :: Infer { } => Expr :: Infer { } , Expr :: Verbatim { tokens , } => Expr :: Verbatim { tokens , } , } } } mod expr_array ; pub use expr_array :: * ; mod expr_assign ; pub use expr_assign :: * ; mod expr_assign_op ; pub use expr_assign_op :: * ; mod expr_async ; pub use expr_async :: * ; mod expr_await ; pub use expr_await :: * ; mod expr_binary ; pub use expr_binary :: * ; mod expr_block ; pub use expr_block :: * ; mod expr_break ; pub use expr_break :: * ; mod expr_call ; pub use expr_call :: * ; mod expr_cast ; pub use expr_cast :: * ; mod expr_closure ; pub use expr_closure :: * ; mod expr_const ; pub use expr_const :: * ; mod expr_continue ; pub use expr_continue :: * ; mod expr_field ; pub use expr_field :: * ; mod expr_for_loop ; pub use expr_for_loop :: * ; mod expr_group ; pub use expr_group :: * ; mod expr_if ; pub use expr_if :: * ; mod expr_index ; pub use expr_index :: * ; mod expr_let ; pub use expr_let :: * ; mod expr_lit ; pub use expr_lit :: * ; mod expr_loop ; pub use expr_loop :: * ; mod expr_match ; pub use expr_match :: * ; mod expr_method_call ; pub use expr_method_call :: * ; mod expr_paren ; pub use expr_paren :: * ; mod expr_path ; pub use expr_path :: * ; mod expr_range ; pub use expr_range :: * ; mod expr_reference ; pub use expr_reference :: * ; mod expr_repeat ; pub use expr_repeat :: * ; mod expr_return ; pub use expr_return :: * ; mod expr_struct ; pub use expr_struct :: * ; mod expr_try ; pub use expr_try :: * ; mod expr_try_block ; pub use expr_try_block :: * ; mod expr_tuple ; pub use expr_tuple :: * ; mod expr_type ; pub use expr_type :: * ; mod expr_unary ; pub use expr_unary :: * ; mod expr_unsafe ; pub use expr_unsafe :: * ; mod expr_while ; pub use expr_while :: * ; mod expr_yield ; pub use expr_yield :: * ;
+#[allow(unused)]
+use super::*;
+#[doc = "A Rust expression. The primary recursive node covering all expression forms."]
+#[derive(Debug, Clone)]
+pub enum Expr {
+    Lit { value: ExprLit },
+    Path { value: ExprPath },
+    Block { value: ExprBlock },
+    Unsafe { value: ExprUnsafe },
+    Const { value: ExprConst },
+    If { value: ExprIf },
+    While { value: ExprWhile },
+    ForLoop { value: ExprForLoop },
+    Loop { value: ExprLoop },
+    Match { value: ExprMatch },
+    Closure { value: ExprClosure },
+    Async { value: ExprAsync },
+    Await { value: ExprAwait },
+    Try { value: ExprTry },
+    TryBlock { value: ExprTryBlock },
+    Yield { value: ExprYield },
+    Return { value: ExprReturn },
+    Break { value: ExprBreak },
+    Continue { value: ExprContinue },
+    Call { value: ExprCall },
+    MethodCall { value: ExprMethodCall },
+    Field { value: ExprField },
+    Index { value: ExprIndex },
+    Reference { value: ExprReference },
+    Unary { value: ExprUnary },
+    Binary { value: ExprBinary },
+    Assign { value: ExprAssign },
+    AssignOp { value: ExprAssignOp },
+    Cast { value: ExprCast },
+    Type { value: ExprType },
+    Let { value: ExprLet },
+    Struct { value: ExprStruct },
+    Tuple { value: ExprTuple },
+    Array { value: ExprArray },
+    Repeat { value: ExprRepeat },
+    Range { value: ExprRange },
+    Macro { value: MacroCall },
+    Group { value: ExprGroup },
+    Paren { value: ExprParen },
+    Infer {},
+    Verbatim { tokens: crate::TokenStream },
+}
+mod expr_array;
+pub use expr_array::*;
+mod expr_assign;
+pub use expr_assign::*;
+mod expr_assign_op;
+pub use expr_assign_op::*;
+mod expr_async;
+pub use expr_async::*;
+mod expr_await;
+pub use expr_await::*;
+mod expr_binary;
+pub use expr_binary::*;
+mod expr_block;
+pub use expr_block::*;
+mod expr_break;
+pub use expr_break::*;
+mod expr_call;
+pub use expr_call::*;
+mod expr_cast;
+pub use expr_cast::*;
+mod expr_closure;
+pub use expr_closure::*;
+mod expr_const;
+pub use expr_const::*;
+mod expr_continue;
+pub use expr_continue::*;
+mod expr_field;
+pub use expr_field::*;
+mod expr_for_loop;
+pub use expr_for_loop::*;
+mod expr_group;
+pub use expr_group::*;
+mod expr_if;
+pub use expr_if::*;
+mod expr_index;
+pub use expr_index::*;
+mod expr_let;
+pub use expr_let::*;
+mod expr_lit;
+pub use expr_lit::*;
+mod expr_loop;
+pub use expr_loop::*;
+mod expr_match;
+pub use expr_match::*;
+mod expr_method_call;
+pub use expr_method_call::*;
+mod expr_paren;
+pub use expr_paren::*;
+mod expr_path;
+pub use expr_path::*;
+mod expr_range;
+pub use expr_range::*;
+mod expr_reference;
+pub use expr_reference::*;
+mod expr_repeat;
+pub use expr_repeat::*;
+mod expr_return;
+pub use expr_return::*;
+mod expr_struct;
+pub use expr_struct::*;
+mod expr_try;
+pub use expr_try::*;
+mod expr_try_block;
+pub use expr_try_block::*;
+mod expr_tuple;
+pub use expr_tuple::*;
+mod expr_type;
+pub use expr_type::*;
+mod expr_unary;
+pub use expr_unary::*;
+mod expr_unsafe;
+pub use expr_unsafe::*;
+mod expr_while;
+pub use expr_while::*;
+mod expr_yield;
+pub use expr_yield::*;

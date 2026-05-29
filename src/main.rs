@@ -2,7 +2,6 @@
 
 mod args;
 mod error;
-mod feature;
 mod schema;
 mod source;
 

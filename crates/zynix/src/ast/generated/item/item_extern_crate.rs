@@ -1,1 +1,10 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ItemExternCrate { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub ident : Ident , pub rename : Option < Ident > , } impl crate :: ast :: Visit for ItemExternCrate { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_item_extern_crate (self) ; } } impl crate :: ast :: Fold for ItemExternCrate { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_item_extern_crate (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ItemExternCrate {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub vis: Visibility,
+    pub ident: Ident,
+    pub rename: Option<Ident>,
+}

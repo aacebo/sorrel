@@ -1,1 +1,11 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct PatStruct { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub qself : Option < QSelf > , pub path : Path , pub fields : crate :: ast :: Punctuated < PatField , crate :: token :: Comma > , pub rest : bool , } impl crate :: ast :: Visit for PatStruct { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_pat_struct (self) ; } } impl crate :: ast :: Fold for PatStruct { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_pat_struct (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct PatStruct {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub qself: Option<QSelf>,
+    pub path: Path,
+    pub fields: crate::ast::Punctuated<PatField, crate::token::Comma>,
+    pub rest: bool,
+}

@@ -1,1 +1,54 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub enum Item { Use { value : ItemUse , } , ExternCrate { value : ItemExternCrate , } , Mod { value : ItemMod , } , Fn { value : ItemFn , } , Struct { value : ItemStruct , } , Enum { value : ItemEnum , } , Union { value : ItemUnion , } , Trait { value : ItemTrait , } , TraitAlias { value : ItemTraitAlias , } , Impl { value : ItemImpl , } , TypeAlias { value : ItemTypeAlias , } , Const { value : ItemConst , } , Static { value : ItemStatic , } , Macro { value : ItemMacro , } , Macro2 { value : ItemMacroRules , } , ForeignMod { value : ItemForeignMod , } , ExternBlock { value : ItemForeignMod , } , } impl crate :: ast :: Visit for Item { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { Item :: Use { value , } => { value . visit (visitor) ; } , Item :: ExternCrate { value , } => { value . visit (visitor) ; } , Item :: Mod { value , } => { value . visit (visitor) ; } , Item :: Fn { value , } => { value . visit (visitor) ; } , Item :: Struct { value , } => { value . visit (visitor) ; } , Item :: Enum { value , } => { value . visit (visitor) ; } , Item :: Union { value , } => { value . visit (visitor) ; } , Item :: Trait { value , } => { value . visit (visitor) ; } , Item :: TraitAlias { value , } => { value . visit (visitor) ; } , Item :: Impl { value , } => { value . visit (visitor) ; } , Item :: TypeAlias { value , } => { value . visit (visitor) ; } , Item :: Const { value , } => { value . visit (visitor) ; } , Item :: Static { value , } => { value . visit (visitor) ; } , Item :: Macro { value , } => { value . visit (visitor) ; } , Item :: Macro2 { value , } => { value . visit (visitor) ; } , Item :: ForeignMod { value , } => { value . visit (visitor) ; } , Item :: ExternBlock { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for Item { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { Item :: Use { value , } => Item :: Use { value . fold (folder) , } , Item :: ExternCrate { value , } => Item :: ExternCrate { value . fold (folder) , } , Item :: Mod { value , } => Item :: Mod { value . fold (folder) , } , Item :: Fn { value , } => Item :: Fn { value . fold (folder) , } , Item :: Struct { value , } => Item :: Struct { value . fold (folder) , } , Item :: Enum { value , } => Item :: Enum { value . fold (folder) , } , Item :: Union { value , } => Item :: Union { value . fold (folder) , } , Item :: Trait { value , } => Item :: Trait { value . fold (folder) , } , Item :: TraitAlias { value , } => Item :: TraitAlias { value . fold (folder) , } , Item :: Impl { value , } => Item :: Impl { value . fold (folder) , } , Item :: TypeAlias { value , } => Item :: TypeAlias { value . fold (folder) , } , Item :: Const { value , } => Item :: Const { value . fold (folder) , } , Item :: Static { value , } => Item :: Static { value . fold (folder) , } , Item :: Macro { value , } => Item :: Macro { value . fold (folder) , } , Item :: Macro2 { value , } => Item :: Macro2 { value . fold (folder) , } , Item :: ForeignMod { value , } => Item :: ForeignMod { value . fold (folder) , } , Item :: ExternBlock { value , } => Item :: ExternBlock { value . fold (folder) , } , } } } mod item_const ; pub use item_const :: * ; mod item_enum ; pub use item_enum :: * ; mod item_extern_crate ; pub use item_extern_crate :: * ; mod item_fn ; pub use item_fn :: * ; mod item_foreign_mod ; pub use item_foreign_mod :: * ; mod item_impl ; pub use item_impl :: * ; mod item_macro ; pub use item_macro :: * ; mod item_macro_rules ; pub use item_macro_rules :: * ; mod item_mod ; pub use item_mod :: * ; mod item_static ; pub use item_static :: * ; mod item_struct ; pub use item_struct :: * ; mod item_trait ; pub use item_trait :: * ; mod item_trait_alias ; pub use item_trait_alias :: * ; mod item_type_alias ; pub use item_type_alias :: * ; mod item_union ; pub use item_union :: * ; mod item_use ; pub use item_use :: * ;
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub enum Item {
+    Use { value: ItemUse },
+    ExternCrate { value: ItemExternCrate },
+    Mod { value: ItemMod },
+    Fn { value: ItemFn },
+    Struct { value: ItemStruct },
+    Enum { value: ItemEnum },
+    Union { value: ItemUnion },
+    Trait { value: ItemTrait },
+    TraitAlias { value: ItemTraitAlias },
+    Impl { value: ItemImpl },
+    TypeAlias { value: ItemTypeAlias },
+    Const { value: ItemConst },
+    Static { value: ItemStatic },
+    Macro { value: ItemMacro },
+    Macro2 { value: ItemMacroRules },
+    ForeignMod { value: ItemForeignMod },
+    ExternBlock { value: ItemForeignMod },
+}
+mod item_const;
+pub use item_const::*;
+mod item_enum;
+pub use item_enum::*;
+mod item_extern_crate;
+pub use item_extern_crate::*;
+mod item_fn;
+pub use item_fn::*;
+mod item_foreign_mod;
+pub use item_foreign_mod::*;
+mod item_impl;
+pub use item_impl::*;
+mod item_macro;
+pub use item_macro::*;
+mod item_macro_rules;
+pub use item_macro_rules::*;
+mod item_mod;
+pub use item_mod::*;
+mod item_static;
+pub use item_static::*;
+mod item_struct;
+pub use item_struct::*;
+mod item_trait;
+pub use item_trait::*;
+mod item_trait_alias;
+pub use item_trait_alias::*;
+mod item_type_alias;
+pub use item_type_alias::*;
+mod item_union;
+pub use item_union::*;
+mod item_use;
+pub use item_use::*;

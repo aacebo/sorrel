@@ -1,1 +1,16 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub enum Stmt { Local { value : Box < Local > , } , Item { value : Box < Item > , } , Expr { value : Box < Expr > , } , Semi { value : Box < Expr > , } , Macro { value : StmtMacro , } , } impl crate :: ast :: Visit for Stmt { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { Stmt :: Local { value , } => { value . visit (visitor) ; } , Stmt :: Item { value , } => { value . visit (visitor) ; } , Stmt :: Expr { value , } => { value . visit (visitor) ; } , Stmt :: Semi { value , } => { value . visit (visitor) ; } , Stmt :: Macro { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for Stmt { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { Stmt :: Local { value , } => Stmt :: Local { value . fold (folder) , } , Stmt :: Item { value , } => Stmt :: Item { value . fold (folder) , } , Stmt :: Expr { value , } => Stmt :: Expr { value . fold (folder) , } , Stmt :: Semi { value , } => Stmt :: Semi { value . fold (folder) , } , Stmt :: Macro { value , } => Stmt :: Macro { value . fold (folder) , } , } } } mod local ; pub use local :: * ; mod local_init ; pub use local_init :: * ; mod stmt_macro ; pub use stmt_macro :: * ;
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub enum Stmt {
+    Local { value: Box<Local> },
+    Item { value: Box<Item> },
+    Expr { value: Box<Expr> },
+    Semi { value: Box<Expr> },
+    Macro { value: StmtMacro },
+}
+mod local;
+pub use local::*;
+mod local_init;
+pub use local_init::*;
+mod stmt_macro;
+pub use stmt_macro::*;

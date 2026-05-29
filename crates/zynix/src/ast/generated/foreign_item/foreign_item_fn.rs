@@ -1,1 +1,9 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ForeignItemFn { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub sig : Signature , } impl crate :: ast :: Visit for ForeignItemFn { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_foreign_item_fn (self) ; } } impl crate :: ast :: Fold for ForeignItemFn { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_foreign_item_fn (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ForeignItemFn {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub vis: Visibility,
+    pub sig: Signature,
+}

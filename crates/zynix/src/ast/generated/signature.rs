@@ -1,1 +1,15 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct Signature { pub span : crate :: Span , pub constness : Constness , pub asyncness : Asyncness , pub unsafety : Unsafety , pub abi : Option < Abi > , pub ident : Ident , pub generics : Generics , pub inputs : crate :: ast :: Punctuated < FnParam , crate :: token :: Comma > , pub variadic : Option < Variadic > , pub output : ReturnType , } impl crate :: ast :: Visit for Signature { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_signature (self) ; } } impl crate :: ast :: Fold for Signature { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_signature (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct Signature {
+    pub span: crate::Span,
+    pub constness: Constness,
+    pub asyncness: Asyncness,
+    pub unsafety: Unsafety,
+    pub abi: Option<Abi>,
+    pub ident: Ident,
+    pub generics: Generics,
+    pub inputs: crate::ast::Punctuated<FnParam, crate::token::Comma>,
+    pub variadic: Option<Variadic>,
+    pub output: ReturnType,
+}

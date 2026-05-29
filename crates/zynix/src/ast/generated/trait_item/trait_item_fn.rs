@@ -1,1 +1,9 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct TraitItemFn { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub sig : Signature , pub default_body : Option < Block > , } impl crate :: ast :: Visit for TraitItemFn { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_trait_item_fn (self) ; } } impl crate :: ast :: Fold for TraitItemFn { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_trait_item_fn (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct TraitItemFn {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub sig: Signature,
+    pub default_body: Option<Block>,
+}

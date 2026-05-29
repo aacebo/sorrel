@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct Generics { pub span : crate :: Span , pub params : crate :: ast :: Punctuated < GenericParam , crate :: token :: Comma > , pub where_clause : Option < WhereClause > , } impl crate :: ast :: Visit for Generics { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_generics (self) ; } } impl crate :: ast :: Fold for Generics { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_generics (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct Generics {
+    pub span: crate::Span,
+    pub params: crate::ast::Punctuated<GenericParam, crate::token::Comma>,
+    pub where_clause: Option<WhereClause>,
+}

@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct PatOr { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub cases : crate :: ast :: Punctuated < Pattern , crate :: token :: Or > , } impl crate :: ast :: Visit for PatOr { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_pat_or (self) ; } } impl crate :: ast :: Fold for PatOr { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_pat_or (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct PatOr {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub cases: crate::ast::Punctuated<Pattern, crate::token::Or>,
+}

@@ -1,1 +1,10 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ConstParam { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub ident : Ident , pub ty : Type , pub default : Option < Expr > , } impl crate :: ast :: Visit for ConstParam { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_const_param (self) ; } } impl crate :: ast :: Fold for ConstParam { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_const_param (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ConstParam {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub ident: Ident,
+    pub ty: Type,
+    pub default: Option<Expr>,
+}

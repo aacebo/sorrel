@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct PatParen { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub pat : Box < Pattern > , } impl crate :: ast :: Visit for PatParen { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_pat_paren (self) ; } } impl crate :: ast :: Fold for PatParen { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_pat_paren (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct PatParen {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub pat: Box<Pattern>,
+}

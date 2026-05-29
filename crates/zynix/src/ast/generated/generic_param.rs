@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub enum GenericParam { Lifetime { value : LifetimeParam , } , Type { value : TypeParam , } , Const { value : ConstParam , } , } impl crate :: ast :: Visit for GenericParam { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { GenericParam :: Lifetime { value , } => { value . visit (visitor) ; } , GenericParam :: Type { value , } => { value . visit (visitor) ; } , GenericParam :: Const { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for GenericParam { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { GenericParam :: Lifetime { value , } => GenericParam :: Lifetime { value . fold (folder) , } , GenericParam :: Type { value , } => GenericParam :: Type { value . fold (folder) , } , GenericParam :: Const { value , } => GenericParam :: Const { value . fold (folder) , } , } } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub enum GenericParam {
+    Lifetime { value: LifetimeParam },
+    Type { value: TypeParam },
+    Const { value: ConstParam },
+}

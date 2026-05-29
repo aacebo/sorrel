@@ -1,1 +1,49 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub enum Pattern { Wild { } , Rest { } , Ident { value : PatIdent , } , Path { value : PatPath , } , Tuple { value : PatTuple , } , TupleStruct { value : PatTupleStruct , } , Struct { value : PatStruct , } , Slice { value : PatSlice , } , Reference { value : PatReference , } , Or { value : PatOr , } , Lit { value : PatLit , } , Range { value : PatRange , } , Macro { value : MacroCall , } , Type { value : PatType , } , Group { value : PatGroup , } , Paren { value : PatParen , } , } impl crate :: ast :: Visit for Pattern { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { Pattern :: Wild { } => { } , Pattern :: Rest { } => { } , Pattern :: Ident { value , } => { value . visit (visitor) ; } , Pattern :: Path { value , } => { value . visit (visitor) ; } , Pattern :: Tuple { value , } => { value . visit (visitor) ; } , Pattern :: TupleStruct { value , } => { value . visit (visitor) ; } , Pattern :: Struct { value , } => { value . visit (visitor) ; } , Pattern :: Slice { value , } => { value . visit (visitor) ; } , Pattern :: Reference { value , } => { value . visit (visitor) ; } , Pattern :: Or { value , } => { value . visit (visitor) ; } , Pattern :: Lit { value , } => { value . visit (visitor) ; } , Pattern :: Range { value , } => { value . visit (visitor) ; } , Pattern :: Macro { value , } => { value . visit (visitor) ; } , Pattern :: Type { value , } => { value . visit (visitor) ; } , Pattern :: Group { value , } => { value . visit (visitor) ; } , Pattern :: Paren { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for Pattern { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { Pattern :: Wild { } => Pattern :: Wild { } , Pattern :: Rest { } => Pattern :: Rest { } , Pattern :: Ident { value , } => Pattern :: Ident { value . fold (folder) , } , Pattern :: Path { value , } => Pattern :: Path { value . fold (folder) , } , Pattern :: Tuple { value , } => Pattern :: Tuple { value . fold (folder) , } , Pattern :: TupleStruct { value , } => Pattern :: TupleStruct { value . fold (folder) , } , Pattern :: Struct { value , } => Pattern :: Struct { value . fold (folder) , } , Pattern :: Slice { value , } => Pattern :: Slice { value . fold (folder) , } , Pattern :: Reference { value , } => Pattern :: Reference { value . fold (folder) , } , Pattern :: Or { value , } => Pattern :: Or { value . fold (folder) , } , Pattern :: Lit { value , } => Pattern :: Lit { value . fold (folder) , } , Pattern :: Range { value , } => Pattern :: Range { value . fold (folder) , } , Pattern :: Macro { value , } => Pattern :: Macro { value . fold (folder) , } , Pattern :: Type { value , } => Pattern :: Type { value . fold (folder) , } , Pattern :: Group { value , } => Pattern :: Group { value . fold (folder) , } , Pattern :: Paren { value , } => Pattern :: Paren { value . fold (folder) , } , } } } mod pat_field ; pub use pat_field :: * ; mod pat_group ; pub use pat_group :: * ; mod pat_ident ; pub use pat_ident :: * ; mod pat_lit ; pub use pat_lit :: * ; mod pat_or ; pub use pat_or :: * ; mod pat_paren ; pub use pat_paren :: * ; mod pat_path ; pub use pat_path :: * ; mod pat_range ; pub use pat_range :: * ; mod pat_reference ; pub use pat_reference :: * ; mod pat_slice ; pub use pat_slice :: * ; mod pat_struct ; pub use pat_struct :: * ; mod pat_tuple ; pub use pat_tuple :: * ; mod pat_tuple_struct ; pub use pat_tuple_struct :: * ; mod pat_type ; pub use pat_type :: * ;
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub enum Pattern {
+    Wild {},
+    Rest {},
+    Ident { value: PatIdent },
+    Path { value: PatPath },
+    Tuple { value: PatTuple },
+    TupleStruct { value: PatTupleStruct },
+    Struct { value: PatStruct },
+    Slice { value: PatSlice },
+    Reference { value: PatReference },
+    Or { value: PatOr },
+    Lit { value: PatLit },
+    Range { value: PatRange },
+    Macro { value: MacroCall },
+    Type { value: PatType },
+    Group { value: PatGroup },
+    Paren { value: PatParen },
+}
+mod pat_field;
+pub use pat_field::*;
+mod pat_group;
+pub use pat_group::*;
+mod pat_ident;
+pub use pat_ident::*;
+mod pat_lit;
+pub use pat_lit::*;
+mod pat_or;
+pub use pat_or::*;
+mod pat_paren;
+pub use pat_paren::*;
+mod pat_path;
+pub use pat_path::*;
+mod pat_range;
+pub use pat_range::*;
+mod pat_reference;
+pub use pat_reference::*;
+mod pat_slice;
+pub use pat_slice::*;
+mod pat_struct;
+pub use pat_struct::*;
+mod pat_tuple;
+pub use pat_tuple::*;
+mod pat_tuple_struct;
+pub use pat_tuple_struct::*;
+mod pat_type;
+pub use pat_type::*;

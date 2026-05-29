@@ -1,1 +1,12 @@
-# [allow (unused)] use super :: * ; # [doc = "An associated constant declaration inside a trait or impl block (`const NAME: Type;` or `const NAME: Type = value;`)."] # [derive (Debug , Clone)] pub struct TraitItemConst { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub ident : Ident , pub generics : Generics , pub ty : Type , pub default : Option < Expr > , } impl crate :: ast :: Visit for TraitItemConst { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_trait_item_const (self) ; } } impl crate :: ast :: Fold for TraitItemConst { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_trait_item_const (self) } }
+#[allow(unused)]
+use super::*;
+#[doc = "An associated constant declaration inside a trait or impl block (`const NAME: Type;` or `const NAME: Type = value;`)."]
+#[derive(Debug, Clone)]
+pub struct TraitItemConst {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub ident: Ident,
+    pub generics: Generics,
+    pub ty: Type,
+    pub default: Option<Expr>,
+}

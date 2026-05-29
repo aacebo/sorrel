@@ -1,1 +1,10 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub enum UseTree { Path { value : UsePath , } , Name { value : UseName , } , Rename { value : UseRename , } , Glob { } , Group { value : UseGroup , } , } impl crate :: ast :: Visit for UseTree { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { UseTree :: Path { value , } => { value . visit (visitor) ; } , UseTree :: Name { value , } => { value . visit (visitor) ; } , UseTree :: Rename { value , } => { value . visit (visitor) ; } , UseTree :: Glob { } => { } , UseTree :: Group { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for UseTree { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { UseTree :: Path { value , } => UseTree :: Path { value . fold (folder) , } , UseTree :: Name { value , } => UseTree :: Name { value . fold (folder) , } , UseTree :: Rename { value , } => UseTree :: Rename { value . fold (folder) , } , UseTree :: Glob { } => UseTree :: Glob { } , UseTree :: Group { value , } => UseTree :: Group { value . fold (folder) , } , } } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub enum UseTree {
+    Path { value: UsePath },
+    Name { value: UseName },
+    Rename { value: UseRename },
+    Glob {},
+    Group { value: UseGroup },
+}

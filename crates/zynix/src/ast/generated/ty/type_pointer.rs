@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct TypePointer { pub span : crate :: Span , pub mutability : Mutability , pub elem : Box < Type > , } impl crate :: ast :: Visit for TypePointer { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_type_pointer (self) ; } } impl crate :: ast :: Fold for TypePointer { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_type_pointer (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct TypePointer {
+    pub span: crate::Span,
+    pub mutability: Mutability,
+    pub elem: Box<Type>,
+}

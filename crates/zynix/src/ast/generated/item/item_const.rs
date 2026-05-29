@@ -1,1 +1,13 @@
-# [allow (unused)] use super :: * ; # [doc = "A top-level constant item (`const NAME: Type = value;`)."] # [derive (Debug , Clone)] pub struct ItemConst { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub ident : Ident , pub generics : Generics , pub ty : Type , pub expr : Expr , } impl crate :: ast :: Visit for ItemConst { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_item_const (self) ; } } impl crate :: ast :: Fold for ItemConst { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_item_const (self) } }
+#[allow(unused)]
+use super::*;
+#[doc = "A top-level constant item (`const NAME: Type = value;`)."]
+#[derive(Debug, Clone)]
+pub struct ItemConst {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub vis: Visibility,
+    pub ident: Ident,
+    pub generics: Generics,
+    pub ty: Type,
+    pub expr: Expr,
+}

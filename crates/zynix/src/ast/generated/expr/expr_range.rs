@@ -1,1 +1,10 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ExprRange { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub start : Option < Box < Expr > > , pub limits : RangeLimits , pub end : Option < Box < Expr > > , } impl crate :: ast :: Visit for ExprRange { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_expr_range (self) ; } } impl crate :: ast :: Fold for ExprRange { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_expr_range (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ExprRange {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub start: Option<Box<Expr>>,
+    pub limits: RangeLimits,
+    pub end: Option<Box<Expr>>,
+}

@@ -1,1 +1,9 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct PatPath { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub qself : Option < QSelf > , pub path : Path , } impl crate :: ast :: Visit for PatPath { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_pat_path (self) ; } } impl crate :: ast :: Fold for PatPath { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_pat_path (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct PatPath {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub qself: Option<QSelf>,
+    pub path: Path,
+}

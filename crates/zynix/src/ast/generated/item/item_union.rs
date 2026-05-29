@@ -1,1 +1,11 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ItemUnion { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub ident : Ident , pub generics : Generics , pub fields : FieldsNamed , } impl crate :: ast :: Visit for ItemUnion { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_item_union (self) ; } } impl crate :: ast :: Fold for ItemUnion { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_item_union (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ItemUnion {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub vis: Visibility,
+    pub ident: Ident,
+    pub generics: Generics,
+    pub fields: FieldsNamed,
+}

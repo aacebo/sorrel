@@ -1,1 +1,7 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub enum WherePredicate { Lifetime { value : LifetimePredicate , } , Type { value : Box < TypePredicate > , } , } impl crate :: ast :: Visit for WherePredicate { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { WherePredicate :: Lifetime { value , } => { value . visit (visitor) ; } , WherePredicate :: Type { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for WherePredicate { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { WherePredicate :: Lifetime { value , } => WherePredicate :: Lifetime { value . fold (folder) , } , WherePredicate :: Type { value , } => WherePredicate :: Type { value . fold (folder) , } , } } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub enum WherePredicate {
+    Lifetime { value: LifetimePredicate },
+    Type { value: Box<TypePredicate> },
+}

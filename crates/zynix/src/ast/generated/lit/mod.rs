@@ -1,1 +1,31 @@
-# [allow (unused)] use super :: * ; # [doc = "A literal value in source code (string, integer, float, byte, char, or boolean)."] # [derive (Debug , Clone)] pub enum Lit { Str { value : LitStr , } , ByteStr { value : LitByteStr , } , CStr { value : LitCStr , } , Byte { value : LitByte , } , Char { value : LitChar , } , Int { value : LitInt , } , Float { value : LitFloat , } , Bool { value : LitBool , } , Verbatim { tokens : crate :: TokenStream , } , } impl crate :: ast :: Visit for Lit { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { Lit :: Str { value , } => { value . visit (visitor) ; } , Lit :: ByteStr { value , } => { value . visit (visitor) ; } , Lit :: CStr { value , } => { value . visit (visitor) ; } , Lit :: Byte { value , } => { value . visit (visitor) ; } , Lit :: Char { value , } => { value . visit (visitor) ; } , Lit :: Int { value , } => { value . visit (visitor) ; } , Lit :: Float { value , } => { value . visit (visitor) ; } , Lit :: Bool { value , } => { value . visit (visitor) ; } , Lit :: Verbatim { tokens , } => { let _ = & tokens ; } , } } } impl crate :: ast :: Fold for Lit { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { Lit :: Str { value , } => Lit :: Str { value . fold (folder) , } , Lit :: ByteStr { value , } => Lit :: ByteStr { value . fold (folder) , } , Lit :: CStr { value , } => Lit :: CStr { value . fold (folder) , } , Lit :: Byte { value , } => Lit :: Byte { value . fold (folder) , } , Lit :: Char { value , } => Lit :: Char { value . fold (folder) , } , Lit :: Int { value , } => Lit :: Int { value . fold (folder) , } , Lit :: Float { value , } => Lit :: Float { value . fold (folder) , } , Lit :: Bool { value , } => Lit :: Bool { value . fold (folder) , } , Lit :: Verbatim { tokens , } => Lit :: Verbatim { tokens , } , } } } mod lit_bool ; pub use lit_bool :: * ; mod lit_byte ; pub use lit_byte :: * ; mod lit_byte_str ; pub use lit_byte_str :: * ; mod lit_c_str ; pub use lit_c_str :: * ; mod lit_char ; pub use lit_char :: * ; mod lit_float ; pub use lit_float :: * ; mod lit_int ; pub use lit_int :: * ; mod lit_str ; pub use lit_str :: * ;
+#[allow(unused)]
+use super::*;
+#[doc = "A literal value in source code (string, integer, float, byte, char, or boolean)."]
+#[derive(Debug, Clone)]
+pub enum Lit {
+    Str { value: LitStr },
+    ByteStr { value: LitByteStr },
+    CStr { value: LitCStr },
+    Byte { value: LitByte },
+    Char { value: LitChar },
+    Int { value: LitInt },
+    Float { value: LitFloat },
+    Bool { value: LitBool },
+    Verbatim { tokens: crate::TokenStream },
+}
+mod lit_bool;
+pub use lit_bool::*;
+mod lit_byte;
+pub use lit_byte::*;
+mod lit_byte_str;
+pub use lit_byte_str::*;
+mod lit_c_str;
+pub use lit_c_str::*;
+mod lit_char;
+pub use lit_char::*;
+mod lit_float;
+pub use lit_float::*;
+mod lit_int;
+pub use lit_int::*;
+mod lit_str;
+pub use lit_str::*;

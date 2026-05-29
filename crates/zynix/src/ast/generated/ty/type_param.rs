@@ -1,1 +1,10 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct TypeParam { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub ident : Ident , pub bounds : crate :: ast :: Punctuated < TypeBound , crate :: token :: Plus > , pub default : Option < Type > , } impl crate :: ast :: Visit for TypeParam { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_type_param (self) ; } } impl crate :: ast :: Fold for TypeParam { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_type_param (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct TypeParam {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub ident: Ident,
+    pub bounds: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
+    pub default: Option<Type>,
+}

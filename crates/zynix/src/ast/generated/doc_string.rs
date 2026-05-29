@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct DocString { pub span : crate :: Span , pub value : String , pub style : AttrStyle , } impl crate :: ast :: Visit for DocString { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_doc_string (self) ; } } impl crate :: ast :: Fold for DocString { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_doc_string (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct DocString {
+    pub span: crate::Span,
+    pub value: String,
+    pub style: AttrStyle,
+}

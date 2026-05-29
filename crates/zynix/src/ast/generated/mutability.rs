@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [doc = "Whether a binding, reference, or pointer is mutable."] # [derive (Debug , Clone)] pub enum Mutability { Immutable , Mutable , } impl crate :: ast :: Visit for Mutability { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { Mutability :: Immutable => { } , Mutability :: Mutable => { } , } } } impl crate :: ast :: Fold for Mutability { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { Mutability :: Immutable => Mutability :: Immutable , Mutability :: Mutable => Mutability :: Mutable , } } }
+#[allow(unused)]
+use super::*;
+#[doc = "Whether a binding, reference, or pointer is mutable."]
+#[derive(Debug, Clone)]
+pub enum Mutability {
+    Immutable,
+    Mutable,
+}

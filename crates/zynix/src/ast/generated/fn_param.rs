@@ -1,1 +1,7 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub enum FnParam { Receiver { value : Box < Receiver > , } , Typed { value : Box < TypedParam > , } , } impl crate :: ast :: Visit for FnParam { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { match self { FnParam :: Receiver { value , } => { value . visit (visitor) ; } , FnParam :: Typed { value , } => { value . visit (visitor) ; } , } } } impl crate :: ast :: Fold for FnParam { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { match self { FnParam :: Receiver { value , } => FnParam :: Receiver { value . fold (folder) , } , FnParam :: Typed { value , } => FnParam :: Typed { value . fold (folder) , } , } } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub enum FnParam {
+    Receiver { value: Box<Receiver> },
+    Typed { value: Box<TypedParam> },
+}

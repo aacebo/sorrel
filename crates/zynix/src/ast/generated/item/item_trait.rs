@@ -1,1 +1,14 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ItemTrait { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub vis : Visibility , pub unsafety : Unsafety , pub auto : bool , pub ident : Ident , pub generics : Generics , pub supertraits : crate :: ast :: Punctuated < TypeBound , crate :: token :: Plus > , pub items : Vec < TraitItem > , } impl crate :: ast :: Visit for ItemTrait { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_item_trait (self) ; } } impl crate :: ast :: Fold for ItemTrait { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_item_trait (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ItemTrait {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub vis: Visibility,
+    pub unsafety: Unsafety,
+    pub auto: bool,
+    pub ident: Ident,
+    pub generics: Generics,
+    pub supertraits: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
+    pub items: Vec<TraitItem>,
+}

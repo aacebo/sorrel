@@ -1,1 +1,8 @@
-# [allow (unused)] use super :: * ; # [derive (Debug , Clone)] pub struct ExprContinue { pub span : crate :: Span , pub attrs : Vec < Attribute > , pub label : Option < Label > , } impl crate :: ast :: Visit for ExprContinue { fn visit (& self , visitor : & mut impl crate :: ast :: Visitor) { visitor . visit_expr_continue (self) ; } } impl crate :: ast :: Fold for ExprContinue { fn fold (self , folder : & mut impl crate :: ast :: Folder) -> Self { folder . fold_expr_continue (self) } }
+#[allow(unused)]
+use super::*;
+#[derive(Debug, Clone)]
+pub struct ExprContinue {
+    pub span: crate::Span,
+    pub attrs: Vec<Attribute>,
+    pub label: Option<Label>,
+}
