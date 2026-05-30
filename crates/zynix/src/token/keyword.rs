@@ -187,6 +187,7 @@ define_keyword! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::token::ToTokenStream;
     use std::str::FromStr;
 
     #[test]

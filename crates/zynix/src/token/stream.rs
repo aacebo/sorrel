@@ -29,7 +29,7 @@ impl TokenStream {
 
     pub fn extend_one(&mut self, token: TokenTree) {
         match self {
-            Self::Compiler(v) => v.extend_one(proc_macro::TokenTree::from(token)),
+            Self::Compiler(v) => token.to_tokens(v),
             Self::Fallback(v) => v.extend_one(token),
         }
     }
@@ -40,7 +40,11 @@ impl TokenStream {
 
     pub fn to_vec(self) -> Vec<TokenTree> {
         match self {
-            Self::Compiler(v) => v.into_iter().map(TokenTree::from).collect(),
+            Self::Compiler(v) => {
+                let mut fb = Self::Fallback(fallback::TokenStream::new());
+                v.to_tokens(&mut fb);
+                fb.into()
+            }
             Self::Fallback(v) => v.into_inner(),
         }
     }
@@ -55,7 +59,11 @@ impl Default for TokenStream {
 impl Extend<TokenTree> for TokenStream {
     fn extend<T: IntoIterator<Item = TokenTree>>(&mut self, iter: T) {
         match self {
-            Self::Compiler(v) => v.extend(iter.into_iter().map(proc_macro::TokenTree::from)),
+            Self::Compiler(v) => {
+                for t in iter {
+                    t.to_tokens(v);
+                }
+            }
             Self::Fallback(v) => v.extend(iter),
         }
     }
@@ -80,10 +88,9 @@ impl From<proc_macro::TokenStream> for TokenStream {
 
 impl From<TokenStream> for proc_macro::TokenStream {
     fn from(stream: TokenStream) -> Self {
-        match stream {
-            TokenStream::Compiler(v) => v,
-            TokenStream::Fallback(v) => v.into_iter().map(proc_macro::TokenTree::from).collect(),
-        }
+        let mut out = proc_macro::TokenStream::new();
+        stream.to_tokens(&mut out);
+        out
     }
 }
 
@@ -117,7 +124,14 @@ impl From<Vec<TokenTree>> for TokenStream {
 impl From<TokenStream> for Vec<TokenTree> {
     fn from(value: TokenStream) -> Self {
         match value {
-            TokenStream::Compiler(v) => v.into_iter().map(TokenTree::from).collect(),
+            TokenStream::Compiler(v) => {
+                let mut sink = TokenStream::Fallback(fallback::TokenStream::new());
+                v.to_tokens(&mut sink);
+                match sink {
+                    TokenStream::Fallback(fb) => fb.into_inner(),
+                    TokenStream::Compiler(_) => unreachable!(),
+                }
+            }
             TokenStream::Fallback(v) => v.into_iter().collect(),
         }
     }
@@ -137,12 +151,12 @@ impl FromIterator<Self> for TokenStream {
 
 impl IntoIterator for TokenStream {
     type Item = TokenTree;
-    type IntoIter = super::IntoIter;
+    type IntoIter = std::vec::IntoIter<TokenTree>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            Self::Compiler(v) => v.into_iter().into(),
-            Self::Fallback(v) => v.into_iter().into(),
+            Self::Compiler(_) => Vec::from(self).into_iter(),
+            Self::Fallback(v) => v.into_inner().into_iter(),
         }
     }
 }
@@ -197,7 +211,7 @@ impl std::fmt::Display for TokenStream {
 impl ToTokens for TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Self::Compiler(v) => tokens.extend(v.clone().into_iter().map(TokenTree::from)),
+            Self::Compiler(v) => v.to_tokens(tokens),
             Self::Fallback(v) => v.to_tokens(tokens),
         }
     }

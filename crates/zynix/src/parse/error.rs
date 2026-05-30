@@ -1,4 +1,5 @@
-use crate::token::{Delim, Group, Ident, LexError, Literal, Punct, Spacing, ToTokens};
+use crate::token::punct::Not;
+use crate::token::{Delim, Group, Ident, LexError, Literal, Punctuation, ToTokenStream, ToTokens};
 use crate::{Span, TokenStream, TokenTree};
 
 #[derive(Debug, Clone)]
@@ -37,10 +38,9 @@ impl ParseError {
 
     pub fn to_compile_error(&self) -> TokenStream {
         let ident = Ident::new("compile_error", self.span);
-        let mut bang = Punct::new('!', Spacing::Alone);
+        let bang = Not::new(self.span);
         let mut lit = Literal::string(&self.to_string());
 
-        bang.set_span(self.span);
         lit.set_span(self.span);
 
         let inner: TokenTree = lit.into();
@@ -48,7 +48,7 @@ impl ParseError {
 
         vec![
             TokenTree::from(ident),
-            TokenTree::from(bang),
+            TokenTree::from(Punctuation::from(bang)),
             TokenTree::from(group),
         ]
         .into()

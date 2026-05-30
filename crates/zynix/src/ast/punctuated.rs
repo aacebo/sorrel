@@ -3,7 +3,7 @@ use std::slice;
 use std::vec;
 
 use crate::parse::{ParseError, ParseStream};
-use crate::token::ToTokens;
+use crate::token::{ToTokenStream, ToTokens};
 use crate::{Parse, TokenStream};
 
 pub struct Punctuated<T, P> {
@@ -824,7 +824,8 @@ impl<T: Clone, P: Clone> Clone for IntoPairs<T, P> {
 mod tests {
     use super::*;
     use crate::Span;
-    use crate::token::{Ident, Punct, Spacing};
+    use crate::token::Ident;
+    use crate::token::punct::Comma;
 
     fn parse_stream(src: &str) -> crate::TokenStream {
         src.parse().unwrap()
@@ -834,7 +835,7 @@ mod tests {
     fn parse_terminated_basic() {
         let ts = parse_stream("a , b , c");
         let mut ps = ts.parse();
-        let p: Punctuated<Ident, Punct> = Punctuated::parse_terminated(&mut ps).unwrap();
+        let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
         assert_eq!(p.len(), 3);
         assert!(!p.trailing_punct());
     }
@@ -843,7 +844,7 @@ mod tests {
     fn parse_terminated_trailing() {
         let ts = parse_stream("a , b , c ,");
         let mut ps = ts.parse();
-        let p: Punctuated<Ident, Punct> = Punctuated::parse_terminated(&mut ps).unwrap();
+        let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
         assert_eq!(p.len(), 3);
         assert!(p.trailing_punct());
     }
@@ -852,7 +853,7 @@ mod tests {
     fn parse_terminated_empty() {
         let ts = parse_stream("");
         let mut ps = ts.parse();
-        let p: Punctuated<Ident, Punct> = Punctuated::parse_terminated(&mut ps).unwrap();
+        let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
         assert!(p.is_empty());
     }
 
@@ -861,7 +862,7 @@ mod tests {
         // "a , b c" — stops after "b" when next token is ident not punct
         let ts = parse_stream("a , b c");
         let mut ps = ts.parse();
-        let p: Punctuated<Ident, Punct> = Punctuated::parse_separated_nonempty(&mut ps).unwrap();
+        let p: Punctuated<Ident, Comma> = Punctuated::parse_separated_nonempty(&mut ps).unwrap();
         assert_eq!(p.len(), 2);
         // "c" should remain in stream
         assert!(!ps.is_empty());
@@ -871,7 +872,7 @@ mod tests {
     fn to_tokens_roundtrip() {
         let ts = parse_stream("a , b , c");
         let mut ps = ts.parse();
-        let p: Punctuated<Ident, Punct> = Punctuated::parse_terminated(&mut ps).unwrap();
+        let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
         let out = p.to_token_stream();
         // TokenStream::to_string compacts whitespace; verify token count and structure
         assert_eq!(out.len(), 5); // a , b , c
@@ -880,13 +881,13 @@ mod tests {
 
     #[test]
     fn len_is_empty_trailing_punct() {
-        let mut p: Punctuated<Ident, Punct> = Punctuated::new();
+        let mut p: Punctuated<Ident, Comma> = Punctuated::new();
         assert!(p.is_empty());
         assert_eq!(p.len(), 0);
         p.push_value(Ident::new("a", Span::default()));
         assert_eq!(p.len(), 1);
         assert!(!p.trailing_punct());
-        p.push_punct(Punct::new(',', Spacing::Alone));
+        p.push_punct(Comma::default());
         assert_eq!(p.len(), 1);
         assert!(p.trailing_punct());
         p.push_value(Ident::new("b", Span::default()));
@@ -898,7 +899,7 @@ mod tests {
     fn iter_yields_values_in_order() {
         let ts = parse_stream("a , b , c");
         let mut ps = ts.parse();
-        let p: Punctuated<Ident, Punct> = Punctuated::parse_terminated(&mut ps).unwrap();
+        let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
         let names: Vec<_> = p.iter().map(|id| id.name().as_ref().to_owned()).collect();
         assert_eq!(names, vec!["a", "b", "c"]);
     }
@@ -907,7 +908,7 @@ mod tests {
     fn pairs_yields_correct_variants() {
         let ts = parse_stream("a , b , c");
         let mut ps = ts.parse();
-        let p: Punctuated<Ident, Punct> = Punctuated::parse_terminated(&mut ps).unwrap();
+        let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
         let pairs: Vec<_> = p.pairs().collect();
         assert_eq!(pairs.len(), 3);
         assert!(matches!(pairs[0], Pair::Punctuated(_, _)));
@@ -917,9 +918,9 @@ mod tests {
 
     #[test]
     fn pop_and_pop_punct() {
-        let mut p: Punctuated<Ident, Punct> = Punctuated::new();
+        let mut p: Punctuated<Ident, Comma> = Punctuated::new();
         p.push_value(Ident::new("a", Span::default()));
-        p.push_punct(Punct::new(',', Spacing::Alone));
+        p.push_punct(Comma::default());
         p.push_value(Ident::new("b", Span::default()));
 
         // pop trailing value
@@ -930,7 +931,7 @@ mod tests {
 
         // pop trailing punct
         let punct = p.pop_punct().unwrap();
-        assert_eq!(punct.as_char(), ',');
+        assert_eq!(punct.as_str(), ",");
         assert!(!p.trailing_punct());
         assert_eq!(p.len(), 1);
     }
@@ -939,7 +940,7 @@ mod tests {
     fn index() {
         let ts = parse_stream("a , b , c");
         let mut ps = ts.parse();
-        let p: Punctuated<Ident, Punct> = Punctuated::parse_terminated(&mut ps).unwrap();
+        let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
         assert_eq!(p[0].name().as_ref(), "a");
         assert_eq!(p[1].name().as_ref(), "b");
         assert_eq!(p[2].name().as_ref(), "c");

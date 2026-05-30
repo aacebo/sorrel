@@ -150,6 +150,7 @@ define_delim! {
 #[cfg(test)]
 mod delim_token_tests {
     use super::*;
+    use crate::token::ToTokenStream;
     use std::str::FromStr;
 
     #[test]

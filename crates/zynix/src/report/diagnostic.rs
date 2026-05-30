@@ -1,5 +1,5 @@
 use crate::report::Level;
-use crate::token::ToTokens;
+use crate::token::{ToTokenStream, ToTokens};
 use crate::{Span, TokenStream};
 
 #[derive(Debug, Clone)]

@@ -74,17 +74,22 @@ impl IntoIterator for TokenStream {
 
 impl From<proc_macro::TokenStream> for TokenStream {
     fn from(value: proc_macro::TokenStream) -> Self {
-        Self(value.into_iter().map(TokenTree::from).collect())
+        let mut sink = crate::TokenStream::Fallback(Self::new());
+        value.to_tokens(&mut sink);
+        match sink {
+            crate::TokenStream::Fallback(fb) => fb,
+            crate::TokenStream::Compiler(_) => unreachable!(),
+        }
     }
 }
 
 impl From<TokenStream> for proc_macro::TokenStream {
     fn from(value: TokenStream) -> Self {
-        value
-            .0
-            .into_iter()
-            .map(proc_macro::TokenTree::from)
-            .collect()
+        let mut out = proc_macro::TokenStream::new();
+        for t in value.0 {
+            t.to_tokens(&mut out);
+        }
+        out
     }
 }
 
@@ -132,8 +137,9 @@ impl crate::token::lex::Scan for TokenStream {
                 continue;
             }
 
-            if let Ok((next, punct)) = super::Punct::scan(c) {
-                tokens.push(crate::token::Punct::Fallback(punct).into());
+            if let Ok((next, op)) = <crate::token::Punctuation as crate::token::lex::Scan>::scan(c)
+            {
+                tokens.push(crate::token::Token::Punct(op).into());
                 c = next;
                 continue;
             }
@@ -180,21 +186,17 @@ impl serde::Serialize for TokenStream {
 
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use crate::token::{Spacing, Token};
-
+        // Operators are whole tokens that render glued internally (`::`, `==`),
+        // so top-level tokens are simply space-separated. Groups hug their own
+        // delimiters.
         let mut first = true;
-        let mut glue_next = false;
 
         for tt in self.0.iter() {
-            if !first && !glue_next {
+            if !first {
                 write!(f, " ")?;
             }
 
             write!(f, "{}", tt)?;
-            glue_next = matches!(
-                tt,
-                TokenTree::Token(Token::Punct(p)) if p.spacing() == Spacing::Joint
-            );
             first = false;
         }
 

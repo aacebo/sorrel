@@ -2,7 +2,6 @@ pub mod delim;
 pub(crate) mod fallback;
 mod group;
 mod ident;
-mod iter;
 pub mod keyword;
 pub mod lex;
 mod literal;
@@ -14,7 +13,6 @@ mod underscore;
 pub use delim::*;
 pub use group::*;
 pub use ident::*;
-pub use iter::*;
 pub use keyword::*;
 pub use lex::{LexError, Scan};
 pub use literal::*;
@@ -25,9 +23,11 @@ pub use underscore::*;
 
 use crate::Span;
 
-pub trait ToTokens {
-    fn to_tokens(&self, tokens: &mut TokenStream);
+pub trait ToTokens<T = TokenStream> {
+    fn to_tokens(&self, tokens: &mut T);
+}
 
+pub trait ToTokenStream: ToTokens<TokenStream> {
     fn to_token_stream(&self) -> TokenStream {
         let mut tokens = TokenStream::new();
         self.to_tokens(&mut tokens);
@@ -42,10 +42,12 @@ pub trait ToTokens {
     }
 }
 
+impl<X: ToTokens<TokenStream> + ?Sized> ToTokenStream for X {}
+
 #[derive(Debug, Clone)]
 pub enum Token {
     Ident(Ident),
-    Punct(Punct),
+    Punct(Punctuation),
     Literal(Literal),
 }
 
@@ -79,8 +81,8 @@ impl From<Ident> for Token {
     }
 }
 
-impl From<Punct> for Token {
-    fn from(value: Punct) -> Self {
+impl From<Punctuation> for Token {
+    fn from(value: Punctuation) -> Self {
         Self::Punct(value)
     }
 }
@@ -147,8 +149,8 @@ impl From<Ident> for TokenTree {
     }
 }
 
-impl From<Punct> for TokenTree {
-    fn from(value: Punct) -> Self {
+impl From<Punctuation> for TokenTree {
+    fn from(value: Punctuation) -> Self {
         Self::Token(Token::from(value))
     }
 }
@@ -165,24 +167,103 @@ impl From<Group> for TokenTree {
     }
 }
 
-impl From<proc_macro::TokenTree> for TokenTree {
-    fn from(value: proc_macro::TokenTree) -> Self {
-        match value {
-            proc_macro::TokenTree::Ident(v) => Self::Token(Token::Ident(v.into())),
-            proc_macro::TokenTree::Punct(v) => Self::Token(Token::Punct(v.into())),
-            proc_macro::TokenTree::Literal(v) => Self::Token(Token::Literal(v.into())),
-            proc_macro::TokenTree::Group(v) => Self::Group(v.into()),
+impl ToTokens<TokenStream> for proc_macro::TokenTree {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            proc_macro::TokenTree::Ident(v) => {
+                tokens.extend_one(Token::Ident(Ident::Compiler(v.clone())).into())
+            }
+            proc_macro::TokenTree::Literal(v) => {
+                tokens.extend_one(Token::Literal(Literal::Compiler(v.clone())).into())
+            }
+            proc_macro::TokenTree::Group(v) => {
+                tokens.extend_one(TokenTree::Group(Group::Compiler(v.clone())))
+            }
+            proc_macro::TokenTree::Punct(p) => scan_puncts(&p.to_string(), tokens),
         }
     }
 }
 
-impl From<TokenTree> for proc_macro::TokenTree {
-    fn from(value: TokenTree) -> Self {
-        match value {
-            TokenTree::Token(Token::Ident(v)) => Self::Ident(v.into()),
-            TokenTree::Token(Token::Punct(v)) => Self::Punct(v.into()),
-            TokenTree::Token(Token::Literal(v)) => Self::Literal(v.into()),
-            TokenTree::Group(v) => Self::Group(v.into()),
+impl ToTokens<TokenStream> for proc_macro::TokenStream {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let mut punct_buf = String::new();
+
+        for tt in self.clone() {
+            match tt {
+                proc_macro::TokenTree::Punct(p) => punct_buf.push(p.as_char()),
+                other => {
+                    if !punct_buf.is_empty() {
+                        scan_puncts(&punct_buf, tokens);
+                        punct_buf.clear();
+                    }
+                    other.to_tokens(tokens);
+                }
+            }
+        }
+
+        if !punct_buf.is_empty() {
+            scan_puncts(&punct_buf, tokens);
+        }
+    }
+}
+
+impl ToTokens<proc_macro::TokenStream> for TokenTree {
+    fn to_tokens(&self, out: &mut proc_macro::TokenStream) {
+        match self {
+            TokenTree::Group(g) => out.extend_one(proc_macro::TokenTree::Group(g.clone().into())),
+            TokenTree::Token(Token::Ident(v)) => {
+                out.extend_one(proc_macro::TokenTree::Ident(v.clone().into()))
+            }
+            TokenTree::Token(Token::Literal(v)) => {
+                out.extend_one(proc_macro::TokenTree::Literal(v.clone().into()))
+            }
+            TokenTree::Token(Token::Punct(op)) => {
+                let text = op.as_str();
+                let span: proc_macro::Span = op.span().into();
+                let last = text.chars().count() - 1;
+
+                for (i, ch) in text.chars().enumerate() {
+                    let spacing = if i == last {
+                        proc_macro::Spacing::Alone
+                    } else {
+                        proc_macro::Spacing::Joint
+                    };
+                    let mut p = proc_macro::Punct::new(ch, spacing);
+                    p.set_span(span);
+                    out.extend_one(proc_macro::TokenTree::Punct(p));
+                }
+            }
+        }
+    }
+}
+
+impl ToTokens<proc_macro::TokenStream> for TokenStream {
+    fn to_tokens(&self, out: &mut proc_macro::TokenStream) {
+        match self {
+            Self::Compiler(v) => out.extend(v.clone()),
+            Self::Fallback(v) => {
+                for t in v.iter() {
+                    t.to_tokens(out);
+                }
+            }
+        }
+    }
+}
+
+fn scan_puncts(s: &str, tokens: &mut TokenStream) {
+    use crate::source::SourceMap;
+    use crate::token::lex::{Cursor, Scan};
+
+    let span = SourceMap::with_mut(|sm| sm.push(s));
+    let mut cursor = Cursor::new(s, span.byte_range().start as u32);
+
+    while !cursor.is_empty() {
+        match <Punctuation as Scan>::scan(cursor) {
+            Ok((next, op)) => {
+                tokens.extend_one(Token::Punct(op).into());
+                cursor = next;
+            }
+            Err(_) => break,
         }
     }
 }
@@ -267,29 +348,27 @@ mod tests {
         assert_eq!(back.name().as_ref(), "bar");
     }
 
-    // --- Punct ---
+    // --- Punct (operators) ---
 
     #[test]
-    fn punct_new_and_accessors() {
-        let p = Punct::new('+', Spacing::Alone);
-        assert_eq!(p.as_char(), '+');
-        assert_eq!(p.spacing(), Spacing::Alone);
+    fn op_as_str() {
+        use crate::token::punct::{Plus, Semi};
+        assert_eq!(Plus::default().as_str(), "+");
+        assert_eq!(Semi::default().as_str(), ";");
     }
 
     #[test]
-    fn punct_display() {
-        let p = Punct::new(';', Spacing::Alone);
-        assert_eq!(format!("{}", p), ";");
+    fn op_display() {
+        use crate::token::punct::{EqEq, Semi};
+        assert_eq!(format!("{}", Semi::default()), ";");
+        assert_eq!(format!("{}", EqEq::default()), "==");
     }
 
     #[test]
-    fn punct_fallback_roundtrip() {
-        let p = Punct::new('!', Spacing::Joint);
-        let fb: fallback::Punct = p.clone().into();
-        assert_eq!(fb.as_char(), '!');
-        assert_eq!(fb.spacing(), Spacing::Joint);
-        let back: Punct = fb.into();
-        assert_eq!(back.as_char(), '!');
+    fn op_is_a_token() {
+        use crate::token::punct::Plus;
+        let t: Token = Punctuation::from(Plus::default()).into();
+        assert!(matches!(t, Token::Punct(Punctuation::Plus(_))));
     }
 
     // --- Literal ---
@@ -353,7 +432,7 @@ mod tests {
     fn token_stream_iter() {
         let mut ts = TokenStream::new();
         ts.extend_one(Ident::new("x", Span::default()).into());
-        ts.extend_one(Punct::new('+', Spacing::Alone).into());
+        ts.extend_one(Punctuation::from(crate::token::punct::Plus::default()).into());
         let count = ts.iter().count();
         assert_eq!(count, 2);
     }
@@ -385,7 +464,7 @@ mod tests {
 
     #[test]
     fn token_from_punct() {
-        let t: Token = Punct::new('+', Spacing::Alone).into();
+        let t: Token = Punctuation::from(crate::token::punct::Plus::default()).into();
         assert!(matches!(t, Token::Punct(_)));
     }
 

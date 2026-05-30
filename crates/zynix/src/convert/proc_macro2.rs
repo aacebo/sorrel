@@ -1,5 +1,5 @@
 use crate::parse::ParseError;
-use crate::token::{Delim, Group, Ident, Literal, Punct, Spacing};
+use crate::token::{Delim, Group, Ident, Literal, Punctuation, Spacing, ToTokens};
 use crate::{Span, Token, TokenStream, TokenTree};
 
 // --- LexError ---
@@ -87,25 +87,6 @@ impl From<Ident> for proc_macro2::Ident {
     }
 }
 
-// --- Punct ---
-
-impl From<proc_macro2::Punct> for Punct {
-    fn from(value: proc_macro2::Punct) -> Self {
-        let span: Span = value.span().into();
-        Self::Fallback(crate::token::fallback::Punct {
-            ch: value.as_char(),
-            spacing: value.spacing().into(),
-            span,
-        })
-    }
-}
-
-impl From<Punct> for proc_macro2::Punct {
-    fn from(value: Punct) -> Self {
-        proc_macro2::Punct::new(value.as_char(), value.spacing().into())
-    }
-}
-
 // --- Literal ---
 
 impl From<proc_macro2::Literal> for Literal {
@@ -130,59 +111,170 @@ impl From<Literal> for proc_macro2::Literal {
 
 impl From<proc_macro2::Group> for Group {
     fn from(value: proc_macro2::Group) -> Self {
-        Self::new(value.delimiter().into(), value.stream().into())
+        let mut inner = TokenStream::Fallback(crate::token::fallback::TokenStream::new());
+        value.stream().to_tokens(&mut inner);
+        Self::new(value.delimiter().into(), inner)
     }
 }
 
 impl From<Group> for proc_macro2::Group {
     fn from(value: Group) -> Self {
         let delim: proc_macro2::Delimiter = value.delim().into();
-        let stream: proc_macro2::TokenStream = value
-            .stream()
-            .into_iter()
-            .map(proc_macro2::TokenTree::from)
-            .collect();
+        let mut stream = proc_macro2::TokenStream::new();
+        value.stream().to_tokens(&mut stream);
         proc_macro2::Group::new(delim, stream)
-    }
-}
-
-// --- TokenTree ---
-
-impl From<proc_macro2::TokenTree> for TokenTree {
-    fn from(value: proc_macro2::TokenTree) -> Self {
-        match value {
-            proc_macro2::TokenTree::Ident(v) => Self::Token(Token::Ident(v.into())),
-            proc_macro2::TokenTree::Punct(v) => Self::Token(Token::Punct(v.into())),
-            proc_macro2::TokenTree::Literal(v) => Self::Token(Token::Literal(v.into())),
-            proc_macro2::TokenTree::Group(v) => Self::Group(v.into()),
-        }
-    }
-}
-
-impl From<TokenTree> for proc_macro2::TokenTree {
-    fn from(value: TokenTree) -> Self {
-        match value {
-            TokenTree::Token(Token::Ident(v)) => proc_macro2::TokenTree::Ident(v.into()),
-            TokenTree::Token(Token::Punct(v)) => proc_macro2::TokenTree::Punct(v.into()),
-            TokenTree::Token(Token::Literal(v)) => proc_macro2::TokenTree::Literal(v.into()),
-            TokenTree::Group(v) => proc_macro2::TokenTree::Group(v.into()),
-        }
     }
 }
 
 // --- TokenStream ---
 
+impl ToTokens<TokenStream> for proc_macro2::TokenStream {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let mut punct_buf = String::new();
+
+        for tt in self.clone() {
+            match tt {
+                proc_macro2::TokenTree::Punct(p) => punct_buf.push(p.as_char()),
+                other => {
+                    if !punct_buf.is_empty() {
+                        scan_puncts(&punct_buf, tokens);
+                        punct_buf.clear();
+                    }
+                    match other {
+                        proc_macro2::TokenTree::Ident(v) => {
+                            tokens.extend_one(Token::Ident(v.into()).into())
+                        }
+                        proc_macro2::TokenTree::Literal(v) => {
+                            tokens.extend_one(Token::Literal(v.into()).into())
+                        }
+                        proc_macro2::TokenTree::Group(v) => {
+                            tokens.extend_one(TokenTree::Group(v.into()))
+                        }
+                        proc_macro2::TokenTree::Punct(_) => unreachable!(),
+                    }
+                }
+            }
+        }
+
+        if !punct_buf.is_empty() {
+            scan_puncts(&punct_buf, tokens);
+        }
+    }
+}
+
+fn scan_puncts(s: &str, tokens: &mut TokenStream) {
+    use crate::source::SourceMap;
+    use crate::token::lex::{Cursor, Scan};
+
+    let span = SourceMap::with_mut(|sm| sm.push(s));
+    let mut cursor = Cursor::new(s, span.byte_range().start as u32);
+
+    while !cursor.is_empty() {
+        match <Punctuation as Scan>::scan(cursor) {
+            Ok((next, op)) => {
+                tokens.extend_one(Token::Punct(op).into());
+                cursor = next;
+            }
+            Err(_) => break,
+        }
+    }
+}
+
+impl ToTokens<proc_macro2::TokenStream> for TokenTree {
+    fn to_tokens(&self, out: &mut proc_macro2::TokenStream) {
+        match self {
+            TokenTree::Group(g) => out.extend([proc_macro2::TokenTree::Group(g.clone().into())]),
+            TokenTree::Token(Token::Ident(v)) => {
+                out.extend([proc_macro2::TokenTree::Ident(v.clone().into())])
+            }
+            TokenTree::Token(Token::Literal(v)) => {
+                out.extend([proc_macro2::TokenTree::Literal(v.clone().into())])
+            }
+            TokenTree::Token(Token::Punct(op)) => {
+                let text = op.as_str();
+                let last = text.chars().count() - 1;
+
+                for (i, ch) in text.chars().enumerate() {
+                    let spacing = if i == last {
+                        proc_macro2::Spacing::Alone
+                    } else {
+                        proc_macro2::Spacing::Joint
+                    };
+                    out.extend([proc_macro2::TokenTree::Punct(proc_macro2::Punct::new(
+                        ch, spacing,
+                    ))]);
+                }
+            }
+        }
+    }
+}
+
+impl ToTokens<proc_macro2::TokenStream> for TokenStream {
+    fn to_tokens(&self, out: &mut proc_macro2::TokenStream) {
+        for t in Vec::<TokenTree>::from(self.clone()) {
+            t.to_tokens(out);
+        }
+    }
+}
+
 impl From<proc_macro2::TokenStream> for TokenStream {
     fn from(stream: proc_macro2::TokenStream) -> Self {
-        Self::Fallback(stream.into_iter().map(TokenTree::from).collect())
+        let mut out = Self::Fallback(crate::token::fallback::TokenStream::new());
+        stream.to_tokens(&mut out);
+        out
     }
 }
 
 impl From<TokenStream> for proc_macro2::TokenStream {
     fn from(stream: TokenStream) -> Self {
-        stream
+        let mut out = proc_macro2::TokenStream::new();
+        stream.to_tokens(&mut out);
+        out
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::TokenStream;
+    use crate::token::{Punctuation, Token, TokenTree};
+    use std::str::FromStr;
+
+    #[test]
+    fn coalesces_joint_puncts_inbound() {
+        // proc-macro2 lexes `==` as two joint single-char puncts; bringing the
+        // stream in must recover one whole `EqEq`.
+        let pm2: proc_macro2::TokenStream = "a == b".parse().unwrap();
+        let ours: TokenStream = pm2.into();
+        let trees: Vec<TokenTree> = ours.into_iter().collect();
+        assert!(matches!(
+            trees[1],
+            TokenTree::Token(Token::Punct(Punctuation::EqEq(_)))
+        ));
+    }
+
+    #[test]
+    fn expands_ops_outbound() {
+        // Our whole `EqEq` expands back to two proc-macro2 puncts.
+        let ours = TokenStream::from_str("==").unwrap();
+        let pm2: proc_macro2::TokenStream = ours.into();
+        let puncts = pm2
             .into_iter()
-            .map(proc_macro2::TokenTree::from)
-            .collect()
+            .filter(|t| matches!(t, proc_macro2::TokenTree::Punct(_)))
+            .count();
+        assert_eq!(puncts, 2);
+    }
+
+    #[test]
+    fn roundtrips_through_pm2() {
+        for src in ["a == b => c", "x :: y", "a >> b", "foo(1, 2)", "let _ = x;"] {
+            let pm2: proc_macro2::TokenStream = src.parse().unwrap();
+            let ours: TokenStream = pm2.clone().into();
+            let back: proc_macro2::TokenStream = ours.into();
+            assert_eq!(
+                pm2.to_string(),
+                back.to_string(),
+                "boundary not stable for {src:?}"
+            );
+        }
     }
 }
