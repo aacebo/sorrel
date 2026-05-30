@@ -132,7 +132,12 @@ impl crate::token::lex::Scan for TokenStream {
             }
 
             if let Ok((next, ident)) = super::Ident::scan(c) {
-                tokens.push(crate::token::Ident::Fallback(ident).into());
+                let token =
+                    match crate::token::Keyword::from_str(ident.name().as_ref(), ident.span()) {
+                        Some(kw) => crate::token::Token::Keyword(kw),
+                        None => crate::token::Token::Ident(crate::token::Ident::Fallback(ident)),
+                    };
+                tokens.push(token.into());
                 c = next;
                 continue;
             }
@@ -186,9 +191,6 @@ impl serde::Serialize for TokenStream {
 
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // Operators are whole tokens that render glued internally (`::`, `==`),
-        // so top-level tokens are simply space-separated. Groups hug their own
-        // delimiters.
         let mut first = true;
 
         for tt in self.0.iter() {

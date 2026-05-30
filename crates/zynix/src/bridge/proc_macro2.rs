@@ -1,5 +1,5 @@
 use crate::parse::ParseError;
-use crate::token::{Delim, Group, Ident, Literal, Punctuation, Spacing, ToTokens};
+use crate::token::{Delim, Group, Ident, Keyword, Literal, Punctuation, Spacing, ToTokens};
 use crate::{Span, Token, TokenStream, TokenTree};
 
 // --- LexError ---
@@ -142,7 +142,12 @@ impl ToTokens<TokenStream> for proc_macro2::TokenStream {
                     }
                     match other {
                         proc_macro2::TokenTree::Ident(v) => {
-                            tokens.extend_one(Token::Ident(v.into()).into())
+                            let span: Span = v.span().into();
+                            let token = match Keyword::from_str(&v.to_string(), span) {
+                                Some(kw) => Token::Keyword(kw),
+                                None => Token::Ident(v.into()),
+                            };
+                            tokens.extend_one(token.into())
                         }
                         proc_macro2::TokenTree::Literal(v) => {
                             tokens.extend_one(Token::Literal(v.into()).into())
@@ -186,6 +191,10 @@ impl ToTokens<proc_macro2::TokenStream> for TokenTree {
             TokenTree::Group(g) => out.extend([proc_macro2::TokenTree::Group(g.clone().into())]),
             TokenTree::Token(Token::Ident(v)) => {
                 out.extend([proc_macro2::TokenTree::Ident(v.clone().into())])
+            }
+            TokenTree::Token(Token::Keyword(kw)) => {
+                let id = proc_macro2::Ident::new(kw.as_str(), proc_macro2::Span::call_site());
+                out.extend([proc_macro2::TokenTree::Ident(id)])
             }
             TokenTree::Token(Token::Literal(v)) => {
                 out.extend([proc_macro2::TokenTree::Literal(v.clone().into())])
@@ -241,8 +250,6 @@ mod tests {
 
     #[test]
     fn coalesces_joint_puncts_inbound() {
-        // proc-macro2 lexes `==` as two joint single-char puncts; bringing the
-        // stream in must recover one whole `EqEq`.
         let pm2: proc_macro2::TokenStream = "a == b".parse().unwrap();
         let ours: TokenStream = pm2.into();
         let trees: Vec<TokenTree> = ours.into_iter().collect();
@@ -254,7 +261,6 @@ mod tests {
 
     #[test]
     fn expands_ops_outbound() {
-        // Our whole `EqEq` expands back to two proc-macro2 puncts.
         let ours = TokenStream::from_str("==").unwrap();
         let pm2: proc_macro2::TokenStream = ours.into();
         let puncts = pm2
@@ -267,7 +273,6 @@ mod tests {
     #[test]
     fn roundtrips_through_pm2() {
         let cases = [
-            // multi-char ops, incl. 3-char and angle brackets
             "a == b => c",
             "x :: y",
             "a >> b",
@@ -275,16 +280,13 @@ mod tests {
             "x ..= y",
             "Vec<Vec<T>>",
             "a::b::<T>()",
-            // nested groups
             "a(b(c))",
             "fn f(x: Vec<(A, B)>) { g([1, 2]) }",
-            // literals
             "\"hello\"",
             "'c'",
             "42u8",
             "3.14",
             "b\"bytes\"",
-            // keywords / idents / underscore
             "pub fn foo() -> Self",
             "let _ = &mut x",
         ];
@@ -292,23 +294,15 @@ mod tests {
         for src in cases {
             let pm2: proc_macro2::TokenStream = src.parse().unwrap();
 
-            // First crossing: proc_macro2 -> ours -> proc_macro2.
             let once: proc_macro2::TokenStream = TokenStream::from(pm2.clone()).into();
-            // Second crossing of that result.
             let twice: proc_macro2::TokenStream = TokenStream::from(once.clone()).into();
 
-            // Our puncts are whole, exact-size operators, so the only thing a
-            // round-trip can vary is inter-token whitespace in `to_string()`
-            // (e.g. a turbofish renders `::<` vs `:: <`) — cosmetic, not
-            // semantic. The invariant is that the bridge reaches a fixed point:
-            // a second crossing changes nothing.
             assert_eq!(
                 once.to_string(),
                 twice.to_string(),
                 "boundary not idempotent for {src:?}"
             );
 
-            // And the round-tripped stream must re-parse without error.
             assert!(
                 once.to_string().parse::<proc_macro2::TokenStream>().is_ok(),
                 "round-tripped stream not reparseable for {src:?}"
@@ -318,8 +312,6 @@ mod tests {
 
     #[test]
     fn nested_groups_preserve_structure_inbound() {
-        // `to_string()` equality alone wouldn't catch a flattened group, so
-        // assert the recursion explicitly: outer group contains an inner group.
         let pm2: proc_macro2::TokenStream = "a(b(c))".parse().unwrap();
         let ours: TokenStream = pm2.into();
         let trees: Vec<TokenTree> = ours.into_iter().collect();

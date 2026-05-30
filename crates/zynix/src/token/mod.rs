@@ -8,7 +8,6 @@ mod literal;
 pub mod punct;
 mod spacing;
 mod stream;
-mod underscore;
 
 pub use delim::*;
 pub use group::*;
@@ -19,7 +18,6 @@ pub use literal::*;
 pub use punct::*;
 pub use spacing::*;
 pub use stream::*;
-pub use underscore::*;
 
 use crate::Span;
 
@@ -47,6 +45,7 @@ impl<X: ToTokens<TokenStream> + ?Sized> ToTokenStream for X {}
 #[derive(Debug, Clone)]
 pub enum Token {
     Ident(Ident),
+    Keyword(Keyword),
     Punct(Punctuation),
     Literal(Literal),
 }
@@ -59,6 +58,7 @@ impl serde::Serialize for Token {
     {
         match self {
             Self::Ident(v) => v.serialize(s),
+            Self::Keyword(v) => v.serialize(s),
             Self::Punct(v) => v.serialize(s),
             Self::Literal(v) => v.serialize(s),
         }
@@ -69,6 +69,7 @@ impl Token {
     pub fn span(&self) -> Span {
         match self {
             Self::Ident(v) => v.span(),
+            Self::Keyword(v) => v.span(),
             Self::Punct(v) => v.span(),
             Self::Literal(v) => v.span(),
         }
@@ -78,6 +79,12 @@ impl Token {
 impl From<Ident> for Token {
     fn from(value: Ident) -> Self {
         Self::Ident(value)
+    }
+}
+
+impl From<Keyword> for Token {
+    fn from(value: Keyword) -> Self {
+        Self::Keyword(value)
     }
 }
 
@@ -97,6 +104,7 @@ impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Ident(v) => write!(f, "{}", v),
+            Self::Keyword(v) => write!(f, "{}", v),
             Self::Punct(v) => write!(f, "{}", v),
             Self::Literal(v) => write!(f, "{}", v),
         }
@@ -149,6 +157,12 @@ impl From<Ident> for TokenTree {
     }
 }
 
+impl From<Keyword> for TokenTree {
+    fn from(value: Keyword) -> Self {
+        Self::Token(Token::from(value))
+    }
+}
+
 impl From<Punctuation> for TokenTree {
     fn from(value: Punctuation) -> Self {
         Self::Token(Token::from(value))
@@ -171,7 +185,11 @@ impl ToTokens<TokenStream> for proc_macro::TokenTree {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             proc_macro::TokenTree::Ident(v) => {
-                tokens.extend_one(Token::Ident(Ident::Compiler(v.clone())).into())
+                let token = match Keyword::from_str(&v.to_string(), v.span().into()) {
+                    Some(kw) => Token::Keyword(kw),
+                    None => Token::Ident(Ident::Compiler(v.clone())),
+                };
+                tokens.extend_one(token.into())
             }
             proc_macro::TokenTree::Literal(v) => {
                 tokens.extend_one(Token::Literal(Literal::Compiler(v.clone())).into())
@@ -213,6 +231,10 @@ impl ToTokens<proc_macro::TokenStream> for TokenTree {
             TokenTree::Group(g) => out.extend_one(proc_macro::TokenTree::Group(g.clone().into())),
             TokenTree::Token(Token::Ident(v)) => {
                 out.extend_one(proc_macro::TokenTree::Ident(v.clone().into()))
+            }
+            TokenTree::Token(Token::Keyword(kw)) => {
+                let id = proc_macro::Ident::new(kw.as_str(), kw.span().into());
+                out.extend_one(proc_macro::TokenTree::Ident(id))
             }
             TokenTree::Token(Token::Literal(v)) => {
                 out.extend_one(proc_macro::TokenTree::Literal(v.clone().into()))

@@ -1,5 +1,5 @@
-use super::lex::LexError;
-use super::{Ident, ToTokens};
+use super::ToTokens;
+use super::lex::{Cursor, LexError, Scan};
 use crate::parse::{ParseError, ParseStream};
 use crate::{Parse, Span, Token, TokenStream, TokenTree};
 
@@ -36,6 +36,24 @@ macro_rules! define_keyword {
             pub fn set_span(&mut self, span: Span) {
                 match self {
                     $(Self::$name(v) => v.set_span(span),)*
+                }
+            }
+
+            pub fn from_str(text: &str, span: Span) -> Option<Self> {
+                match text {
+                    $($text => Some(Self::$name($name::new(span))),)*
+                    _ => None,
+                }
+            }
+        }
+
+        impl Scan for Keyword {
+            fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
+                let (end, id) = super::fallback::Ident::scan(cursor)?;
+
+                match id.name().as_ref() {
+                    $($text => Ok((end, Self::$name($name::new(id.span())))),)*
+                    _ => cursor.error().into(),
                 }
             }
         }
@@ -98,13 +116,25 @@ macro_rules! define_keyword {
                 }
             }
 
+            impl Scan for $name {
+                fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
+                    let (end, id) = super::fallback::Ident::scan(cursor)?;
+
+                    if id.name().as_ref() == $text {
+                        Ok((end, Self::new(id.span())))
+                    } else {
+                        cursor.error().into()
+                    }
+                }
+            }
+
             impl Parse for $name {
                 fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
                     let at = stream.span();
 
                     match stream.advance() {
-                        Some(TokenTree::Token(Token::Ident(id))) if id.name().as_ref() == $text => {
-                            Ok(Self::new(id.span()))
+                        Some(TokenTree::Token(Token::Keyword(Keyword::$name(kw)))) => {
+                            Ok(Self::new(kw.span()))
                         }
                         _ => Err(LexError::new(at)
                             .message(concat!("expected `", $text, "`"))
@@ -115,7 +145,7 @@ macro_rules! define_keyword {
 
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
-                    tokens.extend_one(Ident::new($text, self.span).into());
+                    tokens.extend_one(Token::Keyword(Keyword::$name(*self)).into());
                 }
             }
 
@@ -202,6 +232,33 @@ mod tests {
         let ts = TokenStream::from_str("foo").unwrap();
         let mut ps = ts.parse();
         assert!(ps.parse::<Fn>().is_err());
+    }
+
+    #[test]
+    fn lexer_classifies_keywords_word_boundary() {
+        fn first(src: &str) -> TokenTree {
+            TokenStream::from_str(src)
+                .unwrap()
+                .into_iter()
+                .next()
+                .unwrap()
+        }
+
+        fn assert_ident(tree: TokenTree, name: &str) {
+            let TokenTree::Token(Token::Ident(id)) = tree else {
+                panic!("expected an ident");
+            };
+            assert_eq!(id.name().as_ref(), name);
+        }
+
+        assert!(matches!(
+            first("fn"),
+            TokenTree::Token(Token::Keyword(Keyword::Fn(_)))
+        ));
+
+        assert_ident(first("fnord"), "fnord");
+        assert_ident(first("_"), "_");
+        assert_ident(first("r#fn"), "r#fn");
     }
 
     #[test]

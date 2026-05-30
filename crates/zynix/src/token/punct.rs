@@ -58,8 +58,6 @@ macro_rules! define_punct {
 
         impl Scan for Punctuation {
             fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-                // Maximal munch: try every operator and keep the one that
-                // consumes the most characters (so `==` beats `=`).
                 let mut best: Option<(Cursor<'_>, Self)> = None;
 
                 $(
@@ -216,7 +214,7 @@ define_punct! {
 mod tests {
     use super::*;
     use crate::TokenStream;
-    use crate::token::{ToTokenStream, Underscore};
+    use crate::token::ToTokenStream;
     use std::str::FromStr;
 
     #[test]
@@ -323,10 +321,19 @@ mod tests {
     }
 
     #[test]
-    fn underscore_parses() {
+    fn underscore_lexes_as_ident() {
+        use crate::token::Ident;
+
+        let ts = TokenStream::from_str("_").unwrap();
+        let tree = ts.into_iter().next().unwrap();
+        let TokenTree::Token(Token::Ident(id)) = tree else {
+            panic!("expected `_` to lex as an ident");
+        };
+        assert_eq!(id.name().as_ref(), "_");
+
         let ts = TokenStream::from_str("_").unwrap();
         let mut ps = ts.parse();
-        assert!(ps.parse::<Underscore>().is_ok());
+        assert!(ps.parse::<Ident>().is_ok());
     }
 
     #[test]
@@ -334,7 +341,6 @@ mod tests {
         assert_eq!(format!("{}", Comma::default()), ",");
         assert_eq!(format!("{}", EqEq::default()), "==");
         assert_eq!(format!("{}", DotDotEq::default()), "..=");
-        assert_eq!(format!("{}", Underscore::default()), "_");
     }
 
     #[cfg(feature = "serde")]

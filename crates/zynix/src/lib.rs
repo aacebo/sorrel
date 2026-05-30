@@ -11,7 +11,7 @@
 
 extern crate proc_macro;
 
-pub mod convert;
+pub mod bridge;
 pub mod parse;
 pub mod source;
 pub mod span;
