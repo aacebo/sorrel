@@ -1,76 +1,58 @@
-use super::fallback;
-use super::{Delim, ToTokens};
+use crate::Span;
 use crate::TokenStream;
 use crate::span::DelimSpan;
+use crate::token::Delim;
+use crate::token::lex::{Cursor, LexError, Scan};
 
 #[derive(Debug, Clone)]
-pub enum Group {
-    Compiler(proc_macro::Group),
-    Fallback(fallback::Group),
+pub struct Group {
+    pub(crate) delim: Delim,
+    pub(crate) span: DelimSpan,
+    pub(crate) tokens: TokenStream,
 }
 
 impl Group {
     pub fn new(delim: Delim, stream: TokenStream) -> Self {
-        match stream {
-            TokenStream::Compiler(v) => Self::Compiler(proc_macro::Group::new(delim.into(), v)),
-            TokenStream::Fallback(v) => Self::Fallback(fallback::Group::new(delim, v)),
+        Self {
+            delim,
+            span: DelimSpan::new(Span::call_site(), Span::call_site()),
+            tokens: stream,
         }
     }
 
     pub fn delim(&self) -> Delim {
-        match self {
-            Self::Compiler(v) => v.delimiter().into(),
-            Self::Fallback(v) => v.delim(),
-        }
+        self.delim
     }
 
     pub fn span(&self) -> DelimSpan {
-        match self {
-            Self::Compiler(v) => DelimSpan::new(v.span_open().into(), v.span_close().into()),
-            Self::Fallback(v) => v.span(),
-        }
+        self.span
     }
 
     pub fn stream(&self) -> TokenStream {
-        match self {
-            Self::Compiler(v) => v.stream().into(),
-            Self::Fallback(v) => v.stream().into(),
-        }
+        self.tokens.clone()
+    }
+
+    pub fn set_span(&mut self, span: DelimSpan) {
+        self.span = span;
     }
 }
 
 impl From<proc_macro::Group> for Group {
     fn from(value: proc_macro::Group) -> Self {
-        Self::Compiler(value)
+        let mut group = Self::new(value.delimiter().into(), value.stream().into());
+
+        group.set_span(DelimSpan::new(
+            value.span_open().into(),
+            value.span_close().into(),
+        ));
+
+        group
     }
 }
 
 impl From<Group> for proc_macro::Group {
     fn from(value: Group) -> Self {
-        match value {
-            Group::Compiler(v) => v,
-            Group::Fallback(v) => {
-                let span = v.span.span();
-                let mut group = proc_macro::Group::new(v.delim.into(), v.tokens.into());
-                group.set_span(span.into());
-                group
-            }
-        }
-    }
-}
-
-impl From<fallback::Group> for Group {
-    fn from(value: fallback::Group) -> Self {
-        Self::Fallback(value)
-    }
-}
-
-impl From<Group> for fallback::Group {
-    fn from(value: Group) -> Self {
-        match value {
-            Group::Compiler(v) => fallback::Group::new(v.delimiter().into(), v.stream().into()),
-            Group::Fallback(v) => v,
-        }
+        proc_macro::Group::new(value.delim.into(), value.tokens.into())
     }
 }
 
@@ -82,30 +64,62 @@ impl serde::Serialize for Group {
     {
         use serde::ser::SerializeStruct;
 
-        match self {
-            Self::Fallback(v) => v.serialize(s),
-            Self::Compiler(_) => {
-                let mut o = s.serialize_struct("Group", 2)?;
-                o.serialize_field("delim", &self.delim())?;
-                o.serialize_field("tokens", &self.stream())?;
-                o.end()
-            }
-        }
+        let mut o = s.serialize_struct("Group", 2)?;
+        o.serialize_field("delim", &self.delim)?;
+        o.serialize_field("tokens", &self.tokens)?;
+        o.end()
     }
 }
 
 impl std::fmt::Display for Group {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Compiler(v) => write!(f, "{}", v),
-            Self::Fallback(v) => write!(f, "{}", v),
+        match self.delim {
+            Delim::None => write!(f, "{}", &self.tokens),
+            d => write!(f, "{}{}{}", d.open(), &self.tokens, d.close()),
         }
     }
 }
 
-impl ToTokens for Group {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(self.clone().into());
+impl Scan for Group {
+    fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
+        let ch = cursor.first().ok_or(cursor.error())?;
+        let delim = Delim::from_open(ch).ok_or(cursor.error())?;
+        let c = cursor.advance(ch.len_utf8());
+        // Scan inner tokens until matching close delimiter
+        let (c, inner) = TokenStream::scan(c)?;
+        let close_ch = c.first().ok_or_else(|| {
+            cursor
+                .error()
+                .message(format!("unclosed delimiter '{}'", delim.open()))
+        })?;
+
+        let close_delim = Delim::from_close(close_ch).ok_or_else(|| {
+            c.error().message(format!(
+                "expected '{}', found '{}'",
+                delim.close(),
+                close_ch
+            ))
+        })?;
+
+        if delim != close_delim {
+            return Err(c.error().message(format!(
+                "mismatched delimiter: expected '{}', found '{}'",
+                delim.close(),
+                close_ch,
+            )));
+        }
+
+        let c = c.advance(close_ch.len_utf8());
+        let mut group = Self::new(delim, inner);
+        group.set_span(DelimSpan::new(cursor.span(), c.span()));
+
+        Ok((c, group))
+    }
+}
+
+impl crate::token::ToTokens for Group {
+    fn to_tokens(&self, tokens: &mut crate::TokenStream) {
+        tokens.extend_one(crate::TokenTree::Group(self.clone()));
     }
 }
 

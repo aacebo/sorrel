@@ -1,5 +1,4 @@
 pub mod delim;
-pub(crate) mod fallback;
 mod group;
 mod ident;
 pub mod keyword;
@@ -187,15 +186,15 @@ impl ToTokens<TokenStream> for proc_macro::TokenTree {
             proc_macro::TokenTree::Ident(v) => {
                 let token = match Keyword::from_str(&v.to_string(), v.span().into()) {
                     Some(kw) => Token::Keyword(kw),
-                    None => Token::Ident(Ident::Compiler(v.clone())),
+                    None => Token::Ident(v.clone().into()),
                 };
                 tokens.extend_one(token.into())
             }
             proc_macro::TokenTree::Literal(v) => {
-                tokens.extend_one(Token::Literal(Literal::Compiler(v.clone())).into())
+                tokens.extend_one(Token::Literal(v.clone().into()).into())
             }
             proc_macro::TokenTree::Group(v) => {
-                tokens.extend_one(TokenTree::Group(Group::Compiler(v.clone())))
+                tokens.extend_one(TokenTree::Group(v.clone().into()))
             }
             proc_macro::TokenTree::Punct(p) => scan_puncts(&p.to_string(), tokens),
         }
@@ -261,13 +260,8 @@ impl ToTokens<proc_macro::TokenStream> for TokenTree {
 
 impl ToTokens<proc_macro::TokenStream> for TokenStream {
     fn to_tokens(&self, out: &mut proc_macro::TokenStream) {
-        match self {
-            Self::Compiler(v) => out.extend(v.clone()),
-            Self::Fallback(v) => {
-                for t in v.iter() {
-                    t.to_tokens(out);
-                }
-            }
+        for t in self.iter() {
+            t.to_tokens(out);
         }
     }
 }
@@ -361,15 +355,6 @@ mod tests {
         assert_eq!(format!("{}", id), "hello");
     }
 
-    #[test]
-    fn ident_fallback_roundtrip() {
-        let id = Ident::new("bar", Span::default());
-        let fb: fallback::Ident = id.clone().into();
-        assert_eq!(fb.name().as_ref(), "bar");
-        let back: Ident = fb.into();
-        assert_eq!(back.name().as_ref(), "bar");
-    }
-
     // --- Punct (operators) ---
 
     #[test]
@@ -409,30 +394,12 @@ mod tests {
         assert!(s.contains("42"));
     }
 
-    #[test]
-    fn literal_fallback_roundtrip() {
-        let lit = Literal::string("test");
-        let fb: fallback::Literal = lit.clone().into();
-        let back: Literal = fb.into();
-        let s = format!("{}", back);
-        assert!(s.contains("test"));
-    }
-
     // --- Group ---
 
     #[test]
     fn group_new_and_delim() {
         let g = Group::new(Delim::Paren, TokenStream::new());
         assert_eq!(g.delim(), Delim::Paren);
-    }
-
-    #[test]
-    fn group_fallback_roundtrip() {
-        let g = Group::new(Delim::Bracket, TokenStream::new());
-        let fb: fallback::Group = g.clone().into();
-        assert_eq!(fb.delim(), Delim::Bracket);
-        let back: Group = fb.into();
-        assert_eq!(back.delim(), Delim::Bracket);
     }
 
     // --- TokenStream ---
@@ -457,16 +424,6 @@ mod tests {
         ts.extend_one(Punctuation::from(crate::token::punct::Plus::default()).into());
         let count = ts.iter().count();
         assert_eq!(count, 2);
-    }
-
-    #[test]
-    fn token_stream_fallback_roundtrip() {
-        let mut ts = TokenStream::new();
-        ts.extend_one(Ident::new("y", Span::default()).into());
-        let fb: fallback::TokenStream = ts.into();
-        assert_eq!(fb.len(), 1);
-        let back: TokenStream = fb.into();
-        assert!(!back.is_empty());
     }
 
     #[test]

@@ -77,7 +77,7 @@ impl From<Spacing> for proc_macro2::Spacing {
 impl From<proc_macro2::Ident> for Ident {
     fn from(value: proc_macro2::Ident) -> Self {
         let span: Span = value.span().into();
-        Self::Fallback(crate::token::fallback::Ident::new(&value.to_string(), span))
+        Ident::new(&value.to_string(), span)
     }
 }
 
@@ -92,10 +92,10 @@ impl From<Ident> for proc_macro2::Ident {
 impl From<proc_macro2::Literal> for Literal {
     fn from(value: proc_macro2::Literal) -> Self {
         let span: Span = value.span().into();
-        Self::Fallback(crate::token::fallback::Literal {
+        Literal {
             repr: value.to_string().into_boxed_str(),
             span,
-        })
+        }
     }
 }
 
@@ -111,7 +111,7 @@ impl From<Literal> for proc_macro2::Literal {
 
 impl From<proc_macro2::Group> for Group {
     fn from(value: proc_macro2::Group) -> Self {
-        let mut inner = TokenStream::Fallback(crate::token::fallback::TokenStream::new());
+        let mut inner = TokenStream::new();
         value.stream().to_tokens(&mut inner);
         Self::new(value.delimiter().into(), inner)
     }
@@ -228,7 +228,7 @@ impl ToTokens<proc_macro2::TokenStream> for TokenStream {
 
 impl From<proc_macro2::TokenStream> for TokenStream {
     fn from(stream: proc_macro2::TokenStream) -> Self {
-        let mut out = Self::Fallback(crate::token::fallback::TokenStream::new());
+        let mut out = TokenStream::new();
         stream.to_tokens(&mut out);
         out
     }
@@ -256,6 +256,29 @@ mod tests {
         assert!(matches!(
             trees[1],
             TokenTree::Token(Token::Punct(Punctuation::EqEq(_)))
+        ));
+    }
+
+    #[test]
+    fn builds_owned_types_inbound() {
+        let pm2: proc_macro2::TokenStream = "foo 1 (x)".parse().unwrap();
+        let ours: TokenStream = pm2.into();
+        let trees: Vec<TokenTree> = ours.into_iter().collect();
+
+        let TokenTree::Token(Token::Ident(id)) = &trees[0] else {
+            panic!("expected ident, got {:?}", trees[0]);
+        };
+        assert_eq!(id.name().as_ref(), "foo");
+
+        assert!(matches!(trees[1], TokenTree::Token(Token::Literal(_))));
+
+        let TokenTree::Group(g) = &trees[2] else {
+            panic!("expected group, got {:?}", trees[2]);
+        };
+        assert_eq!(g.delim(), crate::token::Delim::Paren);
+        assert!(matches!(
+            g.stream().into_iter().next().unwrap(),
+            TokenTree::Token(Token::Ident(_))
         ));
     }
 

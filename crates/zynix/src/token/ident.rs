@@ -1,88 +1,76 @@
 use std::borrow::Cow;
 
-use super::fallback;
 use super::{ToTokens, TokenStream};
 use crate::Span;
+use crate::token::lex::{Cursor, LexError, Scan};
 
 #[derive(Debug, Clone)]
-pub enum Ident {
-    Compiler(proc_macro::Ident),
-    Fallback(fallback::Ident),
+pub struct Ident {
+    pub(crate) name: Box<str>,
+    pub(crate) span: Span,
 }
 
 impl Ident {
     pub fn new(name: &str, span: Span) -> Self {
-        if proc_macro::is_available() {
-            Self::Compiler(proc_macro::Ident::new(name, span.into()))
-        } else {
-            Self::Fallback(fallback::Ident::new(name, span))
+        Self {
+            name: name.into(),
+            span,
         }
     }
 
     pub fn name(&self) -> Cow<'_, str> {
-        match self {
-            Self::Compiler(v) => Cow::Owned(v.to_string()),
-            Self::Fallback(v) => v.name(),
-        }
+        Cow::Borrowed(self.name.as_ref())
     }
 
     pub fn span(&self) -> Span {
-        match self {
-            Self::Compiler(v) => v.span().into(),
-            Self::Fallback(v) => v.span(),
-        }
+        self.span
     }
 
     pub fn set_span(&mut self, span: Span) {
-        match self {
-            Self::Compiler(v) => v.set_span(span.into()),
-            Self::Fallback(v) => v.set_span(span),
-        }
+        self.span = span;
     }
 }
 
 impl From<proc_macro::Ident> for Ident {
     fn from(value: proc_macro::Ident) -> Self {
-        Self::Compiler(value)
+        Self::new(&value.to_string(), value.span().into())
     }
 }
 
 impl From<Ident> for proc_macro::Ident {
     fn from(value: Ident) -> Self {
-        match value {
-            Ident::Compiler(v) => v,
-            Ident::Fallback(v) => proc_macro::Ident::new(&v.name, v.span.into()),
+        proc_macro::Ident::new(&value.name, value.span.into())
+    }
+}
+
+impl Scan for Ident {
+    fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
+        // Raw ident: r#ident
+        if cursor.starts_with("r#") {
+            let after = cursor.advance(2);
+            let end = after.skip_while(unicode_ident::is_xid_continue);
+
+            if end.offset() == after.offset() {
+                return cursor.error().into();
+            }
+
+            let span = cursor.span_to(&end);
+            let name = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
+            return Ok((end, Self::new(name, span)));
         }
-    }
-}
 
-impl From<fallback::Ident> for Ident {
-    fn from(value: fallback::Ident) -> Self {
-        Self::Fallback(value)
-    }
-}
+        let first = cursor.first().ok_or(cursor.error())?;
 
-impl From<Ident> for fallback::Ident {
-    fn from(value: Ident) -> Self {
-        match value {
-            Ident::Compiler(v) => fallback::Ident::new(&v.to_string(), v.span().into()),
-            Ident::Fallback(v) => v,
+        if first != '_' && !unicode_ident::is_xid_start(first) {
+            return cursor.error().into();
         }
-    }
-}
 
-impl std::fmt::Display for Ident {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Compiler(v) => write!(f, "{}", v),
-            Self::Fallback(v) => write!(f, "{}", v),
-        }
-    }
-}
-
-impl ToTokens for Ident {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(self.clone().into());
+        let end = cursor
+            .advance(first.len_utf8())
+            .skip_while(unicode_ident::is_xid_continue);
+        let span = cursor.span_to(&end);
+        let name = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
+        Ok((end, Self::new(name, span)))
     }
 }
 
@@ -92,10 +80,19 @@ impl serde::Serialize for Ident {
     where
         S: serde::Serializer,
     {
-        match self {
-            Self::Fallback(v) => v.serialize(s),
-            Self::Compiler(_) => self.to_string().serialize(s),
-        }
+        self.name.serialize(s)
+    }
+}
+
+impl std::fmt::Display for Ident {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
+impl ToTokens for Ident {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(crate::Token::Ident(self.clone()).into());
     }
 }
 

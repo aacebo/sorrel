@@ -1,71 +1,57 @@
 use std::str::FromStr;
 
 use super::ToTokens;
-use super::fallback;
-use crate::TokenTree;
 use crate::parse::{ParseError, ParseStream};
+use crate::span::DelimSpan;
+use crate::token::lex::{Cursor, LexError, Scan};
+use crate::{Span, TokenTree};
 
-#[derive(Clone)]
-pub enum TokenStream {
-    Compiler(proc_macro::TokenStream),
-    Fallback(fallback::TokenStream),
-}
+#[derive(Debug, Default, Clone)]
+pub struct TokenStream(Vec<TokenTree>);
 
 impl TokenStream {
     pub fn new() -> Self {
-        if proc_macro::is_available() {
-            Self::Compiler(proc_macro::TokenStream::new())
-        } else {
-            Self::Fallback(fallback::TokenStream::new())
-        }
+        Self(vec![])
     }
 
     pub fn is_empty(&self) -> bool {
-        match self {
-            Self::Compiler(v) => v.clone().into_iter().next().is_none(),
-            Self::Fallback(v) => v.is_empty(),
-        }
+        self.0.is_empty()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &TokenTree> {
+        self.0.iter()
+    }
+
+    pub fn first(&self) -> Span {
+        self.0.first().map(|v| v.span()).unwrap_or_default()
+    }
+
+    pub fn last(&self) -> Span {
+        self.0.last().map(|v| v.span()).unwrap_or_default()
+    }
+
+    pub fn span(&self) -> Span {
+        self.first().join(self.last())
+    }
+
+    pub fn delim(&self) -> DelimSpan {
+        DelimSpan::new(self.first(), self.last())
     }
 
     pub fn extend_one(&mut self, token: TokenTree) {
-        match self {
-            Self::Compiler(v) => token.to_tokens(v),
-            Self::Fallback(v) => v.extend_one(token),
-        }
+        self.0.push(token);
     }
 
     pub fn parse(&self) -> ParseStream<'_> {
         ParseStream::new(self)
     }
 
+    pub fn into_inner(self) -> Vec<TokenTree> {
+        self.0
+    }
+
     pub fn to_vec(self) -> Vec<TokenTree> {
-        match self {
-            Self::Compiler(v) => {
-                let mut fb = Self::Fallback(fallback::TokenStream::new());
-                v.to_tokens(&mut fb);
-                fb.into()
-            }
-            Self::Fallback(v) => v.into_inner(),
-        }
-    }
-}
-
-impl Default for TokenStream {
-    fn default() -> Self {
-        Self::Fallback(fallback::TokenStream::new())
-    }
-}
-
-impl Extend<TokenTree> for TokenStream {
-    fn extend<T: IntoIterator<Item = TokenTree>>(&mut self, iter: T) {
-        match self {
-            Self::Compiler(v) => {
-                for t in iter {
-                    t.to_tokens(v);
-                }
-            }
-            Self::Fallback(v) => v.extend(iter),
-        }
+        self.0
     }
 }
 
@@ -73,79 +59,25 @@ impl std::ops::Deref for TokenStream {
     type Target = [TokenTree];
 
     fn deref(&self) -> &[TokenTree] {
-        match self {
-            Self::Compiler(_) => &[],
-            Self::Fallback(v) => v,
-        }
+        self.0.as_slice()
     }
 }
 
-impl From<proc_macro::TokenStream> for TokenStream {
-    fn from(stream: proc_macro::TokenStream) -> Self {
-        Self::Compiler(stream)
-    }
-}
-
-impl From<TokenStream> for proc_macro::TokenStream {
-    fn from(stream: TokenStream) -> Self {
-        let mut out = proc_macro::TokenStream::new();
-        stream.to_tokens(&mut out);
-        out
-    }
-}
-
-impl From<fallback::TokenStream> for TokenStream {
-    fn from(value: fallback::TokenStream) -> Self {
-        Self::Fallback(value)
-    }
-}
-
-impl From<TokenStream> for fallback::TokenStream {
-    fn from(value: TokenStream) -> Self {
-        match value {
-            TokenStream::Compiler(_) => fallback::TokenStream::from(value.to_vec()),
-            TokenStream::Fallback(v) => v,
-        }
-    }
-}
-
-impl From<&[TokenTree]> for TokenStream {
-    fn from(value: &[TokenTree]) -> Self {
-        Self::Fallback(fallback::TokenStream::from(value.to_vec()))
-    }
-}
-
-impl From<Vec<TokenTree>> for TokenStream {
-    fn from(value: Vec<TokenTree>) -> Self {
-        Self::Fallback(fallback::TokenStream::from(value))
-    }
-}
-
-impl From<TokenStream> for Vec<TokenTree> {
-    fn from(value: TokenStream) -> Self {
-        match value {
-            TokenStream::Compiler(v) => {
-                let mut sink = TokenStream::Fallback(fallback::TokenStream::new());
-                v.to_tokens(&mut sink);
-                match sink {
-                    TokenStream::Fallback(fb) => fb.into_inner(),
-                    TokenStream::Compiler(_) => unreachable!(),
-                }
-            }
-            TokenStream::Fallback(v) => v.into_iter().collect(),
-        }
+impl Extend<TokenTree> for TokenStream {
+    fn extend<T: IntoIterator<Item = TokenTree>>(&mut self, iter: T) {
+        self.0.extend(iter);
     }
 }
 
 impl FromIterator<TokenTree> for TokenStream {
     fn from_iter<T: IntoIterator<Item = TokenTree>>(iter: T) -> Self {
-        Self::Fallback(iter.into_iter().collect())
+        Self(iter.into_iter().collect())
     }
 }
 
 impl FromIterator<Self> for TokenStream {
     fn from_iter<T: IntoIterator<Item = Self>>(iter: T) -> Self {
-        Self::Fallback(iter.into_iter().flat_map(|s| s.into_iter()).collect())
+        Self(iter.into_iter().flat_map(|s| s.into_iter()).collect())
     }
 }
 
@@ -154,10 +86,100 @@ impl IntoIterator for TokenStream {
     type IntoIter = std::vec::IntoIter<TokenTree>;
 
     fn into_iter(self) -> Self::IntoIter {
-        match self {
-            Self::Compiler(_) => Vec::from(self).into_iter(),
-            Self::Fallback(v) => v.into_inner().into_iter(),
+        self.0.into_iter()
+    }
+}
+
+impl From<Vec<TokenTree>> for TokenStream {
+    fn from(value: Vec<TokenTree>) -> Self {
+        Self(value)
+    }
+}
+
+impl From<&[TokenTree]> for TokenStream {
+    fn from(value: &[TokenTree]) -> Self {
+        Self(value.to_vec())
+    }
+}
+
+impl From<TokenStream> for Vec<TokenTree> {
+    fn from(value: TokenStream) -> Self {
+        value.0
+    }
+}
+
+impl From<proc_macro::TokenStream> for TokenStream {
+    fn from(value: proc_macro::TokenStream) -> Self {
+        let mut out = Self::new();
+        value.to_tokens(&mut out);
+        out
+    }
+}
+
+impl From<TokenStream> for proc_macro::TokenStream {
+    fn from(value: TokenStream) -> Self {
+        let mut out = proc_macro::TokenStream::new();
+        for t in value.0 {
+            t.to_tokens(&mut out);
         }
+        out
+    }
+}
+
+impl Scan for TokenStream {
+    fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
+        let mut tokens = Vec::new();
+        let mut c = cursor;
+
+        loop {
+            c = c.skip_whitespace();
+
+            if c.is_empty() {
+                break;
+            }
+
+            // Check for closing delimiter — return to caller (Group::scan handles matching)
+            if let Some(')' | ']' | '}') = c.first() {
+                break;
+            }
+
+            // Try group first (opening delimiter)
+            if let Ok((next, group)) = crate::token::Group::scan(c) {
+                tokens.push(crate::TokenTree::Group(group));
+                c = next;
+                continue;
+            }
+
+            if let Ok((next, lit)) = crate::token::Literal::scan(c) {
+                tokens.push(crate::Token::Literal(lit).into());
+                c = next;
+                continue;
+            }
+
+            if let Ok((next, ident)) = crate::token::Ident::scan(c) {
+                let token =
+                    match crate::token::Keyword::from_str(ident.name().as_ref(), ident.span()) {
+                        Some(kw) => crate::Token::Keyword(kw),
+                        None => crate::Token::Ident(ident),
+                    };
+                tokens.push(token.into());
+                c = next;
+                continue;
+            }
+
+            if let Ok((next, op)) = <crate::token::Punctuation as Scan>::scan(c) {
+                tokens.push(crate::Token::Punct(op).into());
+                c = next;
+                continue;
+            }
+
+            return Err(c.error().message(format!(
+                "unexpected character '{}'",
+                c.first().unwrap_or('\0')
+            )));
+        }
+
+        Ok((c, Self(tokens)))
     }
 }
 
@@ -165,21 +187,18 @@ impl FromStr for TokenStream {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if proc_macro::is_available() {
-            let pm = s.parse().map_err(ParseError::from)?;
-            return Ok(Self::Compiler(pm));
+        use crate::source::SourceMap;
+
+        let span = SourceMap::with_mut(|sm| sm.push(s));
+        let cursor = Cursor::new(s, span.byte_range().start as u32);
+        let (rest, stream) = Self::scan(cursor)?;
+        let rest = rest.skip_whitespace();
+
+        if !rest.is_empty() {
+            return Err(rest.error().message("unexpected trailing input").into());
         }
 
-        Ok(Self::Fallback(s.parse()?))
-    }
-}
-
-impl std::fmt::Debug for TokenStream {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Compiler(v) => write!(f, "TokenStream::Compiler({})", v),
-            Self::Fallback(v) => write!(f, "TokenStream::Fallback({:?})", v),
-        }
+        Ok(stream)
     }
 }
 
@@ -189,31 +208,30 @@ impl serde::Serialize for TokenStream {
     where
         S: serde::Serializer,
     {
-        match self {
-            Self::Fallback(v) => v.serialize(s),
-            Self::Compiler(_) => {
-                let tokens: Vec<TokenTree> = self.clone().into();
-                tokens.serialize(s)
-            }
-        }
+        self.0.serialize(s)
     }
 }
 
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Compiler(v) => write!(f, "{}", v),
-            Self::Fallback(v) => write!(f, "{}", v),
+        let mut first = true;
+
+        for tt in self.0.iter() {
+            if !first {
+                write!(f, " ")?;
+            }
+
+            write!(f, "{}", tt)?;
+            first = false;
         }
+
+        Ok(())
     }
 }
 
 impl ToTokens for TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            Self::Compiler(v) => v.to_tokens(tokens),
-            Self::Fallback(v) => v.to_tokens(tokens),
-        }
+        tokens.extend(self.clone());
     }
 }
 

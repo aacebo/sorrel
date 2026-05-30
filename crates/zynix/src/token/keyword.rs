@@ -49,7 +49,7 @@ macro_rules! define_keyword {
 
         impl Scan for Keyword {
             fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-                let (end, id) = super::fallback::Ident::scan(cursor)?;
+                let (end, id) = super::Ident::scan(cursor)?;
 
                 match id.name().as_ref() {
                     $($text => Ok((end, Self::$name($name::new(id.span())))),)*
@@ -118,7 +118,7 @@ macro_rules! define_keyword {
 
             impl Scan for $name {
                 fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-                    let (end, id) = super::fallback::Ident::scan(cursor)?;
+                    let (end, id) = super::Ident::scan(cursor)?;
 
                     if id.name().as_ref() == $text {
                         Ok((end, Self::new(id.span())))
