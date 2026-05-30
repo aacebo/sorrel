@@ -1,5 +1,5 @@
 use crate::Span;
-use crate::token::{self as token, Spacing};
+use crate::token::{self, Spacing};
 
 #[derive(Debug, Clone)]
 pub struct Punct {
@@ -49,6 +49,16 @@ impl From<Punct> for proc_macro::Punct {
         let mut p = proc_macro::Punct::new(value.ch, value.spacing.into());
         p.set_span(value.span.into());
         p
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Punct {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.to_string().serialize(s)
     }
 }
 

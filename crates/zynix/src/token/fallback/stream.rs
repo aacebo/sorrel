@@ -168,10 +168,34 @@ impl std::str::FromStr for TokenStream {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for TokenStream {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.0.serialize(s)
+    }
+}
+
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for token in self.0.iter() {
-            write!(f, "{}", token)?;
+        use crate::token::{Spacing, Token};
+
+        let mut first = true;
+        let mut glue_next = false;
+
+        for tt in self.0.iter() {
+            if !first && !glue_next {
+                write!(f, " ")?;
+            }
+
+            write!(f, "{}", tt)?;
+            glue_next = matches!(
+                tt,
+                TokenTree::Token(Token::Punct(p)) if p.spacing() == Spacing::Joint
+            );
+            first = false;
         }
 
         Ok(())

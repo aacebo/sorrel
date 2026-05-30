@@ -169,6 +169,22 @@ impl std::fmt::Debug for TokenStream {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for TokenStream {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Fallback(v) => v.serialize(s),
+            Self::Compiler(_) => {
+                let tokens: Vec<TokenTree> = self.clone().into();
+                tokens.serialize(s)
+            }
+        }
+    }
+}
+
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -183,6 +199,92 @@ impl ToTokens for TokenStream {
         match self {
             Self::Compiler(v) => tokens.extend(v.clone().into_iter().map(TokenTree::from)),
             Self::Fallback(v) => v.to_tokens(tokens),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    mod display {
+        use crate::TokenStream;
+        use std::str::FromStr;
+
+        fn render(src: &str) -> String {
+            TokenStream::from_str(src).unwrap().to_string()
+        }
+
+        #[test]
+        fn separates_word_tokens() {
+            // adjacent idents/keywords must not merge into invalid source
+            assert!(!render("let x").contains("letx"));
+            assert_eq!(render("let x"), "let x");
+            assert_eq!(render("a + b"), "a + b");
+        }
+
+        #[test]
+        fn keeps_joint_punct_tight() {
+            // multi-char puncts stay glued (Joint spacing)
+            assert_eq!(render("x == y"), "x == y");
+            assert_eq!(render("a -> b"), "a -> b");
+            assert_eq!(render("a :: b"), "a :: b");
+            assert_eq!(render("..="), "..=");
+        }
+
+        #[test]
+        fn renders_group_with_delimiters() {
+            // delimiters are preserved (proc_macro2-style spacing inside)
+            assert_eq!(render("(a + b)"), "(a + b)");
+            assert_eq!(render("[a, b]"), "[a , b]");
+            assert_eq!(render("{ x }"), "{x}");
+        }
+
+        #[test]
+        fn group_follows_word_with_space() {
+            // proc_macro2-style: groups are word tokens
+            assert_eq!(render("foo(a, b)"), "foo (a , b)");
+        }
+
+        #[test]
+        fn roundtrips_to_reparseable_source() {
+            for src in ["let x = (a + b) * c;", "x == y", "a::b::c", "foo(1, 2)"] {
+                let rendered = render(src);
+                // must re-parse without error
+                assert!(
+                    TokenStream::from_str(&rendered).is_ok(),
+                    "failed to reparse {:?} from {:?}",
+                    rendered,
+                    src
+                );
+                // and rendering is stable (idempotent)
+                assert_eq!(render(&rendered), rendered);
+            }
+        }
+    }
+
+    #[cfg(feature = "serde")]
+    mod serde {
+        use crate::TokenStream;
+        use std::str::FromStr;
+
+        #[test]
+        fn serializes_as_array_of_token_strings() {
+            let ts = TokenStream::from_str("a + 1").unwrap();
+            let json = serde_json::to_value(&ts).unwrap();
+            assert_eq!(json, serde_json::json!(["a", "+", "1"]));
+        }
+
+        #[test]
+        fn nested_group_serializes_as_nested_array() {
+            let ts = TokenStream::from_str("a + (b * 2)").unwrap();
+            let json = serde_json::to_value(&ts).unwrap();
+            assert_eq!(
+                json,
+                serde_json::json!([
+                    "a",
+                    "+",
+                    { "delim": "paren", "tokens": ["b", "*", "2"] }
+                ])
+            );
         }
     }
 }

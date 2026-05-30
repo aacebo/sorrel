@@ -187,10 +187,9 @@ impl std::hash::Hash for Span {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
             Self::Compiler(s) => {
-                s.start().line().hash(state);
-                s.start().column().hash(state);
-                s.end().line().hash(state);
-                s.end().column().hash(state);
+                let range = s.byte_range();
+                range.start.hash(state);
+                range.end.hash(state);
             }
             Self::Fallback(s) => s.hash(state),
         }
@@ -224,6 +223,26 @@ impl proc_macro::MultiSpan for Span {
         match self {
             Self::Compiler(s) => vec![s],
             Self::Fallback(_) => vec![proc_macro::Span::call_site()],
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Span {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        match self {
+            Self::Fallback(v) => v.serialize(s),
+            Self::Compiler(v) => {
+                let mut o = s.serialize_struct("Span", 2)?;
+                o.serialize_field("start", &v.byte_range().start)?;
+                o.serialize_field("end", &v.byte_range().end)?;
+                o.end()
+            }
         }
     }
 }

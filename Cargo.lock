@@ -859,6 +859,8 @@ name = "zynix"
 version = "0.5.3"
 dependencies = [
  "proc-macro2",
+ "serde",
+ "serde_json",
  "unicode-ident",
  "version_check",
 ]

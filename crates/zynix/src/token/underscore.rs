@@ -5,7 +5,17 @@ use crate::{Parse, Span, Token, TokenStream, TokenTree};
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Underscore {
-    pub span: Span,
+    span: Span,
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Underscore {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        Self::TEXT.serialize(s)
+    }
 }
 
 impl Underscore {
@@ -45,5 +55,21 @@ impl Parse for Underscore {
 impl ToTokens for Underscore {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(Ident::new("_", self.span).into());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "serde")]
+    mod serde {
+        use crate::token::Underscore;
+
+        #[test]
+        fn underscore_serializes_as_string() {
+            assert_eq!(
+                serde_json::to_value(Underscore::default()).unwrap(),
+                serde_json::json!("_")
+            );
+        }
     }
 }

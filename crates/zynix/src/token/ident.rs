@@ -86,6 +86,19 @@ impl ToTokens for Ident {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Ident {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Fallback(v) => v.serialize(s),
+            Self::Compiler(_) => self.to_string().serialize(s),
+        }
+    }
+}
+
 impl crate::Parse for Ident {
     fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
         match stream.advance() {
@@ -93,6 +106,23 @@ impl crate::Parse for Ident {
             _ => Err(crate::token::lex::LexError::new(stream.span())
                 .message("expected Ident")
                 .into()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "serde")]
+    mod serde {
+        use crate::TokenStream;
+        use crate::token::Ident;
+        use std::str::FromStr;
+
+        #[test]
+        fn ident_serializes_as_string() {
+            let ts = TokenStream::from_str("foo").unwrap();
+            let id = ts.parse().parse::<Ident>().unwrap();
+            assert_eq!(serde_json::to_value(&id).unwrap(), serde_json::json!("foo"));
         }
     }
 }

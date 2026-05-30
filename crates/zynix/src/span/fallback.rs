@@ -1,6 +1,7 @@
 use crate::source::{Location, SourceMap};
 
 #[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Span {
     /// the start char index (inclusive).
     start: u32,

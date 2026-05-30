@@ -74,6 +74,26 @@ impl From<Group> for fallback::Group {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Group {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        match self {
+            Self::Fallback(v) => v.serialize(s),
+            Self::Compiler(_) => {
+                let mut o = s.serialize_struct("Group", 2)?;
+                o.serialize_field("delim", &self.delim())?;
+                o.serialize_field("tokens", &self.stream())?;
+                o.end()
+            }
+        }
+    }
+}
+
 impl std::fmt::Display for Group {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -96,6 +116,29 @@ impl crate::Parse for Group {
             _ => Err(crate::token::lex::LexError::new(stream.span())
                 .message("expected Group")
                 .into()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "serde")]
+    mod serde {
+        use crate::TokenStream;
+        use crate::token::TokenTree;
+        use std::str::FromStr;
+
+        #[test]
+        fn group_serializes_as_delim_and_tokens() {
+            let ts = TokenStream::from_str("[a, b]").unwrap();
+            let tree = ts.into_iter().next().unwrap();
+            let TokenTree::Group(g) = tree else {
+                panic!("expected group");
+            };
+            assert_eq!(
+                serde_json::to_value(&g).unwrap(),
+                serde_json::json!({ "delim": "bracket", "tokens": ["a", ",", "b"] })
+            );
         }
     }
 }

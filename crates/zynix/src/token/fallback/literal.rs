@@ -85,6 +85,16 @@ impl From<Literal> for proc_macro::Literal {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Literal {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.repr.serialize(s)
+    }
+}
+
 impl std::fmt::Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.repr)

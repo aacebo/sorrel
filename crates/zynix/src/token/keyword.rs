@@ -10,6 +10,16 @@ macro_rules! define_keyword {
             $($name($name),)*
         }
 
+        #[cfg(feature = "serde")]
+        impl serde::Serialize for Keyword {
+            fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                self.as_str().serialize(s)
+            }
+        }
+
         impl Keyword {
             pub fn as_str(&self) -> &'static str {
                 match self {
@@ -50,6 +60,16 @@ macro_rules! define_keyword {
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name {
                 pub span: Span,
+            }
+
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for $name {
+                fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    self.as_str().serialize(s)
+                }
             }
 
             impl $name {
@@ -213,5 +233,24 @@ mod tests {
         let ts_lower2 = TokenStream::from_str("self").unwrap();
         let mut ps = ts_lower2.parse();
         assert!(ps.parse::<SelfType>().is_err());
+    }
+
+    #[cfg(feature = "serde")]
+    mod serde {
+        use super::*;
+
+        #[test]
+        fn keyword_struct_serializes_as_string() {
+            assert_eq!(
+                serde_json::to_value(Fn::default()).unwrap(),
+                serde_json::json!("fn")
+            );
+        }
+
+        #[test]
+        fn keyword_enum_serializes_as_string() {
+            let kw = Keyword::from(Fn::default());
+            assert_eq!(serde_json::to_value(kw).unwrap(), serde_json::json!("fn"));
+        }
     }
 }

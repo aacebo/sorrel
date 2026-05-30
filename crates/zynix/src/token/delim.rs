@@ -4,6 +4,11 @@ use crate::parse::{ParseError, ParseStream};
 use crate::{Parse, Span, TokenStream, TokenTree};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Serialize),
+    serde(rename_all = "lowercase")
+)]
 pub enum Delim {
     #[default]
     None,
@@ -190,5 +195,22 @@ mod delim_token_tests {
         let stream = Brace::default().to_token_stream();
         let mut ps = stream.parse();
         assert!(ps.parse::<Brace>().is_ok());
+    }
+
+    #[cfg(feature = "serde")]
+    mod serde {
+        use super::*;
+
+        #[test]
+        fn delim_serializes_lowercase() {
+            assert_eq!(
+                serde_json::to_value(Delim::Paren).unwrap(),
+                serde_json::json!("paren")
+            );
+            assert_eq!(
+                serde_json::to_value(Delim::Brace).unwrap(),
+                serde_json::json!("brace")
+            );
+        }
     }
 }

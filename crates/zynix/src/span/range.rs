@@ -1,6 +1,7 @@
 use crate::Span;
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct RangeSpan {
     start: Span,
     end: Span,

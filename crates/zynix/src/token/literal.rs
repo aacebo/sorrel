@@ -112,6 +112,19 @@ impl From<Literal> for fallback::Literal {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Literal {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Fallback(v) => v.serialize(s),
+            Self::Compiler(_) => self.to_string().serialize(s),
+        }
+    }
+}
+
 impl std::fmt::Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -134,6 +147,33 @@ impl crate::Parse for Literal {
             _ => Err(crate::token::lex::LexError::new(stream.span())
                 .message("expected Literal")
                 .into()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "serde")]
+    mod serde {
+        use crate::TokenStream;
+        use crate::token::Literal;
+        use std::str::FromStr;
+
+        #[test]
+        fn integer_literal_serializes_as_string() {
+            let ts = TokenStream::from_str("42").unwrap();
+            let lit = ts.parse().parse::<Literal>().unwrap();
+            assert_eq!(serde_json::to_value(&lit).unwrap(), serde_json::json!("42"));
+        }
+
+        #[test]
+        fn string_literal_serializes_with_quotes() {
+            let ts = TokenStream::from_str("\"hi\"").unwrap();
+            let lit = ts.parse().parse::<Literal>().unwrap();
+            assert_eq!(
+                serde_json::to_value(&lit).unwrap(),
+                serde_json::json!("\"hi\"")
+            );
         }
     }
 }

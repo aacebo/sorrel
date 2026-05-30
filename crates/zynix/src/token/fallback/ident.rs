@@ -74,6 +74,16 @@ impl crate::token::lex::Scan for Ident {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Ident {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.name.serialize(s)
+    }
+}
+
 impl std::fmt::Display for Ident {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name)

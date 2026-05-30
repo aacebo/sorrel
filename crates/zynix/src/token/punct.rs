@@ -102,6 +102,19 @@ impl ToTokens for Punct {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Punct {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Fallback(v) => v.serialize(s),
+            Self::Compiler(_) => self.to_string().serialize(s),
+        }
+    }
+}
+
 impl crate::Parse for Punct {
     fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
         match stream.advance() {
@@ -151,6 +164,16 @@ macro_rules! define_punct {
             $($name($name),)*
         }
 
+        #[cfg(feature = "serde")]
+        impl serde::Serialize for Punctuation {
+            fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                self.as_str().serialize(s)
+            }
+        }
+
         impl Punctuation {
             pub fn as_str(&self) -> &'static str {
                 match self {
@@ -191,6 +214,16 @@ macro_rules! define_punct {
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name {
                 pub span: Span,
+            }
+
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for $name {
+                fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    self.as_str().serialize(s)
+                }
             }
 
             impl $name {
@@ -385,5 +418,35 @@ mod tests {
         assert_eq!(format!("{}", EqEq::default()), "==");
         assert_eq!(format!("{}", DotDotEq::default()), "..=");
         assert_eq!(format!("{}", Underscore::default()), "_");
+    }
+
+    #[cfg(feature = "serde")]
+    mod serde {
+        use super::*;
+        use crate::Token;
+
+        #[test]
+        fn punct_serializes_as_string() {
+            let ts = TokenStream::from_str("+").unwrap();
+            let tree = ts.into_iter().next().unwrap();
+            let TokenTree::Token(Token::Punct(p)) = tree else {
+                panic!("expected punct");
+            };
+            assert_eq!(serde_json::to_value(&p).unwrap(), serde_json::json!("+"));
+        }
+
+        #[test]
+        fn named_punct_serializes_as_string() {
+            assert_eq!(
+                serde_json::to_value(EqEq::default()).unwrap(),
+                serde_json::json!("==")
+            );
+        }
+
+        #[test]
+        fn punctuation_serializes_as_string() {
+            let p = Punctuation::from(Comma::default());
+            assert_eq!(serde_json::to_value(p).unwrap(), serde_json::json!(","));
+        }
     }
 }

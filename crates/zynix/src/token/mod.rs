@@ -49,6 +49,20 @@ pub enum Token {
     Literal(Literal),
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Token {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Ident(v) => v.serialize(s),
+            Self::Punct(v) => v.serialize(s),
+            Self::Literal(v) => v.serialize(s),
+        }
+    }
+}
+
 impl Token {
     pub fn span(&self) -> Span {
         match self {
@@ -97,6 +111,19 @@ impl ToTokens for Token {
 pub enum TokenTree {
     Token(Token),
     Group(Group),
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for TokenTree {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Token(v) => v.serialize(s),
+            Self::Group(v) => v.serialize(s),
+        }
+    }
 }
 
 impl TokenTree {
@@ -384,5 +411,31 @@ mod tests {
     fn token_display() {
         let t: Token = Ident::new("hello", Span::default()).into();
         assert_eq!(format!("{}", t), "hello");
+    }
+
+    #[cfg(feature = "serde")]
+    mod serde {
+        use crate::TokenStream;
+        use std::str::FromStr;
+
+        #[test]
+        fn token_serializes_as_string() {
+            let ts = TokenStream::from_str("foo").unwrap();
+            let tree = ts.into_iter().next().unwrap();
+            assert_eq!(
+                serde_json::to_value(&tree).unwrap(),
+                serde_json::json!("foo")
+            );
+        }
+
+        #[test]
+        fn token_tree_group_serializes_as_object() {
+            let ts = TokenStream::from_str("(x)").unwrap();
+            let tree = ts.into_iter().next().unwrap();
+            assert_eq!(
+                serde_json::to_value(&tree).unwrap(),
+                serde_json::json!({ "delim": "paren", "tokens": ["x"] })
+            );
+        }
     }
 }

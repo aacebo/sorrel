@@ -56,9 +56,27 @@ impl From<Group> for proc_macro::Group {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Group {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        let mut o = s.serialize_struct("Group", 2)?;
+        o.serialize_field("delim", &self.delim)?;
+        o.serialize_field("tokens", &self.tokens)?;
+        o.end()
+    }
+}
+
 impl std::fmt::Display for Group {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", &self.tokens)
+        match self.delim {
+            Delim::None => write!(f, "{}", &self.tokens),
+            d => write!(f, "{}{}{}", d.open(), &self.tokens, d.close()),
+        }
     }
 }
 
