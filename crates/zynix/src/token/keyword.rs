@@ -10,16 +10,6 @@ macro_rules! define_keyword {
             $($name($name),)*
         }
 
-        #[cfg(feature = "serde")]
-        impl serde::Serialize for Keyword {
-            fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-            where
-                S: serde::Serializer,
-            {
-                self.as_str().serialize(s)
-            }
-        }
-
         impl Keyword {
             pub fn as_str(&self) -> &'static str {
                 match self {
@@ -74,20 +64,20 @@ macro_rules! define_keyword {
             }
         }
 
+        #[cfg(feature = "serde")]
+        impl serde::Serialize for Keyword {
+            fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                self.as_str().serialize(s)
+            }
+        }
+
         $(
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name {
                 pub span: Span,
-            }
-
-            #[cfg(feature = "serde")]
-            impl serde::Serialize for $name {
-                fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-                where
-                    S: serde::Serializer,
-                {
-                    self.as_str().serialize(s)
-                }
             }
 
             impl $name {
@@ -152,6 +142,16 @@ macro_rules! define_keyword {
             impl From<$name> for Keyword {
                 fn from(value: $name) -> Self {
                     Self::$name(value)
+                }
+            }
+
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for $name {
+                fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    self.as_str().serialize(s)
                 }
             }
         )+

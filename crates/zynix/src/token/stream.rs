@@ -202,16 +202,6 @@ impl FromStr for TokenStream {
     }
 }
 
-#[cfg(feature = "serde")]
-impl serde::Serialize for TokenStream {
-    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.0.serialize(s)
-    }
-}
-
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut first = true;
@@ -232,6 +222,16 @@ impl std::fmt::Display for TokenStream {
 impl ToTokens for TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend(self.clone());
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for TokenStream {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.0.serialize(s)
     }
 }
 

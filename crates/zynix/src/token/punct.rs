@@ -10,16 +10,6 @@ macro_rules! define_punct {
             $($name($name),)*
         }
 
-        #[cfg(feature = "serde")]
-        impl serde::Serialize for Punctuation {
-            fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-            where
-                S: serde::Serializer,
-            {
-                self.as_str().serialize(s)
-            }
-        }
-
         impl Punctuation {
             pub fn as_str(&self) -> &'static str {
                 match self {
@@ -76,20 +66,20 @@ macro_rules! define_punct {
             }
         }
 
+        #[cfg(feature = "serde")]
+        impl serde::Serialize for Punctuation {
+            fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                self.as_str().serialize(s)
+            }
+        }
+
         $(
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name {
                 pub span: Span,
-            }
-
-            #[cfg(feature = "serde")]
-            impl serde::Serialize for $name {
-                fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-                where
-                    S: serde::Serializer,
-                {
-                    self.as_str().serialize(s)
-                }
             }
 
             impl $name {
@@ -153,6 +143,16 @@ macro_rules! define_punct {
             impl From<$name> for Punctuation {
                 fn from(value: $name) -> Self {
                     Self::$name(value)
+                }
+            }
+
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for $name {
+                fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    self.as_str().serialize(s)
                 }
             }
         )+

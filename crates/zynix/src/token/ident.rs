@@ -6,8 +6,8 @@ use crate::token::lex::{Cursor, LexError, Scan};
 
 #[derive(Debug, Clone)]
 pub struct Ident {
-    pub(crate) name: Box<str>,
-    pub(crate) span: Span,
+    name: Box<str>,
+    span: Span,
 }
 
 impl Ident {
@@ -74,16 +74,6 @@ impl Scan for Ident {
     }
 }
 
-#[cfg(feature = "serde")]
-impl serde::Serialize for Ident {
-    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.name.serialize(s)
-    }
-}
-
 impl std::fmt::Display for Ident {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name)
@@ -104,6 +94,16 @@ impl crate::Parse for Ident {
                 .message("expected Ident")
                 .into()),
         }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Ident {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.name.serialize(s)
     }
 }
 
