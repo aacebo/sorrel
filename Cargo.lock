@@ -864,3 +864,10 @@ dependencies = [
  "unicode-ident",
  "version_check",
 ]
+
+[[package]]
+name = "zynix-macros"
+version = "0.5.3"
+dependencies = [
+ "zynix",
+]

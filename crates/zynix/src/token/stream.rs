@@ -293,6 +293,33 @@ mod tests {
         }
     }
 
+    mod lex {
+        use crate::TokenStream;
+        use crate::token::{Punctuation, Token, TokenTree};
+        use std::str::FromStr;
+
+        fn trees(src: &str) -> Vec<TokenTree> {
+            TokenStream::from_str(src).unwrap().into_iter().collect()
+        }
+
+        #[test]
+        fn lifetime_lexes_as_quote_then_ident() {
+            let t = trees("&'a str");
+            assert!(matches!(
+                t[1],
+                TokenTree::Token(Token::Punct(Punctuation::Quote(_)))
+            ));
+            assert!(matches!(t[2], TokenTree::Token(Token::Ident(_))));
+        }
+
+        #[test]
+        fn char_literal_still_lexes_as_literal() {
+            let t = trees("'c'");
+            assert_eq!(t.len(), 1);
+            assert!(matches!(t[0], TokenTree::Token(Token::Literal(_))));
+        }
+    }
+
     #[cfg(feature = "serde")]
     mod serde {
         use crate::TokenStream;

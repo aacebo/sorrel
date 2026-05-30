@@ -181,6 +181,7 @@ define_punct! {
     Pound      => "#",
     Dollar     => "$",
     Question   => "?",
+    Quote      => "'",
 
     AndAnd     => "&&",
     OrOr       => "||",

@@ -1,0 +1,18 @@
+[package]
+name = "zynix-macros"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+readme.workspace = true
+documentation.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lib]
+doctest = false
+proc-macro = true
+
+[dependencies]
+zynix = { path = "../zynix" }

@@ -83,7 +83,13 @@ impl From<proc_macro2::Ident> for Ident {
 
 impl From<Ident> for proc_macro2::Ident {
     fn from(value: Ident) -> Self {
-        proc_macro2::Ident::new(&value.name(), proc_macro2::Span::call_site())
+        let name = value.name();
+        let span = proc_macro2::Span::call_site();
+
+        match name.strip_prefix("r#") {
+            Some(name) => proc_macro2::Ident::new_raw(name, span),
+            None => proc_macro2::Ident::new(&name, span),
+        }
     }
 }
 
@@ -202,9 +208,10 @@ impl ToTokens<proc_macro2::TokenStream> for TokenTree {
             TokenTree::Token(Token::Punct(op)) => {
                 let text = op.as_str();
                 let last = text.chars().count() - 1;
+                let joint_last = text == "'";
 
                 for (i, ch) in text.chars().enumerate() {
-                    let spacing = if i == last {
+                    let spacing = if i == last && !joint_last {
                         proc_macro2::Spacing::Alone
                     } else {
                         proc_macro2::Spacing::Joint
@@ -312,6 +319,9 @@ mod tests {
             "b\"bytes\"",
             "pub fn foo() -> Self",
             "let _ = &mut x",
+            "r#foo",
+            "fn f<'a>(x: &'a Self) {}",
+            "&'a T",
         ];
 
         for src in cases {

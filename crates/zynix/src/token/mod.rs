@@ -242,9 +242,10 @@ impl ToTokens<proc_macro::TokenStream> for TokenTree {
                 let text = op.as_str();
                 let span: proc_macro::Span = op.span().into();
                 let last = text.chars().count() - 1;
+                let joint_last = text == "'";
 
                 for (i, ch) in text.chars().enumerate() {
-                    let spacing = if i == last {
+                    let spacing = if i == last && !joint_last {
                         proc_macro::Spacing::Alone
                     } else {
                         proc_macro::Spacing::Joint

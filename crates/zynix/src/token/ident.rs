@@ -39,7 +39,12 @@ impl From<proc_macro::Ident> for Ident {
 
 impl From<Ident> for proc_macro::Ident {
     fn from(value: Ident) -> Self {
-        proc_macro::Ident::new(&value.name, value.span.into())
+        let span: proc_macro::Span = value.span.into();
+
+        match value.name.strip_prefix("r#") {
+            Some(name) => proc_macro::Ident::new_raw(name, span),
+            None => proc_macro::Ident::new(&value.name, span),
+        }
     }
 }
 
