@@ -118,7 +118,7 @@ impl SourceMap {
 
         std::fs::write(
             path.join("mod.rs"),
-            quote!(#![allow(unused)] #(#root_decls)*).to_string(),
+            quote!(#![allow(unused)] pub use crate::ast::leaf::*; #(#root_decls)*).to_string(),
         )
     }
 }

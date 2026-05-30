@@ -8,65 +8,11 @@ nodes:
     fields:
     - name: name
       type: Option<String>
-  AssignOp:
-    kind: sum
-    variants:
-    - AddAssign
-    - SubAssign
-    - MulAssign
-    - DivAssign
-    - RemAssign
-    - BitXorAssign
-    - BitAndAssign
-    - BitOrAssign
-    - ShlAssign
-    - ShrAssign
-  Asyncness:
-    kind: sum
-    variants:
-    - Sync
-    - Async
   AttrStyle:
     kind: sum
     variants:
     - Outer
     - Inner
-  BinOp:
-    kind: sum
-    variants:
-    - Add
-    - Sub
-    - Mul
-    - Div
-    - Rem
-    - And
-    - Or
-    - BitXor
-    - BitAnd
-    - BitOr
-    - Shl
-    - Shr
-    - Eq
-    - Lt
-    - Le
-    - Ne
-    - Ge
-    - Gt
-  BoundPolarity:
-    kind: sum
-    variants:
-    - Positive
-    - Negative
-  Constness:
-    kind: sum
-    variants:
-    - NoConst
-    - Const
-  Defaultness:
-    kind: sum
-    variants:
-    - Final
-    - Default
   DelimiterKind:
     kind: sum
     variants:
@@ -135,38 +81,6 @@ nodes:
     fields:
     - name: value
       type: String
-  Movability:
-    kind: sum
-    variants:
-    - Movable
-    - Static
-  Mutability:
-    kind: sum
-    doc: "Whether a binding, reference, or pointer is mutable."
-    variants:
-    - Immutable
-    - Mutable
-  RangeLimits:
-    kind: sum
-    variants:
-    - HalfOpen
-    - Closed
-  TraitBoundModifier:
-    kind: sum
-    variants:
-    - None
-    - Maybe
-  UnOp:
-    kind: sum
-    variants:
-    - Deref
-    - Not
-    - Neg
-  Unsafety:
-    kind: sum
-    variants:
-    - Safe
-    - Unsafe
   DocString:
     kind: product
     extends: node_base
