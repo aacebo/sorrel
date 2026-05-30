@@ -3,7 +3,7 @@ use std::slice;
 use std::vec;
 
 use crate::parse::{ParseError, ParseStream};
-use crate::token::{ToTokenStream, ToTokens};
+use crate::token::ToTokens;
 use crate::{Parse, TokenStream};
 
 pub struct Punctuated<T, P> {
@@ -870,6 +870,8 @@ mod tests {
 
     #[test]
     fn to_tokens_roundtrip() {
+        use crate::token::ToTokenStream;
+
         let ts = parse_stream("a , b , c");
         let mut ps = ts.parse();
         let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();

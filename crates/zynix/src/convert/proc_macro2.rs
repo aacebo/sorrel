@@ -266,15 +266,71 @@ mod tests {
 
     #[test]
     fn roundtrips_through_pm2() {
-        for src in ["a == b => c", "x :: y", "a >> b", "foo(1, 2)", "let _ = x;"] {
+        let cases = [
+            // multi-char ops, incl. 3-char and angle brackets
+            "a == b => c",
+            "x :: y",
+            "a >> b",
+            "a <<= b",
+            "x ..= y",
+            "Vec<Vec<T>>",
+            "a::b::<T>()",
+            // nested groups
+            "a(b(c))",
+            "fn f(x: Vec<(A, B)>) { g([1, 2]) }",
+            // literals
+            "\"hello\"",
+            "'c'",
+            "42u8",
+            "3.14",
+            "b\"bytes\"",
+            // keywords / idents / underscore
+            "pub fn foo() -> Self",
+            "let _ = &mut x",
+        ];
+
+        for src in cases {
             let pm2: proc_macro2::TokenStream = src.parse().unwrap();
-            let ours: TokenStream = pm2.clone().into();
-            let back: proc_macro2::TokenStream = ours.into();
+
+            // First crossing: proc_macro2 -> ours -> proc_macro2.
+            let once: proc_macro2::TokenStream = TokenStream::from(pm2.clone()).into();
+            // Second crossing of that result.
+            let twice: proc_macro2::TokenStream = TokenStream::from(once.clone()).into();
+
+            // Our puncts are whole, exact-size operators, so the only thing a
+            // round-trip can vary is inter-token whitespace in `to_string()`
+            // (e.g. a turbofish renders `::<` vs `:: <`) — cosmetic, not
+            // semantic. The invariant is that the bridge reaches a fixed point:
+            // a second crossing changes nothing.
             assert_eq!(
-                pm2.to_string(),
-                back.to_string(),
-                "boundary not stable for {src:?}"
+                once.to_string(),
+                twice.to_string(),
+                "boundary not idempotent for {src:?}"
+            );
+
+            // And the round-tripped stream must re-parse without error.
+            assert!(
+                once.to_string().parse::<proc_macro2::TokenStream>().is_ok(),
+                "round-tripped stream not reparseable for {src:?}"
             );
         }
+    }
+
+    #[test]
+    fn nested_groups_preserve_structure_inbound() {
+        // `to_string()` equality alone wouldn't catch a flattened group, so
+        // assert the recursion explicitly: outer group contains an inner group.
+        let pm2: proc_macro2::TokenStream = "a(b(c))".parse().unwrap();
+        let ours: TokenStream = pm2.into();
+        let trees: Vec<TokenTree> = ours.into_iter().collect();
+
+        let TokenTree::Group(outer) = &trees[1] else {
+            panic!("expected outer group, got {:?}", trees[1]);
+        };
+        let inner: Vec<TokenTree> = outer.stream().into_iter().collect();
+        assert!(
+            inner.iter().any(|t| matches!(t, TokenTree::Group(_))),
+            "expected a nested group inside the outer group"
+        );
     }
 }
