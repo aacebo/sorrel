@@ -124,6 +124,7 @@ impl SourceMap {
                 pub use crate::ast::leaf::*;
                 pub use crate::ast::lit::*;
                 pub use crate::ast::path::*;
+                pub use crate::ast::ty::*;
                 #(#root_decls)*
             )
             .to_string(),

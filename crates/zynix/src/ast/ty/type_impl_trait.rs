@@ -1,10 +1,8 @@
 #[allow(unused)]
-use super::*;
+use crate::ast::*;
+
 #[derive(Debug, Clone)]
-pub struct TypeParam {
+pub struct TypeImplTrait {
     pub span: crate::Span,
-    pub attrs: Vec<Attribute>,
-    pub ident: Ident,
     pub bounds: crate::ast::Punctuated<TypeBound, crate::token::Plus>,
-    pub default: Option<Type>,
 }

@@ -1,5 +1,6 @@
 #[allow(unused)]
-use super::*;
+use crate::ast::*;
+
 #[derive(Debug, Clone)]
 pub struct TypeBareFn {
     pub span: crate::Span,

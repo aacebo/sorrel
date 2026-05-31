@@ -41,6 +41,20 @@ pub trait ToTokenStream: ToTokens<TokenStream> {
 
 impl<X: ToTokens<TokenStream> + ?Sized> ToTokenStream for X {}
 
+impl<T: ToTokens> ToTokens for ::std::boxed::Box<T> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        (**self).to_tokens(tokens);
+    }
+}
+
+impl<T: ToTokens> ToTokens for Option<T> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        if let Some(v) = self {
+            v.to_tokens(tokens);
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Token {
     Ident(Ident),

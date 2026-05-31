@@ -140,36 +140,47 @@ fn one(
                 false
             };
         }
-    } else if let Some(path) = &opts.call {
-        quote! { let #binding = #path(#stream)?; }
-    } else if opts.separated {
-        quote! { let #binding = ::zynix::ast::Punctuated::parse_separated_nonempty(#stream)?; }
-    } else if opts.terminated {
-        quote! { let #binding = ::zynix::ast::Punctuated::parse_terminated(#stream)?; }
     } else if let Some(delim) = opts.group {
+        // Parse the field from inside the delimiter; honor separated/terminated
+        // for a `Punctuated` field, else parse a single `T`.
         let delim = format_ident!("{delim}");
+        let inner = value_expr(opts, ty, stream);
         quote! {
             let #binding = {
-                let inner = #stream.parse_group(::zynix::token::Delim::#delim)?;
-                let mut inner_stream = inner.parse();
-                ::zynix::Parse::parse(&mut inner_stream)?
+                let group = #stream.parse_group(::zynix::token::Delim::#delim)?;
+                let mut group_stream = group.parse();
+                let #stream = &mut group_stream;
+                #inner
             };
         }
-    } else if type_is(ty, "Option") {
-        quote! {
-            let #binding = {
-                let mut fork = #stream.fork();
-                match ::zynix::Parse::parse(&mut fork) {
-                    Ok(v) => { #stream.seek(&fork); Some(v) }
-                    Err(_) => None,
-                }
-            };
-        }
-    } else if type_is(ty, "Box") {
-        quote! { let #binding = ::std::boxed::Box::new(#stream.parse()?); }
     } else {
-        quote! { let #binding = #stream.parse()?; }
+        let value = value_expr(opts, ty, stream);
+        quote! { let #binding = #value; }
     };
 
     Ok(quote! { #prefix #core #suffix })
+}
+
+/// The expression that produces a field's value from `stream`, honoring
+/// `call`/`separated`/`terminated` and the `Option<T>`/`Box<T>` field shapes.
+fn value_expr(opts: &ParseOptions, ty: &Type, stream: &syn::Ident) -> proc_macro2::TokenStream {
+    if let Some(path) = &opts.call {
+        quote! { #path(#stream)? }
+    } else if opts.separated {
+        quote! { ::zynix::ast::Punctuated::parse_separated_nonempty(#stream)? }
+    } else if opts.terminated {
+        quote! { ::zynix::ast::Punctuated::parse_terminated(#stream)? }
+    } else if type_is(ty, "Option") {
+        quote! {{
+            let mut fork = #stream.fork();
+            match ::zynix::Parse::parse(&mut fork) {
+                Ok(v) => { #stream.seek(&fork); Some(v) }
+                Err(_) => None,
+            }
+        }}
+    } else if type_is(ty, "Box") {
+        quote! { ::std::boxed::Box::new(#stream.parse()?) }
+    } else {
+        quote! { #stream.parse()? }
+    }
 }
