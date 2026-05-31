@@ -10,6 +10,7 @@
 )]
 
 extern crate proc_macro;
+extern crate self as zynix;
 
 pub mod bridge;
 pub mod parse;

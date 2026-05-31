@@ -863,11 +863,15 @@ dependencies = [
  "serde_json",
  "unicode-ident",
  "version_check",
+ "zynix-macros",
 ]
 
 [[package]]
 name = "zynix-macros"
 version = "0.5.3"
 dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
  "zynix",
 ]

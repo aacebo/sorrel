@@ -19,68 +19,6 @@ nodes:
     - Paren
     - Bracket
     - Brace
-  Ident:
-    kind: product
-    doc: "An identifier token (e.g. a variable name, type name, or keyword-like ident)."
-    extends: node_base
-    fields:
-    - name: text
-      type: String
-    - name: raw
-      type: bool
-      default: false
-    meta:
-      public_leaf: true
-      macro_facing: true
-      notes: Generator should treat this as a dedicated identifier token type, not as a plain runtime string.
-  LifetimeName:
-    kind: product
-    extends: node_base
-    fields:
-    - name: text
-      type: String
-  LitBool:
-    kind: product
-    submodule: lit
-    extends: node_base
-    fields:
-    - name: value
-      type: bool
-  LitByte:
-    kind: product
-    submodule: lit
-    extends: node_base
-    fields:
-    - name: value
-      type: u8
-  LitByteStr:
-    kind: product
-    submodule: lit
-    extends: node_base
-    fields:
-    - name: value
-      type: Vec<u8>
-  LitCStr:
-    kind: product
-    submodule: lit
-    extends: node_base
-    fields:
-    - name: value
-      type: Vec<u8>
-  LitChar:
-    kind: product
-    submodule: lit
-    extends: node_base
-    fields:
-    - name: value
-      type: String
-  LitStr:
-    kind: product
-    submodule: lit
-    extends: node_base
-    fields:
-    - name: value
-      type: String
   DocString:
     kind: product
     extends: node_base
@@ -102,41 +40,6 @@ nodes:
         node: true
     - name: rules
       type: crate::TokenStream
-  Lifetime:
-    kind: product
-    doc: "A named lifetime (e.g. `'a`, `'static`)."
-    extends: node_base
-    fields:
-    - name: apostrophe
-      type: crate::Span
-    - name: ident
-      type: Ident
-      meta:
-        node: true
-  LitFloat:
-    kind: product
-    submodule: lit
-    extends: node_base
-    fields:
-    - name: digits
-      type: String
-    - name: suffix
-      type: Ident
-      meta:
-        node: true
-        wrapper: option
-  LitInt:
-    kind: product
-    submodule: lit
-    extends: node_base
-    fields:
-    - name: digits
-      type: String
-    - name: suffix
-      type: Ident
-      meta:
-        node: true
-        wrapper: option
   Member:
     kind: sum
     variants:
@@ -229,63 +132,6 @@ nodes:
     fields:
     - name: lifetimes
       type: 'crate::ast::Punctuated<Lifetime, crate::token::Comma>'
-  Lit:
-    kind: sum
-    submodule: lit
-    doc: "A literal value in source code (string, integer, float, byte, char, or boolean)."
-    variants:
-    - name: Str
-      fields:
-      - name: value
-        type: LitStr
-        meta:
-          node: true
-    - name: ByteStr
-      fields:
-      - name: value
-        type: LitByteStr
-        meta:
-          node: true
-    - name: CStr
-      fields:
-      - name: value
-        type: LitCStr
-        meta:
-          node: true
-    - name: Byte
-      fields:
-      - name: value
-        type: LitByte
-        meta:
-          node: true
-    - name: Char
-      fields:
-      - name: value
-        type: LitChar
-        meta:
-          node: true
-    - name: Int
-      fields:
-      - name: value
-        type: LitInt
-        meta:
-          node: true
-    - name: Float
-      fields:
-      - name: value
-        type: LitFloat
-        meta:
-          node: true
-    - name: Bool
-      fields:
-      - name: value
-        type: LitBool
-        meta:
-          node: true
-    - name: Verbatim
-      fields:
-      - name: tokens
-        type: crate::TokenStream
   ExprContinue:
     kind: product
     submodule: expr
@@ -2325,44 +2171,6 @@ nodes:
       meta:
         node: true
         wrapper: box
-  Path:
-    kind: product
-    doc: "A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`)."
-    extends: node_base
-    fields:
-    - name: leading_colon
-      type: bool
-      default: false
-    - name: segments
-      type: 'crate::ast::Punctuated<PathSegment, crate::token::PathSep>'
-  PathArguments:
-    kind: sum
-    variants:
-    - name: None
-    - name: AngleBracketed
-      fields:
-      - name: args
-        type: 'crate::ast::Punctuated<GenericArgument, crate::token::Comma>'
-    - name: Parenthesized
-      fields:
-      - name: inputs
-        type: 'crate::ast::Punctuated<Type, crate::token::Comma>'
-      - name: output
-        type: Option<Box<Type>>
-        meta:
-          node: true
-  PathSegment:
-    kind: product
-    extends: node_base
-    fields:
-    - name: ident
-      type: Ident
-      meta:
-        node: true
-    - name: args
-      type: PathArguments
-      meta:
-        node: true
   Pattern:
     kind: sum
     submodule: pat

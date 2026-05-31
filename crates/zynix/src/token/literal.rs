@@ -58,6 +58,17 @@ impl Literal {
     lit_constructor!(f32_unsuffixed, f32, "{}");
     lit_constructor!(f64_unsuffixed, f64, "{}");
 
+    pub fn from_repr(repr: &str, span: Span) -> Self {
+        Self {
+            repr: repr.into(),
+            span,
+        }
+    }
+
+    pub fn repr(&self) -> &str {
+        &self.repr
+    }
+
     pub fn span(&self) -> Span {
         self.span
     }

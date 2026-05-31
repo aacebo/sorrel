@@ -204,15 +204,20 @@ impl FromStr for TokenStream {
 
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use crate::token::{Punctuation, Token};
+
         let mut first = true;
+        let mut prev_was_tick = false;
 
         for tt in self.0.iter() {
-            if !first {
+            if !first && !prev_was_tick {
                 write!(f, " ")?;
             }
 
             write!(f, "{}", tt)?;
             first = false;
+            // A `'` glues to the following token to form a lifetime (`'a`).
+            prev_was_tick = matches!(tt, TokenTree::Token(Token::Punct(Punctuation::Quote(_))));
         }
 
         Ok(())
