@@ -1,6 +1,5 @@
 use std::ops::{Index, IndexMut};
-use std::slice;
-use std::vec;
+use std::{slice, vec};
 
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -104,10 +103,7 @@ impl<T, P> Punctuated<T, P> {
     where
         P: Default,
     {
-        assert!(
-            index <= self.len(),
-            "Punctuated::insert: index out of range"
-        );
+        assert!(index <= self.len(), "Punctuated::insert: index out of range");
 
         if index == self.len() {
             self.push(value);
@@ -536,10 +532,7 @@ impl<'a, T, P> Iterator for PrivateIter<'a, T, P> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
-        self.inner
-            .next()
-            .map(|(t, _)| t)
-            .or_else(|| self.last.next())
+        self.inner.next().map(|(t, _)| t).or_else(|| self.last.next())
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -549,9 +542,7 @@ impl<'a, T, P> Iterator for PrivateIter<'a, T, P> {
 
 impl<'a, T, P> DoubleEndedIterator for PrivateIter<'a, T, P> {
     fn next_back(&mut self) -> Option<&'a T> {
-        self.last
-            .next()
-            .or_else(|| self.inner.next_back().map(|(t, _)| t))
+        self.last.next().or_else(|| self.inner.next_back().map(|(t, _)| t))
     }
 }
 
@@ -617,10 +608,7 @@ impl<'a, T> ExactSizeIterator for Iter<'a, T> {
 
 // IterMut
 
-trait IterMutTrait<'a, T: 'a>:
-    DoubleEndedIterator<Item = &'a mut T> + ExactSizeIterator<Item = &'a mut T>
-{
-}
+trait IterMutTrait<'a, T: 'a>: DoubleEndedIterator<Item = &'a mut T> + ExactSizeIterator<Item = &'a mut T> {}
 
 struct PrivateIterMut<'a, T: 'a, P: 'a> {
     inner: slice::IterMut<'a, (T, P)>,
@@ -631,10 +619,7 @@ impl<'a, T, P> Iterator for PrivateIterMut<'a, T, P> {
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<&'a mut T> {
-        self.inner
-            .next()
-            .map(|(t, _)| t)
-            .or_else(|| self.last.next())
+        self.inner.next().map(|(t, _)| t).or_else(|| self.last.next())
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -644,9 +629,7 @@ impl<'a, T, P> Iterator for PrivateIterMut<'a, T, P> {
 
 impl<'a, T, P> DoubleEndedIterator for PrivateIterMut<'a, T, P> {
     fn next_back(&mut self) -> Option<&'a mut T> {
-        self.last
-            .next()
-            .or_else(|| self.inner.next_back().map(|(t, _)| t))
+        self.last.next().or_else(|| self.inner.next_back().map(|(t, _)| t))
     }
 }
 

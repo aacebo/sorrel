@@ -34,9 +34,7 @@ pub use type_tuple::*;
 pub use typed_param::*;
 
 /// Parse `Bound + Bound + ...` for `impl`/`dyn` types.
-pub(crate) fn parse_plus_bounds(
-    stream: &mut ParseStream,
-) -> Result<Punctuated<TypeBound, Plus>, ParseError> {
+pub(crate) fn parse_plus_bounds(stream: &mut ParseStream) -> Result<Punctuated<TypeBound, Plus>, ParseError> {
     let mut bounds = Punctuated::new();
     loop {
         bounds.push_value(stream.parse::<TypeBound>()?);
@@ -217,9 +215,10 @@ fn is_group(tt: &crate::TokenTree, delim: Delim) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     fn parse(src: &str) -> Type {
         let ts = TokenStream::from_str(src).unwrap();

@@ -1,4 +1,4 @@
-use super::AttrStyle;
+use super::attr::AttrStyle;
 
 #[doc = "A documentation comment (`///` outer or `//!` inner). Not parsed from the token stream directly — doc comments surface as `#[doc = \"...\"]` attributes."]
 #[derive(Debug, Clone)]

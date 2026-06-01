@@ -79,11 +79,7 @@ impl SourceMap {
     }
 
     pub fn push(&mut self, src: impl Into<String>) -> Span {
-        let start = self
-            .0
-            .last()
-            .map(|file| file.span().byte_range().end)
-            .unwrap_or(0);
+        let start = self.0.last().map(|file| file.span().byte_range().end).unwrap_or(0);
         let file = Source::new(start, src);
         let span = file.span();
         self.0.push(file);

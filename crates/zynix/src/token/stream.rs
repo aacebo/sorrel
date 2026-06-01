@@ -164,11 +164,10 @@ impl Scan for TokenStream {
             }
 
             if let Ok((next, ident)) = crate::token::Ident::scan(c) {
-                let token =
-                    match crate::token::Keyword::from_str(ident.name().as_ref(), ident.span()) {
-                        Some(kw) => crate::Token::Keyword(kw),
-                        None => crate::Token::Ident(ident),
-                    };
+                let token = match crate::token::Keyword::from_str(ident.name().as_ref(), ident.span()) {
+                    Some(kw) => crate::Token::Keyword(kw),
+                    None => crate::Token::Ident(ident),
+                };
                 tokens.push(token.into());
                 c = next;
                 continue;
@@ -180,10 +179,9 @@ impl Scan for TokenStream {
                 continue;
             }
 
-            return Err(c.error().message(format!(
-                "unexpected character '{}'",
-                c.first().unwrap_or('\0')
-            )));
+            return Err(c
+                .error()
+                .message(format!("unexpected character '{}'", c.first().unwrap_or('\0'))));
         }
 
         Ok((c, Self(tokens)))
@@ -268,8 +266,9 @@ fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Spa
 #[cfg(test)]
 mod tests {
     mod display {
-        use crate::TokenStream;
         use std::str::FromStr;
+
+        use crate::TokenStream;
 
         fn render(src: &str) -> String {
             TokenStream::from_str(src).unwrap().to_string()
@@ -324,9 +323,10 @@ mod tests {
     }
 
     mod lex {
+        use std::str::FromStr;
+
         use crate::TokenStream;
         use crate::token::{Punctuation, Token, TokenTree};
-        use std::str::FromStr;
 
         fn trees(src: &str) -> Vec<TokenTree> {
             TokenStream::from_str(src).unwrap().into_iter().collect()
@@ -336,17 +336,11 @@ mod tests {
         fn doc_comment_becomes_attr() {
             // `/// x` → `# [doc = "x"]`; plain `//` is still skipped.
             let t = trees("/// hello\nfn f() {}");
-            assert!(matches!(
-                t[0],
-                TokenTree::Token(Token::Punct(Punctuation::Pound(_)))
-            ));
+            assert!(matches!(t[0], TokenTree::Token(Token::Punct(Punctuation::Pound(_)))));
             assert!(matches!(t[1], TokenTree::Group(_)));
             // inner doc `//!`
             let inner = trees("//! crate doc\n");
-            assert!(matches!(
-                inner[1],
-                TokenTree::Token(Token::Punct(Punctuation::Not(_)))
-            ));
+            assert!(matches!(inner[1], TokenTree::Token(Token::Punct(Punctuation::Not(_)))));
             // plain comment still skipped
             assert_eq!(trees("// plain\nx").len(), 1);
             // block doc
@@ -359,10 +353,7 @@ mod tests {
         #[test]
         fn lifetime_lexes_as_quote_then_ident() {
             let t = trees("&'a str");
-            assert!(matches!(
-                t[1],
-                TokenTree::Token(Token::Punct(Punctuation::Quote(_)))
-            ));
+            assert!(matches!(t[1], TokenTree::Token(Token::Punct(Punctuation::Quote(_)))));
             assert!(matches!(t[2], TokenTree::Token(Token::Ident(_))));
         }
 
@@ -376,8 +367,9 @@ mod tests {
 
     #[cfg(feature = "serde")]
     mod serde {
-        use crate::TokenStream;
         use std::str::FromStr;
+
+        use crate::TokenStream;
 
         #[test]
         fn serializes_as_array_of_token_strings() {

@@ -1,21 +1,74 @@
-mod attr_args;
-mod attr_style;
-mod attribute;
+pub mod attr;
 mod doc_string;
-mod meta;
+mod meta_list;
+mod meta_name_value;
 
-pub use attr_args::*;
-pub use attr_style::*;
-pub use attribute::*;
+pub use attr::*;
 pub use doc_string::*;
-pub use meta::*;
+pub use meta_list::*;
+pub use meta_name_value::*;
+
+use crate::ast::{Expr, Path};
+use crate::parse::{Parse, ParseError, ParseStream};
+use crate::token::{Eq, ToTokens};
+use crate::{Span, TokenStream};
+
+#[doc = "A structured attribute meta item (`name`, `name(...)`, `name = expr`)."]
+#[derive(Debug, Clone)]
+pub enum Meta {
+    Path(super::Path),
+    List(MetaList),
+    NameValue(MetaNameValue),
+}
+
+impl Parse for Meta {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let path = stream.parse::<Path>()?;
+
+        if let Some(crate::token::TokenTree::Group(group)) = stream.curr() {
+            let delim = group.delim;
+            let tokens = stream.parse_group(delim)?;
+
+            return Ok(Self::List(MetaList {
+                span: Span::default(),
+                path,
+                delim,
+                tokens,
+            }));
+        }
+
+        if stream.peek::<Eq>().is_some() {
+            let _ = stream.parse::<Eq>()?;
+            let value = stream.parse::<Expr>()?;
+
+            return Ok(Meta::NameValue(MetaNameValue {
+                span: Span::default(),
+                path,
+                value,
+            }));
+        }
+
+        Ok(Self::Path(path))
+    }
+}
+
+impl ToTokens for Meta {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        match self {
+            Self::Path(p) => p.to_tokens(t),
+            Self::List(l) => l.to_tokens(t),
+            Self::NameValue(nv) => nv.to_tokens(t),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::token::ToTokenStream;
     use crate::{Parse, TokenStream};
-    use std::str::FromStr;
 
     fn parse<T: Parse>(src: &str) -> T {
         let ts = TokenStream::from_str(src).unwrap();

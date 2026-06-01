@@ -199,12 +199,8 @@ impl ToTokens<TokenStream> for proc_macro::TokenTree {
                 };
                 tokens.extend_one(token.into())
             }
-            proc_macro::TokenTree::Literal(v) => {
-                tokens.extend_one(Token::Literal(v.clone().into()).into())
-            }
-            proc_macro::TokenTree::Group(v) => {
-                tokens.extend_one(TokenTree::Group(v.clone().into()))
-            }
+            proc_macro::TokenTree::Literal(v) => tokens.extend_one(Token::Literal(v.clone().into()).into()),
+            proc_macro::TokenTree::Group(v) => tokens.extend_one(TokenTree::Group(v.clone().into())),
             proc_macro::TokenTree::Punct(p) => scan_puncts(&p.to_string(), tokens),
         }
     }
@@ -237,16 +233,12 @@ impl ToTokens<proc_macro::TokenStream> for TokenTree {
     fn to_tokens(&self, out: &mut proc_macro::TokenStream) {
         match self {
             TokenTree::Group(g) => out.extend_one(proc_macro::TokenTree::Group(g.clone().into())),
-            TokenTree::Token(Token::Ident(v)) => {
-                out.extend_one(proc_macro::TokenTree::Ident(v.clone().into()))
-            }
+            TokenTree::Token(Token::Ident(v)) => out.extend_one(proc_macro::TokenTree::Ident(v.clone().into())),
             TokenTree::Token(Token::Keyword(kw)) => {
                 let id = proc_macro::Ident::new(kw.as_str(), kw.span().into());
                 out.extend_one(proc_macro::TokenTree::Ident(id))
             }
-            TokenTree::Token(Token::Literal(v)) => {
-                out.extend_one(proc_macro::TokenTree::Literal(v.clone().into()))
-            }
+            TokenTree::Token(Token::Literal(v)) => out.extend_one(proc_macro::TokenTree::Literal(v.clone().into())),
             TokenTree::Token(Token::Punct(op)) => {
                 let text = op.as_str();
                 let span: proc_macro::Span = op.span().into();
@@ -496,17 +488,15 @@ mod tests {
 
     #[cfg(feature = "serde")]
     mod serde {
-        use crate::TokenStream;
         use std::str::FromStr;
+
+        use crate::TokenStream;
 
         #[test]
         fn token_serializes_as_string() {
             let ts = TokenStream::from_str("foo").unwrap();
             let tree = ts.into_iter().next().unwrap();
-            assert_eq!(
-                serde_json::to_value(&tree).unwrap(),
-                serde_json::json!("foo")
-            );
+            assert_eq!(serde_json::to_value(&tree).unwrap(), serde_json::json!("foo"));
         }
 
         #[test]

@@ -12,10 +12,7 @@ pub struct Cursor<'a> {
 
 impl<'a> Cursor<'a> {
     pub fn new(src: &'a str, offset: u32) -> Self {
-        Self {
-            rest: src,
-            off: offset,
-        }
+        Self { rest: src, off: offset }
     }
 
     pub fn rest(&self) -> &'a str {
@@ -121,8 +118,7 @@ impl<'a> Cursor<'a> {
 
     /// True at a block doc comment: `/**...` (but not `/***`/`/**/`) or `/*!...`.
     pub fn is_block_doc(&self) -> bool {
-        self.starts_with("/*!")
-            || (self.starts_with("/**") && !self.starts_with("/***") && !self.starts_with("/**/"))
+        self.starts_with("/*!") || (self.starts_with("/**") && !self.starts_with("/***") && !self.starts_with("/**/"))
     }
 
     /// If positioned at a doc comment, return `(cursor after it, is_inner, text)`.
@@ -132,11 +128,7 @@ impl<'a> Cursor<'a> {
             let body = self.advance(3); // skip /// or //!
             let end = body.skip_while(|ch| ch != '\n');
             let text: String = body.rest()[..(end.offset() - body.offset()) as usize].to_string();
-            let next = if end.starts_with("\n") {
-                end.advance(1)
-            } else {
-                end
-            };
+            let next = if end.starts_with("\n") { end.advance(1) } else { end };
             return Some((next, inner, text.trim().to_string()));
         }
         if self.is_block_doc() {

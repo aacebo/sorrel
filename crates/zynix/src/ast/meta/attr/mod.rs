@@ -1,4 +1,9 @@
-use super::{AttrArgs, AttrStyle};
+mod attr_args;
+mod attr_style;
+
+pub use attr_args::*;
+pub use attr_style::*;
+
 use crate::ast::Path;
 use crate::parse::{ParseError, ParseStream};
 use crate::token::punct::{Not, Pound};

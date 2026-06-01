@@ -34,11 +34,7 @@ pub fn expand(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     })
 }
 
-fn fields(
-    fields: &Fields,
-    tokens: &syn::Ident,
-    via_self: bool,
-) -> syn::Result<proc_macro2::TokenStream> {
+fn fields(fields: &Fields, tokens: &syn::Ident, via_self: bool) -> syn::Result<proc_macro2::TokenStream> {
     let mut emits = Vec::new();
 
     match fields {
@@ -73,10 +69,7 @@ fn fields(
     Ok(quote! { #(#emits)* })
 }
 
-fn variant_arm(
-    fields: &Fields,
-    tokens: &syn::Ident,
-) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
+fn variant_arm(fields: &Fields, tokens: &syn::Ident) -> syn::Result<(proc_macro2::TokenStream, proc_macro2::TokenStream)> {
     let mut emits = Vec::new();
 
     let pat = match fields {
@@ -110,12 +103,7 @@ fn variant_arm(
     Ok((pat, quote! { #(#emits)* }))
 }
 
-fn one(
-    access: &proc_macro2::TokenStream,
-    ty: &Type,
-    opts: &ToTokenOptions,
-    tokens: &syn::Ident,
-) -> proc_macro2::TokenStream {
+fn one(access: &proc_macro2::TokenStream, ty: &Type, opts: &ToTokenOptions, tokens: &syn::Ident) -> proc_macro2::TokenStream {
     if opts.skip || opts.value {
         return quote! {};
     }

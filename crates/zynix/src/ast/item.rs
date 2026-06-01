@@ -1,13 +1,11 @@
 use crate::ast::member_item::is_fn_start;
 use crate::ast::{
-    Abi, Attribute, Block, Defaultness, Expr, Fields, FieldsNamed, ForeignItem, Generics, Ident,
-    ImplItem, MacroCall, Mutability, Punctuated, Signature, TraitItem, TraitRef, Type, TypeBound,
-    Unsafety, UseTree, Variant, Visibility,
+    Abi, Attribute, Block, Defaultness, Expr, Fields, FieldsNamed, ForeignItem, Generics, Ident, ImplItem, MacroCall, Mutability,
+    Punctuated, Signature, TraitItem, TraitRef, Type, TypeBound, Unsafety, UseTree, Variant, Visibility,
 };
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{
-    As, Auto, Const, Crate as KwCrate, Enum, Extern, For, Impl, Mod, Static, Struct, Trait,
-    Type as KwType, Union, Use,
+    As, Auto, Const, Crate as KwCrate, Enum, Extern, For, Impl, Mod, Static, Struct, Trait, Type as KwType, Union, Use,
 };
 use crate::token::punct::{Colon, Comma, Eq, Not, Plus, Semi};
 use crate::token::{Delim, Group, LexError, ToTokens, Token, TokenStream as TS, TokenTree};
@@ -230,9 +228,7 @@ impl Parse for Item {
                     s
                 }
                 _ => {
-                    return Err(LexError::new(stream.span())
-                        .message("expected macro body")
-                        .into());
+                    return Err(LexError::new(stream.span()).message("expected macro body").into());
                 }
             };
             return Ok(Item::Macro2(ItemMacroRules {
@@ -274,9 +270,7 @@ impl Parse for Item {
             }));
         }
         // `extern "abi" { ... }` foreign mod (also `unsafe extern`).
-        if is_kw(stream.curr(), "extern")
-            || (is_kw(stream.curr(), "unsafe") && is_extern_block(stream))
-        {
+        if is_kw(stream.curr(), "extern") || (is_kw(stream.curr(), "unsafe") && is_extern_block(stream)) {
             let unsafety = stream.parse::<Unsafety>()?;
             let abi = stream.parse::<Abi>()?;
             let group = stream.parse_group(Delim::Brace)?;
@@ -294,8 +288,7 @@ impl Parse for Item {
             let unsafety = Unsafety::Safe;
             let _ = stream.parse::<Mod>()?;
             let ident = stream.parse::<Ident>()?;
-            let content = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace)
-            {
+            let content = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
                 let group = stream.parse_group(Delim::Brace)?;
                 let mut inner = group.parse();
                 Some(inner.parse_vec::<Item>()?)
@@ -370,8 +363,7 @@ impl Parse for Item {
         {
             return parse_trait(stream, attrs, vis);
         }
-        if is_kw(stream.curr(), "impl") || (is_kw(stream.curr(), "unsafe") && is_impl_after(stream))
-        {
+        if is_kw(stream.curr(), "impl") || (is_kw(stream.curr(), "unsafe") && is_impl_after(stream)) {
             return parse_impl(stream, attrs);
         }
         if is_kw(stream.curr(), "type") {
@@ -462,11 +454,7 @@ impl Parse for Item {
     }
 }
 
-fn parse_trait(
-    stream: &mut ParseStream,
-    attrs: Vec<Attribute>,
-    vis: Visibility,
-) -> Result<Item, ParseError> {
+fn parse_trait(stream: &mut ParseStream, attrs: Vec<Attribute>, vis: Visibility) -> Result<Item, ParseError> {
     let unsafety = stream.parse::<Unsafety>()?;
     let auto = if stream.peek::<Auto>().is_some() {
         let _ = stream.parse::<Auto>()?;
@@ -562,19 +550,14 @@ fn parse_impl(stream: &mut ParseStream, attrs: Vec<Attribute>) -> Result<Item, P
     }))
 }
 
-fn type_to_trait_ref(
-    ty: Type,
-    polarity: crate::ast::BoundPolarity,
-) -> Result<TraitRef, ParseError> {
+fn type_to_trait_ref(ty: Type, polarity: crate::ast::BoundPolarity) -> Result<TraitRef, ParseError> {
     match ty {
         Type::Path(tp) => Ok(TraitRef {
             span: Span::default(),
             polarity,
             path: tp.path,
         }),
-        _ => Err(LexError::new(Span::default())
-            .message("expected trait path")
-            .into()),
+        _ => Err(LexError::new(Span::default()).message("expected trait path").into()),
     }
 }
 
@@ -584,16 +567,19 @@ fn is_kw_after_extern(stream: &mut ParseStream, name: &str) -> bool {
     let _ = fork.parse::<Extern>();
     is_kw(fork.curr(), name)
 }
+
 fn is_extern_block(stream: &mut ParseStream) -> bool {
     let mut fork = stream.fork();
     let _ = fork.parse::<Unsafety>();
     is_kw(fork.curr(), "extern")
 }
+
 fn is_impl_after(stream: &mut ParseStream) -> bool {
     let mut fork = stream.fork();
     let _ = fork.parse::<Unsafety>();
     is_kw(fork.curr(), "impl")
 }
+
 fn is_trait_after(stream: &mut ParseStream) -> bool {
     // `unsafe trait` or `unsafe auto trait`.
     let mut fork = stream.fork();
@@ -603,6 +589,7 @@ fn is_trait_after(stream: &mut ParseStream) -> bool {
     }
     is_kw(fork.curr(), "trait")
 }
+
 fn is_kw_after_unsafety(stream: &mut ParseStream, name: &str) -> bool {
     // `auto trait` (no unsafe).
     let mut fork = stream.fork();
@@ -818,9 +805,10 @@ impl ToTokens for Crate {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     fn parse<T: Parse>(src: &str) -> T {
         let ts = TokenStream::from_str(src).unwrap();
@@ -839,14 +827,8 @@ mod tests {
 
     #[test]
     fn item_struct() {
-        assert!(matches!(
-            parse::<Item>("pub(crate) struct S<T> { a: T }"),
-            Item::Struct(_)
-        ));
-        assert!(matches!(
-            parse::<Item>("struct P(u8, u16);"),
-            Item::Struct(_)
-        ));
+        assert!(matches!(parse::<Item>("pub(crate) struct S<T> { a: T }"), Item::Struct(_)));
+        assert!(matches!(parse::<Item>("struct P(u8, u16);"), Item::Struct(_)));
         assert!(matches!(parse::<Item>("struct U;"), Item::Struct(_)));
     }
 
@@ -879,19 +861,13 @@ mod tests {
 
     #[test]
     fn item_use() {
-        assert!(matches!(
-            parse::<Item>("use a::{b, c as d, e::*};"),
-            Item::Use(_)
-        ));
+        assert!(matches!(parse::<Item>("use a::{b, c as d, e::*};"), Item::Use(_)));
     }
 
     #[test]
     fn item_const_static_type() {
         assert!(matches!(parse::<Item>("const X: u8 = 1;"), Item::Const(_)));
-        assert!(matches!(
-            parse::<Item>("static Y: u8 = 1;"),
-            Item::Static(_)
-        ));
+        assert!(matches!(parse::<Item>("static Y: u8 = 1;"), Item::Static(_)));
         assert!(matches!(parse::<Item>("type Z = u8;"), Item::TypeAlias(_)));
     }
 
@@ -908,10 +884,7 @@ mod tests {
     fn item_mod_and_macro() {
         assert!(matches!(parse::<Item>("mod m { fn a() {} }"), Item::Mod(_)));
         assert!(matches!(parse::<Item>("mod m;"), Item::Mod(_)));
-        assert!(matches!(
-            parse::<Item>("macro_rules! m { () => {} }"),
-            Item::Macro2(_)
-        ));
+        assert!(matches!(parse::<Item>("macro_rules! m { () => {} }"), Item::Macro2(_)));
     }
 
     #[test]
@@ -924,10 +897,7 @@ mod tests {
             Item::Trait(t) => assert!(t.auto),
             _ => panic!("expected trait"),
         }
-        assert!(matches!(
-            parse::<Item>("unsafe auto trait T {}"),
-            Item::Trait(_)
-        ));
+        assert!(matches!(parse::<Item>("unsafe auto trait T {}"), Item::Trait(_)));
     }
 
     #[test]

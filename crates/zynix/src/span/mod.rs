@@ -152,24 +152,16 @@ impl PartialEq for Span {
 impl Ord for Span {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Self::Compiler(a), Self::Compiler(b)) => {
-                match a.start().line().cmp(&b.start().line()) {
-                    std::cmp::Ordering::Equal => {
-                        match a.start().column().cmp(&b.start().column()) {
-                            std::cmp::Ordering::Equal => {
-                                match a.end().line().cmp(&b.end().line()) {
-                                    std::cmp::Ordering::Equal => {
-                                        a.end().column().cmp(&b.end().column())
-                                    }
-                                    ord => ord,
-                                }
-                            }
-                            ord => ord,
-                        }
-                    }
+            (Self::Compiler(a), Self::Compiler(b)) => match a.start().line().cmp(&b.start().line()) {
+                std::cmp::Ordering::Equal => match a.start().column().cmp(&b.start().column()) {
+                    std::cmp::Ordering::Equal => match a.end().line().cmp(&b.end().line()) {
+                        std::cmp::Ordering::Equal => a.end().column().cmp(&b.end().column()),
+                        ord => ord,
+                    },
                     ord => ord,
-                }
-            }
+                },
+                ord => ord,
+            },
             (Self::Fallback(a), Self::Fallback(b)) => a.cmp(b),
             (Self::Fallback(_), Self::Compiler(_)) => std::cmp::Ordering::Less,
             (Self::Compiler(_), Self::Fallback(_)) => std::cmp::Ordering::Greater,

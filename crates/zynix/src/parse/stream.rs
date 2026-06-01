@@ -27,10 +27,7 @@ impl<'a> ParseStream<'a> {
         if let Some(span) = self.pending_gt {
             return span;
         }
-        self.input
-            .get(self.index)
-            .map(|t| t.span())
-            .unwrap_or_default()
+        self.input.get(self.index).map(|t| t.span()).unwrap_or_default()
     }
 
     pub fn fork(&self) -> Self {
@@ -54,9 +51,7 @@ impl<'a> ParseStream<'a> {
         }
         matches!(
             self.curr(),
-            Some(TokenTree::Token(Token::Punct(
-                Punctuation::Gt(_) | Punctuation::Shr(_)
-            )))
+            Some(TokenTree::Token(Token::Punct(Punctuation::Gt(_) | Punctuation::Shr(_))))
         )
     }
 
@@ -195,18 +190,9 @@ mod tests {
         let stream = "a + b".parse::<TokenStream>().unwrap();
         let mut ps = stream.parse();
 
-        assert!(matches!(
-            ps.advance().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        ));
-        assert!(matches!(
-            ps.advance().unwrap(),
-            TokenTree::Token(Token::Punct(_))
-        ));
-        assert!(matches!(
-            ps.advance().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        ));
+        assert!(matches!(ps.advance().unwrap(), TokenTree::Token(Token::Ident(_))));
+        assert!(matches!(ps.advance().unwrap(), TokenTree::Token(Token::Punct(_))));
+        assert!(matches!(ps.advance().unwrap(), TokenTree::Token(Token::Ident(_))));
         assert!(ps.is_empty());
     }
 
@@ -257,10 +243,7 @@ mod tests {
         if let TokenTree::Group(g) = group {
             let tokens = g.stream();
             let mut inner = tokens.parse();
-            debug_assert!(matches!(
-                inner.advance().unwrap(),
-                TokenTree::Token(Token::Ident(_))
-            )); // "a"
+            debug_assert!(matches!(inner.advance().unwrap(), TokenTree::Token(Token::Ident(_)))); // "a"
         }
     }
 }

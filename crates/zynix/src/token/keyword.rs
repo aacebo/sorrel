@@ -216,9 +216,10 @@ define_keyword! {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     #[test]
     fn parses_fn() {
@@ -237,11 +238,7 @@ mod tests {
     #[test]
     fn lexer_classifies_keywords_word_boundary() {
         fn first(src: &str) -> TokenTree {
-            TokenStream::from_str(src)
-                .unwrap()
-                .into_iter()
-                .next()
-                .unwrap()
+            TokenStream::from_str(src).unwrap().into_iter().next().unwrap()
         }
 
         fn assert_ident(tree: TokenTree, name: &str) {
@@ -251,10 +248,7 @@ mod tests {
             assert_eq!(id.name().as_ref(), name);
         }
 
-        assert!(matches!(
-            first("fn"),
-            TokenTree::Token(Token::Keyword(Keyword::Fn(_)))
-        ));
+        assert!(matches!(first("fn"), TokenTree::Token(Token::Keyword(Keyword::Fn(_)))));
 
         assert_ident(first("fnord"), "fnord");
         assert_ident(first("_"), "_");
@@ -299,10 +293,7 @@ mod tests {
 
         #[test]
         fn keyword_struct_serializes_as_string() {
-            assert_eq!(
-                serde_json::to_value(Fn::default()).unwrap(),
-                serde_json::json!("fn")
-            );
+            assert_eq!(serde_json::to_value(Fn::default()).unwrap(), serde_json::json!("fn"));
         }
 
         #[test]

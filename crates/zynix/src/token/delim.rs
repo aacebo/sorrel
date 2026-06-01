@@ -1,9 +1,5 @@
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(
-    feature = "serde",
-    derive(serde::Serialize),
-    serde(rename_all = "lowercase")
-)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize), serde(rename_all = "lowercase"))]
 pub enum Delim {
     #[default]
     None,
@@ -13,6 +9,33 @@ pub enum Delim {
 }
 
 impl Delim {
+    pub fn from_char(ch: char) -> Option<Self> {
+        match ch {
+            '(' | ')' => Some(Self::Paren),
+            '[' | ']' => Some(Self::Bracket),
+            '{' | '}' => Some(Self::Brace),
+            _ => None,
+        }
+    }
+
+    pub fn from_open(ch: char) -> Option<Self> {
+        match ch {
+            '(' => Some(Self::Paren),
+            '[' => Some(Self::Bracket),
+            '{' => Some(Self::Brace),
+            _ => None,
+        }
+    }
+
+    pub fn from_close(ch: char) -> Option<Self> {
+        match ch {
+            ')' => Some(Self::Paren),
+            ']' => Some(Self::Bracket),
+            '}' => Some(Self::Brace),
+            _ => None,
+        }
+    }
+
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Paren => "paren",
@@ -37,24 +60,6 @@ impl Delim {
             Self::Brace => '}',
             Self::Bracket => ']',
             Self::Paren => ')',
-        }
-    }
-
-    pub fn from_open(ch: char) -> Option<Self> {
-        match ch {
-            '(' => Some(Self::Paren),
-            '[' => Some(Self::Bracket),
-            '{' => Some(Self::Brace),
-            _ => None,
-        }
-    }
-
-    pub fn from_close(ch: char) -> Option<Self> {
-        match ch {
-            ')' => Some(Self::Paren),
-            ']' => Some(Self::Bracket),
-            '}' => Some(Self::Brace),
-            _ => None,
         }
     }
 }

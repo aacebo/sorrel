@@ -59,10 +59,7 @@ impl Literal {
     lit_constructor!(f64_unsuffixed, f64, "{}");
 
     pub fn from_repr(repr: &str, span: Span) -> Self {
-        Self {
-            repr: repr.into(),
-            span,
-        }
+        Self { repr: repr.into(), span }
     }
 
     pub fn repr(&self) -> &str {
@@ -410,9 +407,9 @@ fn hex_digit(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
 
 fn suffix(c: Cursor<'_>) -> Cursor<'_> {
     match c.first() {
-        Some(ch) if ch == '_' || unicode_ident::is_xid_start(ch) => c
-            .advance(ch.len_utf8())
-            .skip_while(unicode_ident::is_xid_continue),
+        Some(ch) if ch == '_' || unicode_ident::is_xid_start(ch) => {
+            c.advance(ch.len_utf8()).skip_while(unicode_ident::is_xid_continue)
+        }
         _ => c,
     }
 }
@@ -421,9 +418,10 @@ fn suffix(c: Cursor<'_>) -> Cursor<'_> {
 mod tests {
     #[cfg(feature = "serde")]
     mod serde {
+        use std::str::FromStr;
+
         use crate::TokenStream;
         use crate::token::Literal;
-        use std::str::FromStr;
 
         #[test]
         fn integer_literal_serializes_as_string() {
@@ -436,10 +434,7 @@ mod tests {
         fn string_literal_serializes_with_quotes() {
             let ts = TokenStream::from_str("\"hi\"").unwrap();
             let lit = ts.parse().parse::<Literal>().unwrap();
-            assert_eq!(
-                serde_json::to_value(&lit).unwrap(),
-                serde_json::json!("\"hi\"")
-            );
+            assert_eq!(serde_json::to_value(&lit).unwrap(), serde_json::json!("\"hi\""));
         }
     }
 }

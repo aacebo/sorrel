@@ -12,10 +12,7 @@ pub struct Ident {
 
 impl Ident {
     pub fn new(name: &str, span: Span) -> Self {
-        Self {
-            name: name.into(),
-            span,
-        }
+        Self { name: name.into(), span }
     }
 
     pub fn name(&self) -> Cow<'_, str> {
@@ -70,9 +67,7 @@ impl Scan for Ident {
             return cursor.error().into();
         }
 
-        let end = cursor
-            .advance(first.len_utf8())
-            .skip_while(unicode_ident::is_xid_continue);
+        let end = cursor.advance(first.len_utf8()).skip_while(unicode_ident::is_xid_continue);
         let span = cursor.span_to(&end);
         let name = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
         Ok((end, Self::new(name, span)))
@@ -116,9 +111,10 @@ impl serde::Serialize for Ident {
 mod tests {
     #[cfg(feature = "serde")]
     mod serde {
+        use std::str::FromStr;
+
         use crate::TokenStream;
         use crate::token::Ident;
-        use std::str::FromStr;
 
         #[test]
         fn ident_serializes_as_string() {

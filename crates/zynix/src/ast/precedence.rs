@@ -29,9 +29,7 @@ impl Precedence {
             BinOp::BitAnd => Precedence::BitAnd,
             BinOp::BitOr => Precedence::BitOr,
             BinOp::Shl | BinOp::Shr => Precedence::Shift,
-            BinOp::Eq | BinOp::Lt | BinOp::Le | BinOp::Ne | BinOp::Ge | BinOp::Gt => {
-                Precedence::Compare
-            }
+            BinOp::Eq | BinOp::Lt | BinOp::Le | BinOp::Ne | BinOp::Ge | BinOp::Gt => Precedence::Compare,
         }
     }
 }

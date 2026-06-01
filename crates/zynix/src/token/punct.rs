@@ -213,10 +213,11 @@ define_punct! {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::TokenStream;
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     #[test]
     fn parse_comma() {
@@ -276,19 +277,10 @@ mod tests {
     fn shr_is_one_whole_op() {
         use crate::token::Token;
 
-        let toks: Vec<TokenTree> = TokenStream::from_str("a >> b")
-            .unwrap()
-            .into_iter()
-            .collect();
-        let op_count = toks
-            .iter()
-            .filter(|t| matches!(t, TokenTree::Token(Token::Punct(_))))
-            .count();
+        let toks: Vec<TokenTree> = TokenStream::from_str("a >> b").unwrap().into_iter().collect();
+        let op_count = toks.iter().filter(|t| matches!(t, TokenTree::Token(Token::Punct(_)))).count();
         assert_eq!(op_count, 1);
-        assert!(matches!(
-            toks[1],
-            TokenTree::Token(Token::Punct(Punctuation::Shr(_)))
-        ));
+        assert!(matches!(toks[1], TokenTree::Token(Token::Punct(Punctuation::Shr(_)))));
     }
 
     #[test]
@@ -361,10 +353,7 @@ mod tests {
 
         #[test]
         fn named_punct_serializes_as_string() {
-            assert_eq!(
-                serde_json::to_value(EqEq::default()).unwrap(),
-                serde_json::json!("==")
-            );
+            assert_eq!(serde_json::to_value(EqEq::default()).unwrap(), serde_json::json!("=="));
         }
 
         #[test]

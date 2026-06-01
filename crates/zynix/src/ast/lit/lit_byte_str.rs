@@ -15,9 +15,7 @@ impl Parse for LitByteStr {
 
         match Lit::parse(stream)? {
             Lit::ByteStr(v) => Ok(v),
-            _ => Err(LexError::new(at)
-                .message("expected byte-string literal")
-                .into()),
+            _ => Err(LexError::new(at).message("expected byte-string literal").into()),
         }
     }
 }

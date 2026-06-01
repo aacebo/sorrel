@@ -57,9 +57,10 @@ impl std::fmt::Display for Ident {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     fn parse(src: &str) -> Ident {
         let ts = TokenStream::from_str(src).unwrap();

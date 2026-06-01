@@ -43,10 +43,11 @@ impl From<crate::ast::Ident> for Path {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::token::ToTokenStream;
     use crate::{Parse, TokenStream};
-    use std::str::FromStr;
 
     fn parse<T: Parse>(src: &str) -> T {
         let ts = TokenStream::from_str(src).unwrap();
@@ -95,10 +96,7 @@ mod tests {
     fn angle_bracketed() {
         let p: Path = parse("Vec<T>");
         assert_eq!(p.segments.len(), 1);
-        assert!(matches!(
-            p.segments.first().unwrap().args,
-            PathArguments::AngleBracketed(_)
-        ));
+        assert!(matches!(p.segments.first().unwrap().args, PathArguments::AngleBracketed(_)));
         assert_eq!(render(&p), "Vec < T >");
     }
 
@@ -107,10 +105,7 @@ mod tests {
         // `Vec<Box<T>>` closes with a single `>>` token; structured parsing must split it.
         let p: Path = parse("Vec<Box<T>>");
         assert_eq!(p.segments.len(), 1);
-        assert!(matches!(
-            p.segments.first().unwrap().args,
-            PathArguments::AngleBracketed(_)
-        ));
+        assert!(matches!(p.segments.first().unwrap().args, PathArguments::AngleBracketed(_)));
 
         let deep: Path = parse("A<B<C<D>>>");
         assert_eq!(deep.segments.len(), 1);
@@ -121,10 +116,7 @@ mod tests {
         let p: Path = parse("Iterator<Item = u8>");
         match &p.segments.first().unwrap().args {
             PathArguments::AngleBracketed(a) => {
-                assert!(matches!(
-                    a.args.first().unwrap(),
-                    crate::ast::GenericArgument::AssocType(_)
-                ));
+                assert!(matches!(a.args.first().unwrap(), crate::ast::GenericArgument::AssocType(_)));
             }
             _ => panic!("expected angle-bracketed"),
         }

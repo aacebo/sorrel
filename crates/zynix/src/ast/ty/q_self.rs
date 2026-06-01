@@ -41,9 +41,7 @@ pub(crate) fn parse_qualified_path(stream: &mut ParseStream) -> Result<(QSelf, P
 impl QSelf {
     /// Parse `< Type ( as Path )? >`, returning the qself plus the trait path
     /// segments (if any) that the enclosing `TypePath` must prepend to its path.
-    pub(crate) fn parse_with_trait(
-        stream: &mut ParseStream,
-    ) -> Result<(Self, Option<Path>), ParseError> {
+    pub(crate) fn parse_with_trait(stream: &mut ParseStream) -> Result<(Self, Option<Path>), ParseError> {
         let _ = stream.parse::<Lt>()?;
         let ty = Box::new(stream.parse::<Type>()?);
 

@@ -93,11 +93,7 @@ fn each_meta(
         }
 
         attr.parse_nested_meta(|meta| {
-            let key = meta
-                .path
-                .get_ident()
-                .map(|i| i.to_string())
-                .unwrap_or_default();
+            let key = meta.path.get_ident().map(|i| i.to_string()).unwrap_or_default();
 
             f(&key, meta)
         })?;

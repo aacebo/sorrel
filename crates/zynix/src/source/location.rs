@@ -8,11 +8,7 @@ pub struct Location {
 
 impl Location {
     pub const fn new(index: usize, line: usize, column: usize) -> Self {
-        Self {
-            index,
-            line,
-            column,
-        }
+        Self { index, line, column }
     }
 
     pub const fn index(&self) -> usize {

@@ -1,6 +1,4 @@
-use crate::ast::{
-    Attribute, Expr, Ident, Member, Mutability, Path, Punctuated, QSelf, RangeLimits, Type,
-};
+use crate::ast::{Attribute, Expr, Ident, Member, Mutability, Path, Punctuated, QSelf, RangeLimits, Type};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{Mut, Ref};
 use crate::token::punct::{And, At, Colon, Comma, DotDot, Or as OrPunct};
@@ -385,10 +383,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 }
 
-fn parse_pat_ident(
-    stream: &mut ParseStream,
-    attrs: Vec<Attribute>,
-) -> Result<PatIdent, ParseError> {
+fn parse_pat_ident(stream: &mut ParseStream, attrs: Vec<Attribute>) -> Result<PatIdent, ParseError> {
     let by_ref = if stream.peek::<Ref>().is_some() {
         let _ = stream.parse::<Ref>()?;
         true
@@ -413,9 +408,7 @@ fn parse_pat_ident(
     })
 }
 
-fn parse_struct_pat_body(
-    stream: &mut ParseStream,
-) -> Result<(Punctuated<PatField, Comma>, bool), ParseError> {
+fn parse_struct_pat_body(stream: &mut ParseStream) -> Result<(Punctuated<PatField, Comma>, bool), ParseError> {
     let mut fields = Punctuated::new();
     let mut rest = false;
 
@@ -434,9 +427,7 @@ fn parse_struct_pat_body(
             let ident = match &member {
                 Member::Named(id) => id.clone(),
                 Member::Unnamed(_) => {
-                    return Err(LexError::new(stream.span())
-                        .message("tuple index needs a pattern")
-                        .into());
+                    return Err(LexError::new(stream.span()).message("tuple index needs a pattern").into());
                 }
             };
             (

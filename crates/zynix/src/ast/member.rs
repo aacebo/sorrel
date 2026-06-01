@@ -16,9 +16,10 @@ impl Parse for Member {
 
         match stream.curr() {
             Some(TokenTree::Token(Token::Literal(lit))) => {
-                let index = lit.repr().parse::<u32>().map_err(|_| {
-                    ParseError::from(LexError::new(at).message("expected tuple index"))
-                })?;
+                let index = lit
+                    .repr()
+                    .parse::<u32>()
+                    .map_err(|_| ParseError::from(LexError::new(at).message("expected tuple index")))?;
                 stream.advance();
                 Ok(Member::Unnamed(index))
             }
@@ -32,8 +33,7 @@ impl ToTokens for Member {
         match self {
             Member::Named(ident) => ident.to_tokens(tokens),
             Member::Unnamed(index) => {
-                token::Literal::from_repr(&index.to_string(), crate::Span::default())
-                    .to_tokens(tokens);
+                token::Literal::from_repr(&index.to_string(), crate::Span::default()).to_tokens(tokens);
             }
         }
     }

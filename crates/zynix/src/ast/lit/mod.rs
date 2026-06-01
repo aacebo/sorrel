@@ -78,22 +78,13 @@ impl Parse for Lit {
 
                 // Classify by repr prefix and build the matching variant.
                 Ok(
-                    if repr.starts_with("b\"")
-                        || repr.starts_with("br\"")
-                        || repr.starts_with("br#")
-                    {
+                    if repr.starts_with("b\"") || repr.starts_with("br\"") || repr.starts_with("br#") {
                         Lit::ByteStr(LitByteStr { span, repr })
-                    } else if repr.starts_with("c\"")
-                        || repr.starts_with("cr\"")
-                        || repr.starts_with("cr#")
-                    {
+                    } else if repr.starts_with("c\"") || repr.starts_with("cr\"") || repr.starts_with("cr#") {
                         Lit::CStr(LitCStr { span, repr })
                     } else if repr.starts_with("b'") {
                         Lit::Byte(LitByte { span, repr })
-                    } else if repr.starts_with('"')
-                        || repr.starts_with("r\"")
-                        || repr.starts_with("r#")
-                    {
+                    } else if repr.starts_with('"') || repr.starts_with("r\"") || repr.starts_with("r#") {
                         Lit::Str(LitStr { span, repr })
                     } else if repr.starts_with('\'') {
                         Lit::Char(LitChar { span, repr })
@@ -106,14 +97,10 @@ impl Parse for Lit {
                     },
                 )
             }
-            Some(TokenTree::Token(Token::Ident(id)))
-                if id.name() == "true" || id.name() == "false" =>
-            {
-                Ok(Lit::Bool(LitBool {
-                    span: id.span(),
-                    value: id.name() == "true",
-                }))
-            }
+            Some(TokenTree::Token(Token::Ident(id))) if id.name() == "true" || id.name() == "false" => Ok(Lit::Bool(LitBool {
+                span: id.span(),
+                value: id.name() == "true",
+            })),
             _ => Err(LexError::new(at).message("expected literal").into()),
         }
     }
@@ -144,10 +131,11 @@ impl std::fmt::Display for Lit {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::Span;
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     fn parse<T: Parse>(src: &str) -> Result<T, ParseError> {
         let ts = TokenStream::from_str(src).unwrap();
@@ -177,14 +165,8 @@ mod tests {
 
     #[test]
     fn bool_value() {
-        assert!(matches!(
-            lit("true"),
-            Lit::Bool(LitBool { value: true, .. })
-        ));
-        assert!(matches!(
-            lit("false"),
-            Lit::Bool(LitBool { value: false, .. })
-        ));
+        assert!(matches!(lit("true"), Lit::Bool(LitBool { value: true, .. })));
+        assert!(matches!(lit("false"), Lit::Bool(LitBool { value: false, .. })));
     }
 
     #[test]
@@ -196,16 +178,7 @@ mod tests {
 
     #[test]
     fn roundtrips() {
-        for src in [
-            "\"s\"",
-            "42",
-            "1.5",
-            "'c'",
-            "true",
-            "false",
-            "0xff",
-            "1_000usize",
-        ] {
+        for src in ["\"s\"", "42", "1.5", "'c'", "true", "false", "0xff", "1_000usize"] {
             assert_eq!(roundtrip(src), src, "roundtrip mismatch for {src}");
         }
     }

@@ -78,9 +78,7 @@ impl Parse for GenericArgument {
         // Lifetime argument.
         if matches!(
             stream.curr(),
-            Some(TokenTree::Token(Token::Punct(
-                crate::token::Punctuation::Quote(_)
-            )))
+            Some(TokenTree::Token(Token::Punct(crate::token::Punctuation::Quote(_))))
         ) {
             return Ok(GenericArgument::Lifetime(stream.parse()?));
         }
@@ -103,9 +101,7 @@ impl Parse for GenericArgument {
 }
 
 /// Try to parse `Ident (<...>)? = T|expr` or `Ident (<...>)? : bounds`.
-fn try_assoc_or_constraint(
-    stream: &mut ParseStream,
-) -> Result<Option<GenericArgument>, ParseError> {
+fn try_assoc_or_constraint(stream: &mut ParseStream) -> Result<Option<GenericArgument>, ParseError> {
     let mut fork = stream.fork();
 
     // A bare ident, optionally with its own `<...>`.

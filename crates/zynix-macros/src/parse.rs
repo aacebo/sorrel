@@ -73,10 +73,7 @@ pub fn expand(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
 }
 
 /// Returns (per-field binding statements, constructor body).
-fn fields(
-    fields: &Fields,
-    stream: &syn::Ident,
-) -> syn::Result<(Vec<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
+fn fields(fields: &Fields, stream: &syn::Ident) -> syn::Result<(Vec<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
     let mut stmts = Vec::new();
 
     match fields {
@@ -108,12 +105,7 @@ fn fields(
     }
 }
 
-fn one(
-    binding: &syn::Ident,
-    ty: &Type,
-    opts: &ParseOptions,
-    stream: &syn::Ident,
-) -> syn::Result<proc_macro2::TokenStream> {
+fn one(binding: &syn::Ident, ty: &Type, opts: &ParseOptions, stream: &syn::Ident) -> syn::Result<proc_macro2::TokenStream> {
     if opts.skip {
         return Ok(quote! { let #binding = ::core::default::Default::default(); });
     }
@@ -122,14 +114,8 @@ fn one(
         return Ok(quote! { let #binding = #expr; });
     }
 
-    let prefix = opts
-        .prefix
-        .as_ref()
-        .map(|tok| quote! { let _ = #stream.parse::<#tok>()?; });
-    let suffix = opts
-        .suffix
-        .as_ref()
-        .map(|tok| quote! { let _ = #stream.parse::<#tok>()?; });
+    let prefix = opts.prefix.as_ref().map(|tok| quote! { let _ = #stream.parse::<#tok>()?; });
+    let suffix = opts.suffix.as_ref().map(|tok| quote! { let _ = #stream.parse::<#tok>()?; });
 
     let core = if let Some(tok) = &opts.peek {
         quote! {

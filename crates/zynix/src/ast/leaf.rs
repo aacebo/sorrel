@@ -172,10 +172,11 @@ define_leaf! {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::TokenStream;
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     fn parse<T: Parse>(src: &str) -> Result<T, ParseError> {
         let ts = TokenStream::from_str(src).unwrap();
@@ -218,60 +219,21 @@ mod tests {
 
     #[test]
     fn roundtrips() {
-        assert_eq!(
-            parse::<BinOp>("+").unwrap().to_token_stream().to_string(),
-            "+"
-        );
-        assert_eq!(
-            parse::<BinOp>("==").unwrap().to_token_stream().to_string(),
-            "=="
-        );
-        assert_eq!(
-            parse::<AssignOp>("<<=")
-                .unwrap()
-                .to_token_stream()
-                .to_string(),
-            "<<="
-        );
-        assert_eq!(
-            parse::<RangeLimits>("..=")
-                .unwrap()
-                .to_token_stream()
-                .to_string(),
-            "..="
-        );
-        assert_eq!(
-            parse::<Mutability>("mut")
-                .unwrap()
-                .to_token_stream()
-                .to_string(),
-            "mut"
-        );
-        assert_eq!(
-            parse::<Mutability>("")
-                .unwrap()
-                .to_token_stream()
-                .to_string(),
-            ""
-        );
+        assert_eq!(parse::<BinOp>("+").unwrap().to_token_stream().to_string(), "+");
+        assert_eq!(parse::<BinOp>("==").unwrap().to_token_stream().to_string(), "==");
+        assert_eq!(parse::<AssignOp>("<<=").unwrap().to_token_stream().to_string(), "<<=");
+        assert_eq!(parse::<RangeLimits>("..=").unwrap().to_token_stream().to_string(), "..=");
+        assert_eq!(parse::<Mutability>("mut").unwrap().to_token_stream().to_string(), "mut");
+        assert_eq!(parse::<Mutability>("").unwrap().to_token_stream().to_string(), "");
     }
 
     #[test]
     fn range_and_modifiers() {
         assert_eq!(parse::<RangeLimits>("..").unwrap(), RangeLimits::HalfOpen);
         assert_eq!(parse::<RangeLimits>("..=").unwrap(), RangeLimits::Closed);
-        assert_eq!(
-            parse::<TraitBoundModifier>("?").unwrap(),
-            TraitBoundModifier::Maybe
-        );
-        assert_eq!(
-            parse::<TraitBoundModifier>("").unwrap(),
-            TraitBoundModifier::None
-        );
-        assert_eq!(
-            parse::<BoundPolarity>("!").unwrap(),
-            BoundPolarity::Negative
-        );
+        assert_eq!(parse::<TraitBoundModifier>("?").unwrap(), TraitBoundModifier::Maybe);
+        assert_eq!(parse::<TraitBoundModifier>("").unwrap(), TraitBoundModifier::None);
+        assert_eq!(parse::<BoundPolarity>("!").unwrap(), BoundPolarity::Negative);
         assert_eq!(parse::<BoundPolarity>("").unwrap(), BoundPolarity::Positive);
     }
 }

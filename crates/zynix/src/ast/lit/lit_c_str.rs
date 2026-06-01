@@ -15,9 +15,7 @@ impl Parse for LitCStr {
 
         match Lit::parse(stream)? {
             Lit::CStr(v) => Ok(v),
-            _ => Err(LexError::new(at)
-                .message("expected C-string literal")
-                .into()),
+            _ => Err(LexError::new(at).message("expected C-string literal").into()),
         }
     }
 }

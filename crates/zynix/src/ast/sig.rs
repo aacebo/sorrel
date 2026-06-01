@@ -1,6 +1,5 @@
 use crate::ast::{
-    Asyncness, Attribute, Constness, Generics, Ident, Lifetime, Mutability, Punctuated, ReturnType,
-    Type, TypedParam, Unsafety,
+    Asyncness, Attribute, Constness, Generics, Ident, Lifetime, Mutability, Punctuated, ReturnType, Type, TypedParam, Unsafety,
 };
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{Extern, Fn, SelfValue};
@@ -65,11 +64,7 @@ impl Parse for Receiver {
         } else {
             false
         };
-        let lifetime = if reference {
-            stream.parse_opt::<Lifetime>()
-        } else {
-            None
-        };
+        let lifetime = if reference { stream.parse_opt::<Lifetime>() } else { None };
         let mutability = stream.parse::<Mutability>()?;
         let _ = stream.parse::<SelfValue>()?;
         Ok(Self {
@@ -317,10 +312,7 @@ impl ToTokens for Signature {
             }
             v.to_tokens(&mut inner);
         }
-        t.extend_one(TokenTree::Group(crate::token::Group::new(
-            Delim::Paren,
-            inner,
-        )));
+        t.extend_one(TokenTree::Group(crate::token::Group::new(Delim::Paren, inner)));
         self.output.to_tokens(t);
         if let Some(w) = &self.generics.where_clause {
             w.to_tokens(t);
@@ -338,9 +330,10 @@ fn emit_angle_params(generics: &Generics, t: &mut TokenStream) {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     fn parse<T: Parse>(src: &str) -> T {
         let ts = TokenStream::from_str(src).unwrap();
@@ -372,9 +365,6 @@ mod tests {
     fn bare_fn_type() {
         use crate::ast::Type;
         assert!(matches!(parse::<Type>("fn(u8) -> u8"), Type::BareFn(_)));
-        assert_eq!(
-            parse::<Type>("fn(u8) -> u8").to_token_stream().to_string(),
-            "fn (u8) -> u8"
-        );
+        assert_eq!(parse::<Type>("fn(u8) -> u8").to_token_stream().to_string(), "fn (u8) -> u8");
     }
 }

@@ -1,9 +1,6 @@
 use zynix_macros::{Parse, ToTokens};
 
-use crate::ast::{
-    Attribute, BoundLifetimes, BoundPolarity, Expr, Ident, Lifetime, Path, Punctuated,
-    TraitBoundModifier, Type,
-};
+use crate::ast::{Attribute, BoundLifetimes, BoundPolarity, Expr, Ident, Lifetime, Path, Punctuated, TraitBoundModifier, Type};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
 use crate::token::keyword::{Const, Where};
@@ -531,10 +528,11 @@ fn emit_bounds(bounds: &Punctuated<Lifetime, Plus>, t: &mut TokenStream) {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::TokenStream;
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     fn parse<T: Parse>(src: &str) -> T {
         let ts = TokenStream::from_str(src).unwrap();
@@ -553,10 +551,7 @@ mod tests {
 
         let g2: Generics = parse("<'a, T: Clone, const N: usize>");
         assert_eq!(g2.params.len(), 3);
-        assert!(matches!(
-            g2.params.first().unwrap(),
-            GenericParam::Lifetime(_)
-        ));
+        assert!(matches!(g2.params.first().unwrap(), GenericParam::Lifetime(_)));
     }
 
     #[test]
@@ -576,10 +571,7 @@ mod tests {
     fn impl_dyn_types() {
         use crate::ast::Type;
         assert!(matches!(parse::<Type>("impl Clone"), Type::ImplTrait(_)));
-        assert!(matches!(
-            parse::<Type>("dyn Clone + 'a"),
-            Type::TraitObject(_)
-        ));
+        assert!(matches!(parse::<Type>("dyn Clone + 'a"), Type::TraitObject(_)));
         assert_eq!(render(&parse::<Type>("impl Clone")), "impl Clone");
     }
 }

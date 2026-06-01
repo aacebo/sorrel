@@ -15,9 +15,7 @@ impl Parse for LitBool {
 
         match Lit::parse(stream)? {
             Lit::Bool(v) => Ok(v),
-            _ => Err(LexError::new(at)
-                .message("expected `true` or `false`")
-                .into()),
+            _ => Err(LexError::new(at).message("expected `true` or `false`").into()),
         }
     }
 }

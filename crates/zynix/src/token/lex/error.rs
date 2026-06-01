@@ -8,10 +8,7 @@ pub struct LexError {
 
 impl LexError {
     pub fn new(span: Span) -> Self {
-        Self {
-            span,
-            message: None,
-        }
+        Self { span, message: None }
     }
 
     pub fn message(mut self, message: impl std::fmt::Display) -> Self {
@@ -36,13 +33,7 @@ impl<T> From<LexError> for Result<T, LexError> {
 
 impl std::fmt::Display for LexError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.message
-                .as_deref()
-                .unwrap_or("string could not be parsed")
-        )
+        write!(f, "{}", self.message.as_deref().unwrap_or("string could not be parsed"))
     }
 }
 

@@ -1,13 +1,11 @@
 use crate::ast::precedence::Precedence;
 use crate::ast::{
-    AngleArgs, AssignOp, Asyncness, Attribute, BinOp, Block, BoundLifetimes, ClosureParam,
-    Constness, FieldValue, Ident, Label, Lit, MacroCall, Member, Movability, Mutability, Path,
-    Pattern, Punctuated, QSelf, RangeLimits, ReturnType, Type, UnOp,
+    AngleArgs, AssignOp, Asyncness, Attribute, BinOp, Block, BoundLifetimes, ClosureParam, Constness, FieldValue, Ident, Label,
+    Lit, MacroCall, Member, Movability, Mutability, Path, Pattern, Punctuated, QSelf, RangeLimits, ReturnType, Type, UnOp,
 };
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{
-    Await as KwAwait, Break, Const, Continue, For, If, In, Let, Loop, Match, Move, Return, Unsafe,
-    While, Yield,
+    Await as KwAwait, Break, Const, Continue, For, If, In, Let, Loop, Match, Move, Return, Unsafe, While, Yield,
 };
 use crate::token::punct::{And, Comma, Dot, DotDot, Eq, Not, Or, OrOr, Question, Semi, Star};
 use crate::token::{Delim, Group, LexError, Punctuation, ToTokens};
@@ -578,12 +576,7 @@ fn parse_expr(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, Pars
     parse_binary(stream, lhs, Precedence::Min, allow_struct)
 }
 
-fn parse_binary(
-    stream: &mut ParseStream,
-    mut lhs: Expr,
-    min: Precedence,
-    allow_struct: bool,
-) -> Result<Expr, ParseError> {
+fn parse_binary(stream: &mut ParseStream, mut lhs: Expr, min: Precedence, allow_struct: bool) -> Result<Expr, ParseError> {
     loop {
         if Precedence::Cast >= min && stream.peek::<crate::token::keyword::As>().is_some() {
             let _ = stream.parse::<crate::token::keyword::As>()?;
@@ -625,8 +618,7 @@ fn parse_binary(
 
         // Range with a left operand: `a..b`, `a..=b`, `a..` (Precedence::Range).
         if Precedence::Range >= min
-            && (stream.peek::<DotDot>().is_some()
-                || stream.peek::<crate::token::punct::DotDotEq>().is_some())
+            && (stream.peek::<DotDot>().is_some() || stream.peek::<crate::token::punct::DotDotEq>().is_some())
         {
             let limits = stream.parse::<RangeLimits>()?;
             let end = maybe_range_end(stream, allow_struct)?;
@@ -681,8 +673,7 @@ fn next(p: Precedence) -> Precedence {
 
 fn parse_unary(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, ParseError> {
     // Prefix range: `..b`, `..=b`, `..`.
-    if stream.peek::<DotDot>().is_some() || stream.peek::<crate::token::punct::DotDotEq>().is_some()
-    {
+    if stream.peek::<DotDot>().is_some() || stream.peek::<crate::token::punct::DotDotEq>().is_some() {
         let limits = stream.parse::<RangeLimits>()?;
         let end = maybe_range_end(stream, allow_struct)?;
         return Ok(Expr::Range(ExprRange {
@@ -722,9 +713,7 @@ fn parse_unary(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, Par
 }
 
 fn prefix_un_op(stream: &mut ParseStream) -> bool {
-    stream.peek::<Not>().is_some()
-        || stream.peek::<crate::token::punct::Minus>().is_some()
-        || stream.peek::<Star>().is_some()
+    stream.peek::<Not>().is_some() || stream.peek::<crate::token::punct::Minus>().is_some() || stream.peek::<Star>().is_some()
 }
 
 /// Parse an optional turbofish `::<...>` (method-call generic args).
@@ -1190,17 +1179,13 @@ fn parse_struct_body(stream: &mut ParseStream) -> Result<StructBody, ParseError>
 fn is_closure_start(stream: &mut ParseStream) -> bool {
     // `|...|`, `||`, `move`, or a `const`/`async` immediately followed by a
     // closure start (not a `{` block).
-    if stream.peek::<Or>().is_some()
-        || stream.peek::<OrOr>().is_some()
-        || stream.peek::<Move>().is_some()
-    {
+    if stream.peek::<Or>().is_some() || stream.peek::<OrOr>().is_some() || stream.peek::<Move>().is_some() {
         return true;
     }
     let leads_closure = matches!(
         stream.nth(1),
-        Some(TokenTree::Token(Token::Punct(
-            Punctuation::Or(_) | Punctuation::OrOr(_)
-        ))) | Some(TokenTree::Token(Token::Keyword(_)))
+        Some(TokenTree::Token(Token::Punct(Punctuation::Or(_) | Punctuation::OrOr(_))))
+            | Some(TokenTree::Token(Token::Keyword(_)))
     );
     (stream.peek::<Const>().is_some() || stream.peek::<crate::token::keyword::Async>().is_some())
         && leads_closure
@@ -1256,10 +1241,7 @@ fn parse_closure(stream: &mut ParseStream) -> Result<ExprClosure, ParseError> {
 
 /// Parse a bare lifetime label (no trailing `:`) for `break`/`continue`.
 fn parse_opt_break_label(stream: &mut ParseStream) -> Option<Label> {
-    if !matches!(
-        stream.curr(),
-        Some(TokenTree::Token(Token::Punct(Punctuation::Quote(_))))
-    ) {
+    if !matches!(stream.curr(), Some(TokenTree::Token(Token::Punct(Punctuation::Quote(_))))) {
         return None;
     }
     let name = stream.parse_opt::<crate::ast::Lifetime>()?;
@@ -1271,13 +1253,8 @@ fn parse_opt_break_label(stream: &mut ParseStream) -> Option<Label> {
 
 fn is_label_start(stream: &mut ParseStream) -> bool {
     // A lifetime (`'a`) directly followed by `:` is a loop/block label.
-    matches!(
-        stream.curr(),
-        Some(TokenTree::Token(Token::Punct(Punctuation::Quote(_))))
-    ) && matches!(
-        stream.nth(2),
-        Some(TokenTree::Token(Token::Punct(Punctuation::Colon(_))))
-    )
+    matches!(stream.curr(), Some(TokenTree::Token(Token::Punct(Punctuation::Quote(_)))))
+        && matches!(stream.nth(2), Some(TokenTree::Token(Token::Punct(Punctuation::Colon(_)))))
 }
 
 fn peek2_is_brace(stream: &ParseStream) -> bool {
@@ -1294,10 +1271,7 @@ fn async_is_block(stream: &ParseStream) -> bool {
 }
 
 /// Parse an optional range end — `None` if the next token can't begin an expr.
-fn maybe_range_end(
-    stream: &mut ParseStream,
-    allow_struct: bool,
-) -> Result<Option<Box<Expr>>, ParseError> {
+fn maybe_range_end(stream: &mut ParseStream, allow_struct: bool) -> Result<Option<Box<Expr>>, ParseError> {
     if stream.is_empty() || at_expr_terminator(stream) {
         return Ok(None);
     }
@@ -1338,10 +1312,11 @@ fn is_group(tt: &TokenTree, delim: Delim) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::ast::{Block, Stmt};
     use crate::token::ToTokenStream;
-    use std::str::FromStr;
 
     fn parse<T: Parse>(src: &str) -> T {
         let ts = TokenStream::from_str(src).unwrap();
@@ -1366,14 +1341,9 @@ mod tests {
         let e = parse::<Expr>("a + b * c");
         match e {
             Expr::Binary(ExprBinary {
-                op: BinOp::Add,
-                right,
-                ..
+                op: BinOp::Add, right, ..
             }) => {
-                assert!(matches!(
-                    *right,
-                    Expr::Binary(ExprBinary { op: BinOp::Mul, .. })
-                ));
+                assert!(matches!(*right, Expr::Binary(ExprBinary { op: BinOp::Mul, .. })));
             }
             _ => panic!("expected top-level Add"),
         }
@@ -1385,14 +1355,9 @@ mod tests {
         let e = parse::<Expr>("a - b - c");
         match e {
             Expr::Binary(ExprBinary {
-                op: BinOp::Sub,
-                left,
-                ..
+                op: BinOp::Sub, left, ..
             }) => {
-                assert!(matches!(
-                    *left,
-                    Expr::Binary(ExprBinary { op: BinOp::Sub, .. })
-                ));
+                assert!(matches!(*left, Expr::Binary(ExprBinary { op: BinOp::Sub, .. })));
             }
             _ => panic!("expected left-assoc Sub"),
         }
@@ -1435,14 +1400,8 @@ mod tests {
 
     #[test]
     fn if_while_let() {
-        assert!(matches!(
-            parse::<Expr>("if let Some(x) = o { x } else { 0 }"),
-            Expr::If(_)
-        ));
-        assert!(matches!(
-            parse::<Expr>("while let Some(x) = it.next() { }"),
-            Expr::While(_)
-        ));
+        assert!(matches!(parse::<Expr>("if let Some(x) = o { x } else { 0 }"), Expr::If(_)));
+        assert!(matches!(parse::<Expr>("while let Some(x) = it.next() { }"), Expr::While(_)));
     }
 
     #[test]
@@ -1456,28 +1415,19 @@ mod tests {
     #[test]
     fn closures_with_modifiers() {
         assert!(matches!(parse::<Expr>("async || 1"), Expr::Closure(_)));
-        assert!(matches!(
-            parse::<Expr>("async move |x| x"),
-            Expr::Closure(_)
-        ));
+        assert!(matches!(parse::<Expr>("async move |x| x"), Expr::Closure(_)));
         assert!(matches!(parse::<Expr>("const || 1"), Expr::Closure(_)));
     }
 
     #[test]
     fn labeled() {
-        assert!(matches!(
-            parse::<Expr>("'a: loop { break 'a 1 }"),
-            Expr::Loop(_)
-        ));
+        assert!(matches!(parse::<Expr>("'a: loop { break 'a 1 }"), Expr::Loop(_)));
         assert!(matches!(parse::<Expr>("'a: { 1 }"), Expr::Block(_)));
     }
 
     #[test]
     fn qualified_path_expr() {
-        assert!(matches!(
-            parse::<Expr>("<T as Trait>::CONST"),
-            Expr::Path(_)
-        ));
+        assert!(matches!(parse::<Expr>("<T as Trait>::CONST"), Expr::Path(_)));
         assert!(matches!(parse::<Expr>("::std::mem::swap"), Expr::Path(_)));
     }
 
@@ -1507,17 +1457,11 @@ mod tests {
 
     #[test]
     fn control_flow() {
-        assert!(matches!(
-            parse::<Expr>("if a { b } else { c }"),
-            Expr::If(_)
-        ));
+        assert!(matches!(parse::<Expr>("if a { b } else { c }"), Expr::If(_)));
         assert!(matches!(parse::<Expr>("while a { }"), Expr::While(_)));
         assert!(matches!(parse::<Expr>("for x in xs { }"), Expr::ForLoop(_)));
         assert!(matches!(parse::<Expr>("loop { }"), Expr::Loop(_)));
-        assert!(matches!(
-            parse::<Expr>("match x { _ => 1 }"),
-            Expr::Match(_)
-        ));
+        assert!(matches!(parse::<Expr>("match x { _ => 1 }"), Expr::Match(_)));
         assert!(matches!(parse::<Expr>("{ a }"), Expr::Block(_)));
         assert!(matches!(parse::<Expr>("unsafe { }"), Expr::Unsafe(_)));
         assert!(matches!(parse::<Expr>("return x"), Expr::Return(_)));
@@ -1534,10 +1478,7 @@ mod tests {
     #[test]
     fn closures() {
         assert!(matches!(parse::<Expr>("|x| x"), Expr::Closure(_)));
-        assert!(matches!(
-            parse::<Expr>("|x: u32| -> u32 { x }"),
-            Expr::Closure(_)
-        ));
+        assert!(matches!(parse::<Expr>("|x: u32| -> u32 { x }"), Expr::Closure(_)));
         assert!(matches!(parse::<Expr>("move || 1"), Expr::Closure(_)));
         assert!(matches!(parse::<Expr>("|| {}"), Expr::Closure(_)));
     }
@@ -1555,14 +1496,8 @@ mod tests {
         assert!(matches!(parse::<Pattern>("mut x"), Pattern::Ident(_)));
         assert!(matches!(parse::<Pattern>("&x"), Pattern::Reference(_)));
         assert!(matches!(parse::<Pattern>("(a, b)"), Pattern::Tuple(_)));
-        assert!(matches!(
-            parse::<Pattern>("Some(x)"),
-            Pattern::TupleStruct(_)
-        ));
-        assert!(matches!(
-            parse::<Pattern>("Point { x, y }"),
-            Pattern::Struct(_)
-        ));
+        assert!(matches!(parse::<Pattern>("Some(x)"), Pattern::TupleStruct(_)));
+        assert!(matches!(parse::<Pattern>("Point { x, y }"), Pattern::Struct(_)));
         assert!(matches!(parse::<Pattern>("1"), Pattern::Lit(_)));
     }
 
@@ -1590,14 +1525,7 @@ mod tests {
 
     #[test]
     fn roundtrips() {
-        for src in [
-            "a + b * c",
-            "f (x , y)",
-            "a . b . c",
-            "x as u32",
-            "- x",
-            "& mut x",
-        ] {
+        for src in ["a + b * c", "f (x , y)", "a . b . c", "x as u32", "- x", "& mut x"] {
             let e = parse::<Expr>(src);
             // re-render and re-parse must produce an equal token string
             let r = render(&e);

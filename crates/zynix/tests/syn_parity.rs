@@ -6,9 +6,8 @@
 
 use std::str::FromStr;
 
-use zynix::ast;
 use zynix::token::ToTokenStream;
-use zynix::{Parse, TokenStream};
+use zynix::{Parse, TokenStream, ast};
 
 /// Parse `src` into our `T`, returning Err on lex or parse failure.
 fn zynix_parse<T: Parse>(src: &str) -> Result<T, String> {
@@ -31,8 +30,7 @@ where
 
     // Re-emit and re-parse for round-trip stability.
     let reemitted = parsed.to_token_stream().to_string();
-    zynix_parse::<Our>(&reemitted)
-        .unwrap_or_else(|e| panic!("zynix re-parse failed for {src:?} -> {reemitted:?}: {e}"));
+    zynix_parse::<Our>(&reemitted).unwrap_or_else(|e| panic!("zynix re-parse failed for {src:?} -> {reemitted:?}: {e}"));
 }
 
 #[test]
@@ -133,16 +131,13 @@ fn patterns() {
         "x @ 1",
     ] {
         // `syn::Pat` isn't `Parse`; use the multi-pattern entry (allows or-patterns).
-        let syn_ok =
-            syn::parse::Parser::parse_str(syn::Pat::parse_multi_with_leading_vert, src).is_ok();
+        let syn_ok = syn::parse::Parser::parse_str(syn::Pat::parse_multi_with_leading_vert, src).is_ok();
         assert!(syn_ok, "corpus snippet not valid syn pattern: {src:?}");
 
-        let parsed: ast::Pattern =
-            zynix_parse(src).unwrap_or_else(|e| panic!("zynix failed on pat {src:?}: {e}"));
+        let parsed: ast::Pattern = zynix_parse(src).unwrap_or_else(|e| panic!("zynix failed on pat {src:?}: {e}"));
         let reemitted = parsed.to_token_stream().to_string();
-        zynix_parse::<ast::Pattern>(&reemitted).unwrap_or_else(|e| {
-            panic!("zynix re-parse failed for pat {src:?} -> {reemitted:?}: {e}")
-        });
+        zynix_parse::<ast::Pattern>(&reemitted)
+            .unwrap_or_else(|e| panic!("zynix re-parse failed for pat {src:?} -> {reemitted:?}: {e}"));
     }
 }
 

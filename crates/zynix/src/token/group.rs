@@ -1,8 +1,7 @@
-use crate::Span;
-use crate::TokenStream;
 use crate::span::DelimSpan;
 use crate::token::Delim;
 use crate::token::lex::{Cursor, LexError, Scan};
+use crate::{Span, TokenStream};
 
 #[derive(Debug, Clone)]
 pub struct Group {
@@ -41,10 +40,7 @@ impl From<proc_macro::Group> for Group {
     fn from(value: proc_macro::Group) -> Self {
         let mut group = Self::new(value.delimiter().into(), value.stream().into());
 
-        group.set_span(DelimSpan::new(
-            value.span_open().into(),
-            value.span_close().into(),
-        ));
+        group.set_span(DelimSpan::new(value.span_open().into(), value.span_close().into()));
 
         group
     }
@@ -71,18 +67,13 @@ impl Scan for Group {
         let delim = Delim::from_open(ch).ok_or(cursor.error())?;
         let c = cursor.advance(ch.len_utf8());
         let (c, inner) = TokenStream::scan(c)?;
-        let close_ch = c.first().ok_or_else(|| {
-            cursor
-                .error()
-                .message(format!("unclosed delimiter '{}'", delim.open()))
-        })?;
+        let close_ch = c
+            .first()
+            .ok_or_else(|| cursor.error().message(format!("unclosed delimiter '{}'", delim.open())))?;
 
         let close_delim = Delim::from_close(close_ch).ok_or_else(|| {
-            c.error().message(format!(
-                "expected '{}', found '{}'",
-                delim.close(),
-                close_ch
-            ))
+            c.error()
+                .message(format!("expected '{}', found '{}'", delim.close(), close_ch))
         })?;
 
         if delim != close_delim {
@@ -137,9 +128,10 @@ impl serde::Serialize for Group {
 mod tests {
     #[cfg(feature = "serde")]
     mod serde {
+        use std::str::FromStr;
+
         use crate::TokenStream;
         use crate::token::TokenTree;
-        use std::str::FromStr;
 
         #[test]
         fn group_serializes_as_delim_and_tokens() {

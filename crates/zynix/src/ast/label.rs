@@ -9,6 +9,7 @@ use crate::token::punct::Colon;
 pub struct Label {
     #[parse(skip)]
     pub span: Span,
+
     #[parse(suffix = Colon)]
     pub name: Lifetime,
 }

@@ -1,6 +1,6 @@
 use crate::ast::{
-    Attribute, Block, Defaultness, Expr, Generics, Ident, MacroCall, Mutability, Punctuated,
-    Signature, Type, TypeBound, Visibility,
+    Attribute, Block, Defaultness, Expr, Generics, Ident, MacroCall, Mutability, Punctuated, Signature, Type, TypeBound,
+    Visibility,
 };
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{Const, Fn, Static, Type as KwType};
@@ -14,10 +14,7 @@ fn emit_attrs(attrs: &[Attribute], t: &mut TokenStream) {
     }
 }
 
-fn parse_semi_macro(
-    stream: &mut ParseStream,
-    attrs: Vec<Attribute>,
-) -> Result<(MacroCall, bool), ParseError> {
+fn parse_semi_macro(stream: &mut ParseStream, attrs: Vec<Attribute>) -> Result<(MacroCall, bool), ParseError> {
     let _ = attrs;
     let mac = stream.parse::<MacroCall>()?;
     let semi = if stream.peek::<Semi>().is_some() {
@@ -299,8 +296,7 @@ impl Parse for TraitItem {
         }
         if is_fn_start(stream) {
             let sig = stream.parse::<Signature>()?;
-            let default_body = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace)
-            {
+            let default_body = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
                 Some(stream.parse::<Block>()?)
             } else {
                 let _ = stream.parse::<Semi>();
@@ -526,9 +522,7 @@ pub(crate) fn is_fn_start(stream: &mut ParseStream) -> bool {
     fork.peek::<Fn>().is_some()
 }
 
-pub(crate) fn parse_plus_bounds(
-    stream: &mut ParseStream,
-) -> Result<Punctuated<TypeBound, Plus>, ParseError> {
+pub(crate) fn parse_plus_bounds(stream: &mut ParseStream) -> Result<Punctuated<TypeBound, Plus>, ParseError> {
     let mut bounds = Punctuated::new();
     loop {
         bounds.push_value(stream.parse::<TypeBound>()?);

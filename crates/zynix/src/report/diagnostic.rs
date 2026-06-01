@@ -46,11 +46,7 @@ impl Diagnostic {
 impl From<Diagnostic> for proc_macro::Diagnostic {
     fn from(value: Diagnostic) -> Self {
         let msg = value.message.unwrap_or_default();
-        let spans: Vec<_> = value
-            .spans
-            .into_iter()
-            .map(proc_macro::Span::from)
-            .collect();
+        let spans: Vec<_> = value.spans.into_iter().map(proc_macro::Span::from).collect();
 
         let mut new = if spans.is_empty() {
             Self::new(value.level.into(), msg)
@@ -60,11 +56,7 @@ impl From<Diagnostic> for proc_macro::Diagnostic {
 
         for child in value.children {
             let message = child.message.unwrap_or_default();
-            let spans: Vec<_> = child
-                .spans
-                .into_iter()
-                .map(proc_macro::Span::from)
-                .collect();
+            let spans: Vec<_> = child.spans.into_iter().map(proc_macro::Span::from).collect();
 
             if child.level.is_error() {
                 new = new.span_error(spans, message);
@@ -199,30 +191,16 @@ mod tests {
 
     #[test]
     fn level_elevated_by_child() {
-        let child = Diagnostic::new()
-            .level(Level::Error)
-            .message("child")
-            .build();
-        let parent = Diagnostic::new()
-            .level(Level::Note)
-            .message("parent")
-            .child(child)
-            .build();
+        let child = Diagnostic::new().level(Level::Error).message("child").build();
+        let parent = Diagnostic::new().level(Level::Note).message("parent").child(child).build();
 
         assert_eq!(parent.level(), Level::Error);
     }
 
     #[test]
     fn level_not_lowered_by_child() {
-        let child = Diagnostic::new()
-            .level(Level::Note)
-            .message("child")
-            .build();
-        let parent = Diagnostic::new()
-            .level(Level::Error)
-            .message("parent")
-            .child(child)
-            .build();
+        let child = Diagnostic::new().level(Level::Note).message("child").build();
+        let parent = Diagnostic::new().level(Level::Error).message("parent").child(child).build();
 
         assert_eq!(parent.level(), Level::Error);
     }
@@ -232,12 +210,7 @@ mod tests {
         let c1 = Diagnostic::new().level(Level::Note).build();
         let c2 = Diagnostic::new().level(Level::Warning).build();
         let c3 = Diagnostic::new().level(Level::Help).build();
-        let parent = Diagnostic::new()
-            .level(Level::Unknown)
-            .child(c1)
-            .child(c2)
-            .child(c3)
-            .build();
+        let parent = Diagnostic::new().level(Level::Unknown).child(c1).child(c2).child(c3).build();
 
         assert_eq!(parent.level(), Level::Warning);
     }
@@ -252,10 +225,7 @@ mod tests {
 
     #[test]
     fn display_with_message() {
-        let d = Diagnostic::new()
-            .level(Level::Error)
-            .message("something broke")
-            .build();
+        let d = Diagnostic::new().level(Level::Error).message("something broke").build();
         let s = format!("{}", d);
         assert_eq!(s, "[error]:: something broke");
     }
@@ -269,15 +239,8 @@ mod tests {
 
     #[test]
     fn display_with_children() {
-        let child = Diagnostic::new()
-            .level(Level::Help)
-            .message("try this")
-            .build();
-        let parent = Diagnostic::new()
-            .level(Level::Error)
-            .message("failed")
-            .child(child)
-            .build();
+        let child = Diagnostic::new().level(Level::Help).message("try this").build();
+        let parent = Diagnostic::new().level(Level::Error).message("failed").child(child).build();
         let s = format!("{}", parent);
         assert!(s.contains("[error]:: failed"));
         assert!(s.contains("\n  [help]:: try this"));
@@ -286,16 +249,8 @@ mod tests {
     #[test]
     fn partial_eq_same_spans() {
         let span = Span::default();
-        let d1 = Diagnostic::new()
-            .level(Level::Error)
-            .message("a")
-            .span(span)
-            .build();
-        let d2 = Diagnostic::new()
-            .level(Level::Note)
-            .message("b")
-            .span(span)
-            .build();
+        let d1 = Diagnostic::new().level(Level::Error).message("a").span(span).build();
+        let d2 = Diagnostic::new().level(Level::Note).message("b").span(span).build();
         assert_eq!(d1, d2);
     }
 
@@ -310,34 +265,20 @@ mod tests {
     #[cfg(not(nightly))]
     #[test]
     fn to_stream_produces_compile_error() {
-        let d = Diagnostic::new()
-            .level(Level::Error)
-            .message("broken")
-            .build();
+        let d = Diagnostic::new().level(Level::Error).message("broken").build();
         let stream = d.to_token_stream();
         let s = stream.to_string();
-        assert!(
-            s.contains("compile_error"),
-            "expected compile_error in: {}",
-            s
-        );
+        assert!(s.contains("compile_error"), "expected compile_error in: {}", s);
         assert!(s.contains("broken"), "expected message in: {}", s);
     }
 
     #[cfg(not(nightly))]
     #[test]
     fn emit_returns_stream() {
-        let d = Diagnostic::new()
-            .level(Level::Warning)
-            .message("warn msg")
-            .build();
+        let d = Diagnostic::new().level(Level::Warning).message("warn msg").build();
         let stream = d.emit();
         let s = stream.to_string();
-        assert!(
-            s.contains("compile_error"),
-            "expected compile_error in: {}",
-            s
-        );
+        assert!(s.contains("compile_error"), "expected compile_error in: {}", s);
         assert!(s.contains("warn msg"), "expected message in: {}", s);
     }
 

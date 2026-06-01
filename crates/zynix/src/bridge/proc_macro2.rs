@@ -15,10 +15,7 @@ impl From<proc_macro2::LexError> for ParseError {
 
 impl From<proc_macro2::Span> for crate::span::fallback::Span {
     fn from(value: proc_macro2::Span) -> Self {
-        Self::new(
-            value.byte_range().start as u32,
-            value.byte_range().end as u32,
-        )
+        Self::new(value.byte_range().start as u32, value.byte_range().end as u32)
     }
 }
 
@@ -108,8 +105,7 @@ impl From<proc_macro2::Literal> for Literal {
 impl From<Literal> for proc_macro2::Literal {
     fn from(value: Literal) -> Self {
         let repr = format!("{}", value);
-        repr.parse()
-            .unwrap_or_else(|_| proc_macro2::Literal::string(&repr))
+        repr.parse().unwrap_or_else(|_| proc_macro2::Literal::string(&repr))
     }
 }
 
@@ -155,12 +151,8 @@ impl ToTokens<TokenStream> for proc_macro2::TokenStream {
                             };
                             tokens.extend_one(token.into())
                         }
-                        proc_macro2::TokenTree::Literal(v) => {
-                            tokens.extend_one(Token::Literal(v.into()).into())
-                        }
-                        proc_macro2::TokenTree::Group(v) => {
-                            tokens.extend_one(TokenTree::Group(v.into()))
-                        }
+                        proc_macro2::TokenTree::Literal(v) => tokens.extend_one(Token::Literal(v.into()).into()),
+                        proc_macro2::TokenTree::Group(v) => tokens.extend_one(TokenTree::Group(v.into())),
                         proc_macro2::TokenTree::Punct(_) => unreachable!(),
                     }
                 }
@@ -195,16 +187,12 @@ impl ToTokens<proc_macro2::TokenStream> for TokenTree {
     fn to_tokens(&self, out: &mut proc_macro2::TokenStream) {
         match self {
             TokenTree::Group(g) => out.extend([proc_macro2::TokenTree::Group(g.clone().into())]),
-            TokenTree::Token(Token::Ident(v)) => {
-                out.extend([proc_macro2::TokenTree::Ident(v.clone().into())])
-            }
+            TokenTree::Token(Token::Ident(v)) => out.extend([proc_macro2::TokenTree::Ident(v.clone().into())]),
             TokenTree::Token(Token::Keyword(kw)) => {
                 let id = proc_macro2::Ident::new(kw.as_str(), proc_macro2::Span::call_site());
                 out.extend([proc_macro2::TokenTree::Ident(id)])
             }
-            TokenTree::Token(Token::Literal(v)) => {
-                out.extend([proc_macro2::TokenTree::Literal(v.clone().into())])
-            }
+            TokenTree::Token(Token::Literal(v)) => out.extend([proc_macro2::TokenTree::Literal(v.clone().into())]),
             TokenTree::Token(Token::Punct(op)) => {
                 let text = op.as_str();
                 let last = text.chars().count() - 1;
@@ -216,9 +204,7 @@ impl ToTokens<proc_macro2::TokenStream> for TokenTree {
                     } else {
                         proc_macro2::Spacing::Joint
                     };
-                    out.extend([proc_macro2::TokenTree::Punct(proc_macro2::Punct::new(
-                        ch, spacing,
-                    ))]);
+                    out.extend([proc_macro2::TokenTree::Punct(proc_macro2::Punct::new(ch, spacing))]);
                 }
             }
         }
@@ -251,19 +237,17 @@ impl From<TokenStream> for proc_macro2::TokenStream {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use crate::TokenStream;
     use crate::token::{Punctuation, Token, TokenTree};
-    use std::str::FromStr;
 
     #[test]
     fn coalesces_joint_puncts_inbound() {
         let pm2: proc_macro2::TokenStream = "a == b".parse().unwrap();
         let ours: TokenStream = pm2.into();
         let trees: Vec<TokenTree> = ours.into_iter().collect();
-        assert!(matches!(
-            trees[1],
-            TokenTree::Token(Token::Punct(Punctuation::EqEq(_)))
-        ));
+        assert!(matches!(trees[1], TokenTree::Token(Token::Punct(Punctuation::EqEq(_)))));
     }
 
     #[test]
@@ -330,11 +314,7 @@ mod tests {
             let once: proc_macro2::TokenStream = TokenStream::from(pm2.clone()).into();
             let twice: proc_macro2::TokenStream = TokenStream::from(once.clone()).into();
 
-            assert_eq!(
-                once.to_string(),
-                twice.to_string(),
-                "boundary not idempotent for {src:?}"
-            );
+            assert_eq!(once.to_string(), twice.to_string(), "boundary not idempotent for {src:?}");
 
             assert!(
                 once.to_string().parse::<proc_macro2::TokenStream>().is_ok(),

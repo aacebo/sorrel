@@ -1,4 +1,5 @@
-use std::{cell::RefCell, collections::BTreeMap};
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 
 use super::Location;
 use crate::span::fallback::Span;

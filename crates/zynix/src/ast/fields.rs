@@ -138,12 +138,8 @@ impl From<FieldsUnnamed> for Fields {
 impl Parse for Fields {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         match stream.curr() {
-            Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => {
-                Ok(Fields::Named(stream.parse()?))
-            }
-            Some(TokenTree::Group(g)) if g.delim() == Delim::Paren => {
-                Ok(Fields::Unnamed(stream.parse()?))
-            }
+            Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => Ok(Fields::Named(stream.parse()?)),
+            Some(TokenTree::Group(g)) if g.delim() == Delim::Paren => Ok(Fields::Unnamed(stream.parse()?)),
             _ => Ok(Fields::Unit),
         }
     }
