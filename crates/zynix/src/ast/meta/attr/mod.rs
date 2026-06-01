@@ -12,6 +12,7 @@ use crate::{Parse, Span, TokenStream, TokenTree};
 
 #[doc = "A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Attribute {
     pub span: Span,
     pub style: AttrStyle,

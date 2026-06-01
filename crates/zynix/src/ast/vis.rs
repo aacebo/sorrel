@@ -6,6 +6,7 @@ use crate::{Parse, TokenStream, TokenTree};
 
 #[doc = "The visibility of an item (`pub`, `pub(crate)`, `pub(in path)`, or inherited)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Visibility {
     Inherited,
     Public,

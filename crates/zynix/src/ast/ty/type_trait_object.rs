@@ -7,6 +7,7 @@ use crate::{Parse, Span, TokenStream};
 
 #[doc = "A trait object type (e.g. `dyn Iterator<Item = u8>`, `dyn Fn() + 'a`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeTraitObject {
     pub span: Span,
     pub dyn_token: bool,

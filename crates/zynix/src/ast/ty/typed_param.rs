@@ -7,6 +7,7 @@ use crate::token::punct::Colon;
 
 #[doc = "A typed function parameter (`pat: Type`)."]
 #[derive(Debug, Clone, Parse, ToTokens)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypedParam {
     #[parse(skip)]
     pub span: Span,

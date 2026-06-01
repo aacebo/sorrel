@@ -6,6 +6,7 @@ use crate::{Parse, Span, TokenStream, TokenTree};
 
 #[doc = "A macro invocation (`path!(...)`, `path![...]`, `path!{...}`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MacroCall {
     pub span: Span,
     pub attrs: Vec<Attribute>,

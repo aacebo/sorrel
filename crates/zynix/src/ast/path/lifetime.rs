@@ -6,6 +6,7 @@ use crate::token::punct::Quote;
 
 #[doc = "A named lifetime (e.g. `'a`, `'static`)."]
 #[derive(Debug, Clone, Parse, ToTokens)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Lifetime {
     #[parse(skip)]
     pub span: Span,

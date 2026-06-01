@@ -3,7 +3,9 @@ use crate::parse::{ParseError, ParseStream};
 use crate::token::{self, LexError, ToTokens};
 use crate::{Parse, Span, TokenStream};
 
+#[doc = "A string literal (`\"hello\"`, `r#\"raw\"#`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitStr {
     pub span: Span,
     pub repr: String,

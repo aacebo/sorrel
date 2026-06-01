@@ -8,6 +8,7 @@ use crate::{Parse, Span, TokenStream};
 
 #[doc = "A raw pointer type (e.g. `*const T`, `*mut T`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePointer {
     pub span: Span,
     pub mutability: Mutability,

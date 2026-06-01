@@ -39,9 +39,7 @@ impl Group {
 impl From<proc_macro::Group> for Group {
     fn from(value: proc_macro::Group) -> Self {
         let mut group = Self::new(value.delimiter().into(), value.stream().into());
-
         group.set_span(DelimSpan::new(value.span_open().into(), value.span_close().into()));
-
         group
     }
 }
@@ -55,8 +53,8 @@ impl From<Group> for proc_macro::Group {
 impl std::fmt::Display for Group {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.delim {
-            Delim::None => write!(f, "{}", &self.tokens),
-            d => write!(f, "{}{}{}", d.open(), &self.tokens, d.close()),
+            Delim::None => write!(f, "{}", self.tokens),
+            d => write!(f, "{}{}{}", d.open(), self.tokens, d.close()),
         }
     }
 }

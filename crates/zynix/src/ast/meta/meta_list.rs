@@ -4,6 +4,7 @@ use crate::{Span, TokenStream, TokenTree};
 
 #[doc = "A list-style meta item (`name(tokens)`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MetaList {
     pub span: Span,
     pub path: Path,

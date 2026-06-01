@@ -8,6 +8,7 @@ use crate::{Span, TokenStream};
 
 #[doc = "The `<T as Trait>` qualifier of a qualified path."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct QSelf {
     pub span: Span,
     pub ty: Box<Type>,

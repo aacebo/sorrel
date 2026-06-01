@@ -3,7 +3,9 @@ use crate::parse::{ParseError, ParseStream};
 use crate::token::{self, LexError, ToTokens};
 use crate::{Parse, Span, TokenStream};
 
+#[doc = "A character literal (`'a'`, `'\\n'`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitChar {
     pub span: Span,
     pub repr: String,

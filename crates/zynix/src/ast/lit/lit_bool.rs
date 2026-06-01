@@ -3,7 +3,9 @@ use crate::parse::{ParseError, ParseStream};
 use crate::token::{self, LexError, ToTokens};
 use crate::{Parse, Span, TokenStream};
 
+#[doc = "A boolean literal (`true` or `false`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitBool {
     pub span: Span,
     pub value: bool,

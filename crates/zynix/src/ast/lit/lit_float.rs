@@ -3,7 +3,9 @@ use crate::parse::{ParseError, ParseStream};
 use crate::token::{self, LexError, ToTokens};
 use crate::{Parse, Span, TokenStream};
 
+#[doc = "A floating-point literal (`1.0`, `3.14f64`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitFloat {
     pub span: Span,
     pub repr: String,

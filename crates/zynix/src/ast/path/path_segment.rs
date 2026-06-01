@@ -6,7 +6,9 @@ use crate::parse::{ParseError, ParseStream};
 use crate::token::Delim;
 use crate::{Parse, Span, TokenTree};
 
+#[doc = "A single segment of a path (an identifier optionally followed by generic arguments)."]
 #[derive(Debug, Clone, ToTokens)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PathSegment {
     #[parse(skip)]
     pub span: Span,

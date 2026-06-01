@@ -1,0 +1,47 @@
+use super::TraitItem;
+use crate::ast::{Attribute, Generics, Ident, Punctuated, Type, TypeBound};
+use crate::parse::{ParseError, ParseStream};
+use crate::token::keyword::Type as KwType;
+use crate::token::punct::{Colon, Eq, Plus, Semi};
+use crate::token::{LexError, ToTokens};
+use crate::{Parse, Span, TokenStream};
+
+#[doc = "An associated type inside a trait definition (`type Name: Bound = Default;`)."]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct TraitItemType {
+    pub span: Span,
+    pub attrs: Vec<Attribute>,
+    pub ident: Ident,
+    pub generics: Generics,
+    pub bounds: Punctuated<TypeBound, Plus>,
+    pub default: Option<Type>,
+}
+
+impl Parse for TraitItemType {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let at = stream.span();
+        match TraitItem::parse(stream)? {
+            TraitItem::Type(v) => Ok(v),
+            _ => Err(LexError::new(at).message("expected trait type").into()),
+        }
+    }
+}
+
+impl ToTokens for TraitItemType {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        super::super::emit_attrs(&self.attrs, t);
+        KwType::default().to_tokens(t);
+        self.ident.to_tokens(t);
+        self.generics.to_tokens(t);
+        if !self.bounds.is_empty() {
+            Colon::default().to_tokens(t);
+            self.bounds.to_tokens(t);
+        }
+        if let Some(d) = &self.default {
+            Eq::default().to_tokens(t);
+            d.to_tokens(t);
+        }
+        Semi::default().to_tokens(t);
+    }
+}

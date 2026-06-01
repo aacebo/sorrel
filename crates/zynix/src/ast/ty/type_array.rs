@@ -5,6 +5,7 @@ use crate::{Span, TokenStream};
 
 #[doc = "A fixed-size array type (`[T; N]`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeArray {
     pub span: Span,
     pub elem: Box<Type>,

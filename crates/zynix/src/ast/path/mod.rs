@@ -16,6 +16,7 @@ pub use path_segment::*;
 
 #[doc = "A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`)."]
 #[derive(Debug, Clone, Parse, ToTokens)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Path {
     #[parse(skip)]
     pub span: Span,

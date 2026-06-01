@@ -7,6 +7,7 @@ use crate::{Parse, Span, TokenStream};
 
 #[doc = "An `impl Trait` type (e.g. `impl Iterator<Item = u8>`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeImplTrait {
     pub span: Span,
     pub bounds: Punctuated<TypeBound, Plus>,

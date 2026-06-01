@@ -801,6 +801,18 @@ impl<T: Clone, P: Clone> Clone for IntoPairs<T, P> {
     }
 }
 
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize, P> serde::Serialize for Punctuated<T, P> {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+        let mut seq = s.serialize_seq(Some(self.len()))?;
+        for item in self.iter() {
+            seq.serialize_element(item)?;
+        }
+        seq.end()
+    }
+}
+
 // --- Tests ---
 
 #[cfg(test)]

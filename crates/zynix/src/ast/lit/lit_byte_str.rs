@@ -3,7 +3,9 @@ use crate::parse::{ParseError, ParseStream};
 use crate::token::{self, LexError, ToTokens};
 use crate::{Parse, Span, TokenStream};
 
+#[doc = "A byte string literal (`b\"hello\"`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitByteStr {
     pub span: Span,
     pub repr: String,

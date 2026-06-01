@@ -1,4 +1,4 @@
-use crate::ast::{Attribute, Expr, GenericArgument, Lifetime, Member, Pattern, Punctuated, Type};
+use crate::ast::{Attribute, Expr, Lifetime, Pattern, Punctuated, Type};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
 use crate::token::keyword::{For, If};
@@ -7,7 +7,9 @@ use crate::{Parse, Span, TokenStream};
 
 // --- MatchArm: `pat (if guard)? => body` ---
 
+#[doc = "A single arm of a `match` expression (`pat (if guard)? => body`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MatchArm {
     pub span: Span,
     pub attrs: Vec<Attribute>,
@@ -55,75 +57,11 @@ impl ToTokens for MatchArm {
     }
 }
 
-// --- FieldValue: `member: expr` or shorthand `member` ---
-
-#[derive(Debug, Clone)]
-pub struct FieldValue {
-    pub span: Span,
-    pub attrs: Vec<Attribute>,
-    pub member: Member,
-    pub expr: Expr,
-    pub shorthand: bool,
-}
-
-impl Parse for FieldValue {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
-        let member = stream.parse::<Member>()?;
-        if stream.peek::<Colon>().is_some() {
-            let _ = stream.parse::<Colon>()?;
-            let expr = stream.parse::<Expr>()?;
-            Ok(Self {
-                span: Span::default(),
-                attrs,
-                member,
-                expr,
-                shorthand: false,
-            })
-        } else {
-            // shorthand: `field` means `field: field`
-            let expr = match &member {
-                Member::Named(id) => Expr::Path(crate::ast::ExprPath {
-                    span: Span::default(),
-                    attrs: Vec::new(),
-                    qself: None,
-                    path: id.clone().into(),
-                }),
-                Member::Unnamed(_) => {
-                    return Err(crate::token::LexError::new(stream.span())
-                        .message("tuple index needs a value")
-                        .into());
-                }
-            };
-            Ok(Self {
-                span: Span::default(),
-                attrs,
-                member,
-                expr,
-                shorthand: true,
-            })
-        }
-    }
-}
-
-impl ToTokens for FieldValue {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
-        if self.shorthand {
-            self.member.to_tokens(t);
-        } else {
-            self.member.to_tokens(t);
-            Colon::default().to_tokens(t);
-            self.expr.to_tokens(t);
-        }
-    }
-}
-
 // --- ClosureParam: `pat` or `pat: ty` ---
 
+#[doc = "A closure parameter, either type-annotated (`pat: ty`) or inferred (`pat`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ClosureParam {
     Typed { pat: Box<Pattern>, ty: Box<Type> },
     Inferred { pat: Box<Pattern> },
@@ -158,7 +96,9 @@ impl ToTokens for ClosureParam {
 
 // --- ReturnType: `(-> Type)?` ---
 
+#[doc = "The optional return type of a function (`-> Type` or nothing)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ReturnType {
     Default,
     Type(Box<Type>),
@@ -184,45 +124,11 @@ impl ToTokens for ReturnType {
     }
 }
 
-// --- AngleArgs: `<args,*>` ---
-
-#[derive(Debug, Clone)]
-pub struct AngleArgs {
-    pub span: Span,
-    pub args: Punctuated<GenericArgument, Comma>,
-}
-
-impl Parse for AngleArgs {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let _ = stream.parse::<Lt>()?;
-        let mut args = Punctuated::new();
-        while !stream.peek_angle_close() && !stream.is_empty() {
-            args.push_value(stream.parse::<GenericArgument>()?);
-            if stream.peek::<Comma>().is_some() {
-                args.push_punct(stream.parse::<Comma>()?);
-            } else {
-                break;
-            }
-        }
-        stream.eat_angle_close()?;
-        Ok(Self {
-            span: Span::default(),
-            args,
-        })
-    }
-}
-
-impl ToTokens for AngleArgs {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        Lt::default().to_tokens(t);
-        self.args.to_tokens(t);
-        Gt::default().to_tokens(t);
-    }
-}
-
 // --- BoundLifetimes: `for<'a, 'b>` ---
 
+#[doc = "A `for<'a, 'b>` higher-ranked lifetime binder."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BoundLifetimes {
     pub span: Span,
     pub params: Punctuated<Lifetime, Comma>,

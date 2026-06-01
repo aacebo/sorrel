@@ -6,6 +6,7 @@ use crate::{Parse, TokenStream, TokenTree};
 
 #[doc = "The arguments of an attribute, after its path (e.g. the `(Clone)` in `derive(Clone)` or the `= \"x\"` in `path = \"x\"`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum AttrArgs {
     Empty,
     Delimited { delim: Delim, tokens: TokenStream },

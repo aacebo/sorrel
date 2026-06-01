@@ -49,6 +49,7 @@ pub(crate) fn parse_plus_bounds(stream: &mut ParseStream) -> Result<Punctuated<T
 
 #[doc = "A Rust type expression. Covers all positions where a type can appear in source code."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Type {
     Never,
     Infer,

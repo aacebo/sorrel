@@ -1,8 +1,9 @@
 use crate::ast::BinOp;
 
-#[allow(dead_code)]
+#[doc = "Operator precedence level used when parsing and printing expressions without parentheses."]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum Precedence {
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub enum Precedence {
     Min = 0,
     Range,   // .. ..=
     Or,      // ||
@@ -17,9 +18,8 @@ pub(crate) enum Precedence {
     Cast,    // as
 }
 
-#[allow(dead_code)]
 impl Precedence {
-    pub(crate) fn of(op: &BinOp) -> Self {
+    pub fn of(op: &BinOp) -> Self {
         match op {
             BinOp::Add | BinOp::Sub => Precedence::Add,
             BinOp::Mul | BinOp::Div | BinOp::Rem => Precedence::Mul,

@@ -4,6 +4,7 @@ use crate::{Span, TokenStream};
 
 #[doc = "A name-value meta item (`name = expr`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MetaNameValue {
     pub span: Span,
     pub path: Path,

@@ -4,6 +4,7 @@ use crate::{Parse, Span, Token, TokenStream, TokenTree};
 
 #[doc = "An identifier token (e.g. a variable name, type name, or keyword-like ident)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Ident {
     pub span: Span,
     pub text: String,

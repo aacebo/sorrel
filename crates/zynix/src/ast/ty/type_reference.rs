@@ -7,6 +7,7 @@ use crate::token::punct::And;
 
 #[doc = "A reference type (e.g. `&'a T`, `&mut T`)."]
 #[derive(Debug, Clone, Parse, ToTokens)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeReference {
     #[parse(skip)]
     pub span: Span,

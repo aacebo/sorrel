@@ -8,6 +8,7 @@ use crate::{Parse, Span, TokenStream};
 
 #[doc = "A path type (e.g. `T`, `std::vec::Vec`, `<T as Trait>::Item`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePath {
     pub span: Span,
     pub qself: Option<QSelf>,

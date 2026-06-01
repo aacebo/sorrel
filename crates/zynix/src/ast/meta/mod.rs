@@ -13,6 +13,7 @@ use crate::{Span, TokenStream};
 
 #[doc = "A structured attribute meta item (`name`, `name(...)`, `name = expr`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Meta {
     Path(super::Path),
     List(MetaList),
@@ -64,8 +65,8 @@ impl ToTokens for Meta {
 mod tests {
     use std::str::FromStr;
 
-    use super::*;
     use super::attr::*;
+    use super::*;
     use crate::token::ToTokenStream;
     use crate::{Parse, TokenStream};
 

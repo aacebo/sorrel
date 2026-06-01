@@ -6,6 +6,7 @@ use crate::{Parse, Span, TokenStream, TokenTree};
 
 #[doc = "Parenthesized path arguments (`Fn(A, B) -> C`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ParenthesizedArgs {
     pub span: Span,
     pub inputs: Punctuated<Type, Comma>,
@@ -14,6 +15,7 @@ pub struct ParenthesizedArgs {
 
 #[doc = "The arguments of a path segment: none, angle-bracketed (`<T>`), or parenthesized (`Fn(A) -> B`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum PathArguments {
     None,
     AngleBracketed(AngleArgs),

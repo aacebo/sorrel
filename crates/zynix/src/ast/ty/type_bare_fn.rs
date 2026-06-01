@@ -7,6 +7,7 @@ use crate::{Parse, Span, TokenStream, TokenTree};
 
 #[doc = "A bare function pointer type (e.g. `fn(u8) -> u8`, `extern \"C\" fn()`)."]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeBareFn {
     pub span: Span,
     pub lifetimes: Option<BoundLifetimes>,
