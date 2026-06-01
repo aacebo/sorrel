@@ -1,10 +1,8 @@
 pub mod attr;
-mod doc_string;
 mod meta_list;
 mod meta_name_value;
 
-pub use attr::*;
-pub use doc_string::*;
+pub use attr::Attribute;
 pub use meta_list::*;
 pub use meta_name_value::*;
 
@@ -67,6 +65,7 @@ mod tests {
     use std::str::FromStr;
 
     use super::*;
+    use super::attr::*;
     use crate::token::ToTokenStream;
     use crate::{Parse, TokenStream};
 
