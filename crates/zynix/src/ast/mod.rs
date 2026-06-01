@@ -2,7 +2,6 @@
 
 pub(crate) mod args;
 pub(crate) mod attr;
-pub(crate) mod aux;
 pub(crate) mod delimiter_kind;
 pub(crate) mod expr;
 pub(crate) mod fields;
@@ -15,6 +14,7 @@ pub(crate) mod lit;
 pub(crate) mod macro_call;
 pub(crate) mod member;
 pub(crate) mod member_item;
+pub(crate) mod misc;
 pub(crate) mod pat;
 pub(crate) mod path;
 pub(crate) mod precedence;
@@ -27,7 +27,6 @@ pub(crate) mod vis;
 
 pub use args::*;
 pub use attr::*;
-pub use aux::*;
 pub use delimiter_kind::*;
 pub use expr::*;
 pub use fields::*;
@@ -40,6 +39,7 @@ pub use lit::*;
 pub use macro_call::*;
 pub use member::*;
 pub use member_item::*;
+pub use misc::*;
 pub use pat::*;
 pub use path::*;
 pub use punctuated::*;
