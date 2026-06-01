@@ -1,13 +1,6 @@
-use crate::ast::{
-    Abi, Attribute, BoundPolarity, Defaultness, Expr, Fields, FieldsNamed, ForeignItem, Generics, Ident, ImplItem, MacroCall,
-    Mutability, Punctuated, Signature, StmtBlock, TraitItem, TraitRef, Type, Unsafety, UseTree, Visibility,
-};
+use crate::ast::Attribute;
 use crate::parse::{ParseError, ParseStream};
-use crate::token::keyword::{
-    As, Auto, Const, Crate as KwCrate, Enum, Extern, For, Impl, Mod, Static, Struct, Trait, Type as KwType, Union, Use,
-};
-use crate::token::punct::{Colon, Eq, Not, Semi};
-use crate::token::{Delim, Group, LexError, ToTokens, Token, TokenStream as TS, TokenTree};
+use crate::token::{Delim, Group, LexError, ToTokens, TokenStream as TS, TokenTree};
 use crate::{Parse, Span, TokenStream};
 
 mod item_const;
@@ -100,241 +93,54 @@ impl_from! {
 impl Parse for Item {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse_vec::<Attribute>()?;
-        let vis = stream.parse::<Visibility>()?;
 
-        // `macro_rules! name { ... }`
-        if is_kw(stream.curr(), "macro_rules") {
-            let _ = stream.parse::<crate::token::keyword::MacroRules>()?;
-            let _ = stream.parse::<Not>()?;
-            let ident = stream.parse::<Ident>()?;
-            let rules = match stream.curr() {
-                Some(TokenTree::Group(g)) => {
-                    let s = g.stream();
-                    stream.advance();
-                    s
-                }
-                _ => {
-                    return Err(LexError::new(stream.span()).message("expected macro body").into());
-                }
-            };
-            return Ok(Item::Macro2(ItemMacroRules {
-                span: Span::default(),
-                attrs,
-                ident,
-                rules,
-            }));
+        if stream.peek::<ItemMacroRules>().is_some() {
+            return Ok(Item::Macro2(stream.parse()?));
         }
-
-        if is_kw(stream.curr(), "use") {
-            let _ = stream.parse::<Use>()?;
-            let tree = stream.parse::<UseTree>()?;
-            let _ = stream.parse::<Semi>();
-            return Ok(Item::Use(ItemUse {
-                span: Span::default(),
-                attrs,
-                vis,
-                tree,
-            }));
+        if stream.peek::<ItemUse>().is_some() {
+            return Ok(Item::Use(stream.parse()?));
         }
-        if is_kw(stream.curr(), "extern") && is_kw_after_extern(stream, "crate") {
-            let _ = stream.parse::<Extern>()?;
-            let _ = stream.parse::<KwCrate>()?;
-            let ident = stream.parse::<Ident>()?;
-            let rename = if stream.peek::<As>().is_some() {
-                let _ = stream.parse::<As>()?;
-                Some(stream.parse::<Ident>()?)
-            } else {
-                None
-            };
-            let _ = stream.parse::<Semi>();
-            return Ok(Item::ExternCrate(ItemExternCrate {
-                span: Span::default(),
-                attrs,
-                vis,
-                ident,
-                rename,
-            }));
+        if stream.peek::<ItemExternCrate>().is_some() {
+            return Ok(Item::ExternCrate(stream.parse()?));
         }
-        // `extern "abi" { ... }` foreign mod (also `unsafe extern`).
-        if is_kw(stream.curr(), "extern") || (is_kw(stream.curr(), "unsafe") && is_extern_block(stream)) {
-            let unsafety = stream.parse::<Unsafety>()?;
-            let abi = stream.parse::<Abi>()?;
-            let group = stream.parse_group(Delim::Brace)?;
-            let mut inner = group.parse();
-            let items = inner.parse_vec::<ForeignItem>()?;
-            return Ok(Item::ForeignMod(ItemForeignMod {
-                span: Span::default(),
-                attrs,
-                unsafety,
-                abi,
-                items,
-            }));
+        if stream.peek::<ItemForeignMod>().is_some() {
+            return Ok(Item::ForeignMod(stream.parse()?));
         }
-        if is_kw(stream.curr(), "mod") {
-            let unsafety = Unsafety::Safe;
-            let _ = stream.parse::<Mod>()?;
-            let ident = stream.parse::<Ident>()?;
-            let content = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-                let group = stream.parse_group(Delim::Brace)?;
-                let mut inner = group.parse();
-                Some(inner.parse_vec::<Item>()?)
-            } else {
-                let _ = stream.parse::<Semi>();
-                None
-            };
-            return Ok(Item::Mod(ItemMod {
-                span: Span::default(),
-                attrs,
-                vis,
-                unsafety,
-                ident,
-                content,
-            }));
+        if stream.peek::<ItemMod>().is_some() {
+            return Ok(Item::Mod(stream.parse()?));
         }
-        if is_kw(stream.curr(), "struct") {
-            let _ = stream.parse::<Struct>()?;
-            let ident = stream.parse::<Ident>()?;
-            let mut generics = stream.parse::<Generics>()?;
-            // `struct S where ...;` or `struct S { ... }` or `struct S(...);`
-            if stream.peek::<crate::token::keyword::Where>().is_some() {
-                generics.where_clause = Some(stream.parse()?);
-            }
-            let fields = stream.parse::<Fields>()?;
-            let _ = stream.parse::<Semi>();
-            return Ok(Item::Struct(ItemStruct {
-                span: Span::default(),
-                attrs,
-                vis,
-                ident,
-                generics,
-                fields,
-            }));
+        if stream.peek::<ItemStruct>().is_some() {
+            return Ok(Item::Struct(stream.parse()?));
         }
-        if is_kw(stream.curr(), "enum") {
-            let _ = stream.parse::<Enum>()?;
-            let ident = stream.parse::<Ident>()?;
-            let mut generics = stream.parse::<Generics>()?;
-            if stream.peek::<crate::token::keyword::Where>().is_some() {
-                generics.where_clause = Some(stream.parse()?);
-            }
-            let group = stream.parse_group(Delim::Brace)?;
-            let mut inner = group.parse();
-            let variants = Punctuated::parse_terminated(&mut inner)?;
-            return Ok(Item::Enum(ItemEnum {
-                span: Span::default(),
-                attrs,
-                vis,
-                ident,
-                generics,
-                variants,
-            }));
+        if stream.peek::<ItemEnum>().is_some() {
+            return Ok(Item::Enum(stream.parse()?));
         }
-        if is_kw(stream.curr(), "union") {
-            let _ = stream.parse::<Union>()?;
-            let ident = stream.parse::<Ident>()?;
-            let generics = stream.parse::<Generics>()?;
-            let fields = stream.parse::<FieldsNamed>()?;
-            return Ok(Item::Union(ItemUnion {
-                span: Span::default(),
-                attrs,
-                vis,
-                ident,
-                generics,
-                fields,
-            }));
+        if stream.peek::<ItemUnion>().is_some() {
+            return Ok(Item::Union(stream.parse()?));
         }
-        if is_kw(stream.curr(), "trait")
-            || is_kw(stream.curr(), "auto") && is_kw_after_unsafety(stream, "trait")
-            || is_kw(stream.curr(), "unsafe") && is_trait_after(stream)
-        {
-            return parse_trait(stream, attrs, vis);
+        if stream.peek::<ItemTraitAlias>().is_some() {
+            return Ok(Item::TraitAlias(stream.parse()?));
         }
-        if is_kw(stream.curr(), "impl") || (is_kw(stream.curr(), "unsafe") && is_impl_after(stream)) {
-            return parse_impl(stream, attrs);
+        if stream.peek::<ItemTrait>().is_some() {
+            return Ok(Item::Trait(stream.parse()?));
         }
-        if is_kw(stream.curr(), "type") {
-            let _ = stream.parse::<KwType>()?;
-            let ident = stream.parse::<Ident>()?;
-            let generics = stream.parse::<Generics>()?;
-            let _ = stream.parse::<Eq>()?;
-            let ty = stream.parse::<Type>()?;
-            let _ = stream.parse::<Semi>();
-            return Ok(Item::TypeAlias(ItemTypeAlias {
-                span: Span::default(),
-                attrs,
-                vis,
-                ident,
-                generics,
-                ty,
-            }));
+        if stream.peek::<ItemImpl>().is_some() {
+            return Ok(Item::Impl(stream.parse()?));
         }
-        if is_kw(stream.curr(), "const") && !crate::ast::member::is_fn_start(stream) {
-            let _ = stream.parse::<Const>()?;
-            let ident = stream.parse::<Ident>()?;
-            let generics = stream.parse::<Generics>()?;
-            let _ = stream.parse::<Colon>()?;
-            let ty = stream.parse::<Type>()?;
-            let _ = stream.parse::<Eq>()?;
-            let expr = stream.parse::<Expr>()?;
-            let _ = stream.parse::<Semi>();
-            return Ok(Item::Const(ItemConst {
-                span: Span::default(),
-                attrs,
-                vis,
-                ident,
-                generics,
-                ty,
-                expr,
-            }));
+        if stream.peek::<ItemTypeAlias>().is_some() {
+            return Ok(Item::TypeAlias(stream.parse()?));
         }
-        if is_kw(stream.curr(), "static") {
-            let _ = stream.parse::<Static>()?;
-            let mutability = stream.parse::<Mutability>()?;
-            let ident = stream.parse::<Ident>()?;
-            let _ = stream.parse::<Colon>()?;
-            let ty = stream.parse::<Type>()?;
-            let _ = stream.parse::<Eq>()?;
-            let expr = stream.parse::<Expr>()?;
-            let _ = stream.parse::<Semi>();
-            return Ok(Item::Static(ItemStatic {
-                span: Span::default(),
-                attrs,
-                vis,
-                mutability,
-                ident,
-                ty,
-                expr,
-            }));
+        if stream.peek::<ItemConst>().is_some() {
+            return Ok(Item::Const(stream.parse()?));
         }
-        if crate::ast::member::is_fn_start(stream) {
-            let defaultness = Defaultness::Final;
-            let sig = stream.parse::<Signature>()?;
-            let body = stream.parse::<StmtBlock>()?;
-            return Ok(Item::Fn(ItemFn {
-                span: Span::default(),
-                attrs,
-                vis,
-                defaultness,
-                sig,
-                body,
-            }));
+        if stream.peek::<ItemStatic>().is_some() {
+            return Ok(Item::Static(stream.parse()?));
         }
-        // Macro invocation item: `path!(...);`
-        if let Some(mac) = stream.parse_opt::<MacroCall>() {
-            let semi = if stream.peek::<Semi>().is_some() {
-                let _ = stream.parse::<Semi>()?;
-                true
-            } else {
-                false
-            };
-            return Ok(Item::Macro(ItemMacro {
-                span: Span::default(),
-                attrs,
-                ident: None,
-                mac,
-                semi,
-            }));
+        if stream.peek::<ItemFn>().is_some() {
+            return Ok(Item::Fn(stream.parse()?));
+        }
+        if stream.peek::<ItemMacro>().is_some() {
+            return Ok(Item::Macro(stream.parse()?));
         }
 
         Err(LexError::new(at).message("expected item").into())
@@ -364,193 +170,10 @@ impl ToTokens for Item {
     }
 }
 
-// ===========================================================================
-// Crate
-// ===========================================================================
-
-#[doc = "A whole parsed crate (inner attributes + items)."]
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct Crate {
-    pub span: Span,
-    pub attrs: Vec<Attribute>,
-    pub items: Vec<Item>,
-}
-
-impl Parse for Crate {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
-        let items = stream.parse_vec::<Item>()?;
-        Ok(Self {
-            span: Span::default(),
-            attrs,
-            items,
-        })
-    }
-}
-
-impl ToTokens for Crate {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
-        for it in &self.items {
-            it.to_tokens(t);
-        }
-    }
-}
-
 pub(super) fn emit_attrs(attrs: &[Attribute], t: &mut TokenStream) {
     for a in attrs {
         a.to_tokens(t);
     }
-}
-
-pub(super) fn is_kw(tt: Option<&TokenTree>, name: &str) -> bool {
-    matches!(tt, Some(TokenTree::Token(Token::Keyword(k))) if k.as_str() == name)
-}
-
-fn parse_trait(stream: &mut ParseStream, attrs: Vec<Attribute>, vis: Visibility) -> Result<Item, ParseError> {
-    let unsafety = stream.parse::<Unsafety>()?;
-    let auto = if stream.peek::<Auto>().is_some() {
-        let _ = stream.parse::<Auto>()?;
-        true
-    } else {
-        false
-    };
-    let _ = stream.parse::<Trait>()?;
-    let ident = stream.parse::<Ident>()?;
-    let mut generics = stream.parse::<Generics>()?;
-
-    // `trait T = Bound;` alias vs `trait T : Bounds { ... }`.
-    if stream.peek::<Eq>().is_some() {
-        let _ = stream.parse::<Eq>()?;
-        let bounds = crate::ast::member::parse_plus_bounds(stream)?;
-        let _ = stream.parse::<Semi>();
-        return Ok(Item::TraitAlias(ItemTraitAlias {
-            span: Span::default(),
-            attrs,
-            vis,
-            ident,
-            generics,
-            bounds,
-        }));
-    }
-
-    let supertraits = if stream.peek::<Colon>().is_some() {
-        let _ = stream.parse::<Colon>()?;
-        crate::ast::member::parse_plus_bounds(stream)?
-    } else {
-        Punctuated::new()
-    };
-    if stream.peek::<crate::token::keyword::Where>().is_some() {
-        generics.where_clause = Some(stream.parse()?);
-    }
-    let group = stream.parse_group(Delim::Brace)?;
-    let mut inner = group.parse();
-    let items = inner.parse_vec::<TraitItem>()?;
-    Ok(Item::Trait(ItemTrait {
-        span: Span::default(),
-        attrs,
-        vis,
-        unsafety,
-        auto,
-        ident,
-        generics,
-        supertraits,
-        items,
-    }))
-}
-
-fn parse_impl(stream: &mut ParseStream, attrs: Vec<Attribute>) -> Result<Item, ParseError> {
-    let defaultness = stream.parse::<Defaultness>()?;
-    let unsafety = stream.parse::<Unsafety>()?;
-    let _ = stream.parse::<Impl>()?;
-    let generics = stream.parse::<Generics>()?;
-
-    // Optional `!` for a negative impl (`impl !Trait for T`).
-    let polarity = if stream.peek::<Not>().is_some() {
-        let _ = stream.parse::<Not>()?;
-        BoundPolarity::Negative
-    } else {
-        BoundPolarity::Positive
-    };
-
-    // `impl Trait for Type` vs `impl Type`. Parse a type; if `for` follows, it was the trait.
-    let first = stream.parse::<Type>()?;
-    let (trait_ref, self_ty) = if stream.peek::<For>().is_some() {
-        let _ = stream.parse::<For>()?;
-        let self_ty = stream.parse::<Type>()?;
-        (Some(type_to_trait_ref(first, polarity)?), self_ty)
-    } else {
-        (None, first)
-    };
-
-    let mut generics = generics;
-    if stream.peek::<crate::token::keyword::Where>().is_some() {
-        generics.where_clause = Some(stream.parse()?);
-    }
-
-    let group = stream.parse_group(Delim::Brace)?;
-    let mut inner = group.parse();
-    let items = inner.parse_vec::<ImplItem>()?;
-    Ok(Item::Impl(ItemImpl {
-        span: Span::default(),
-        attrs,
-        defaultness,
-        unsafety,
-        generics,
-        trait_ref,
-        self_ty,
-        items,
-    }))
-}
-
-fn type_to_trait_ref(ty: Type, polarity: BoundPolarity) -> Result<TraitRef, ParseError> {
-    match ty {
-        Type::Path(tp) => Ok(TraitRef {
-            span: Span::default(),
-            polarity,
-            path: tp.path,
-        }),
-        _ => Err(LexError::new(Span::default()).message("expected trait path").into()),
-    }
-}
-
-// lookahead helpers
-fn is_kw_after_extern(stream: &mut ParseStream, name: &str) -> bool {
-    let mut fork = stream.fork();
-    let _ = fork.parse::<Extern>();
-    is_kw(fork.curr(), name)
-}
-
-fn is_extern_block(stream: &mut ParseStream) -> bool {
-    let mut fork = stream.fork();
-    let _ = fork.parse::<Unsafety>();
-    is_kw(fork.curr(), "extern")
-}
-
-fn is_impl_after(stream: &mut ParseStream) -> bool {
-    let mut fork = stream.fork();
-    let _ = fork.parse::<Unsafety>();
-    is_kw(fork.curr(), "impl")
-}
-
-fn is_trait_after(stream: &mut ParseStream) -> bool {
-    // `unsafe trait` or `unsafe auto trait`.
-    let mut fork = stream.fork();
-    let _ = fork.parse::<Unsafety>();
-    if is_kw(fork.curr(), "auto") {
-        fork.advance();
-    }
-    is_kw(fork.curr(), "trait")
-}
-
-fn is_kw_after_unsafety(stream: &mut ParseStream, name: &str) -> bool {
-    // `auto trait` (no unsafe).
-    let mut fork = stream.fork();
-    if is_kw(fork.curr(), "auto") {
-        fork.advance();
-    }
-    is_kw(fork.curr(), name)
 }
 
 pub(super) fn emit_brace_items<T: ToTokens>(items: &[T], t: &mut TokenStream) {
@@ -566,6 +189,7 @@ mod tests {
     use std::str::FromStr;
 
     use super::*;
+    use crate::ast::Crate;
     use crate::token::ToTokenStream;
 
     fn parse<T: Parse>(src: &str) -> T {

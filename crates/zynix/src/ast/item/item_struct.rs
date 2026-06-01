@@ -1,9 +1,10 @@
 use super::emit_attrs;
 use crate::ast::{Attribute, Fields, Generics, Ident, Visibility};
+use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
 use crate::token::keyword::Struct;
 use crate::token::punct::Semi;
-use crate::{Span, TokenStream};
+use crate::{Parse, Span, TokenStream};
 
 #[doc = "A struct item (`struct Name<T> { ... }` or `struct Name(T);`)."]
 #[derive(Debug, Clone)]
@@ -15,6 +16,29 @@ pub struct ItemStruct {
     pub ident: Ident,
     pub generics: Generics,
     pub fields: Fields,
+}
+
+impl Parse for ItemStruct {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        let _ = stream.parse::<Struct>()?;
+        let ident = stream.parse::<Ident>()?;
+        let mut generics = stream.parse::<Generics>()?;
+        if stream.peek::<crate::token::keyword::Where>().is_some() {
+            generics.where_clause = Some(stream.parse()?);
+        }
+        let fields = stream.parse::<Fields>()?;
+        let _ = stream.parse::<Semi>();
+        Ok(ItemStruct {
+            span: Span::default(),
+            attrs,
+            vis,
+            ident,
+            generics,
+            fields,
+        })
+    }
 }
 
 impl ToTokens for ItemStruct {

@@ -1,9 +1,10 @@
 use super::emit_attrs;
 use crate::ast::{Attribute, Generics, Ident, Type, Visibility};
+use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
 use crate::token::keyword::Type as KwType;
 use crate::token::punct::{Eq, Semi};
-use crate::{Span, TokenStream};
+use crate::{Parse, Span, TokenStream};
 
 #[doc = "A type alias item (`type Name<T> = Type;`)."]
 #[derive(Debug, Clone)]
@@ -15,6 +16,27 @@ pub struct ItemTypeAlias {
     pub ident: Ident,
     pub generics: Generics,
     pub ty: Type,
+}
+
+impl Parse for ItemTypeAlias {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        let _ = stream.parse::<KwType>()?;
+        let ident = stream.parse::<Ident>()?;
+        let generics = stream.parse::<Generics>()?;
+        let _ = stream.parse::<Eq>()?;
+        let ty = stream.parse::<Type>()?;
+        let _ = stream.parse::<Semi>();
+        Ok(ItemTypeAlias {
+            span: Span::default(),
+            attrs,
+            vis,
+            ident,
+            generics,
+            ty,
+        })
+    }
 }
 
 impl ToTokens for ItemTypeAlias {

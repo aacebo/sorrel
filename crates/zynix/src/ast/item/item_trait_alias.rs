@@ -1,9 +1,10 @@
 use super::emit_attrs;
-use crate::ast::{Attribute, Generics, Ident, Punctuated, TypeBound, Visibility};
+use crate::ast::{Attribute, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibility};
+use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
-use crate::token::keyword::Trait;
+use crate::token::keyword::{Auto, Trait};
 use crate::token::punct::{Eq, Plus, Semi};
-use crate::{Span, TokenStream};
+use crate::{Parse, Span, TokenStream};
 
 #[doc = "A trait alias item (`trait Alias<T> = Bound1 + Bound2;`)."]
 #[derive(Debug, Clone)]
@@ -15,6 +16,32 @@ pub struct ItemTraitAlias {
     pub ident: Ident,
     pub generics: Generics,
     pub bounds: Punctuated<TypeBound, Plus>,
+}
+
+impl Parse for ItemTraitAlias {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        let _unsafety = stream.parse::<Unsafety>()?;
+        // skip optional `auto`
+        if stream.peek::<Auto>().is_some() {
+            let _ = stream.parse::<Auto>()?;
+        }
+        let _ = stream.parse::<Trait>()?;
+        let ident = stream.parse::<Ident>()?;
+        let generics = stream.parse::<Generics>()?;
+        let _ = stream.parse::<Eq>()?;
+        let bounds = crate::ast::member::parse_plus_bounds(stream)?;
+        let _ = stream.parse::<Semi>();
+        Ok(ItemTraitAlias {
+            span: Span::default(),
+            attrs,
+            vis,
+            ident,
+            generics,
+            bounds,
+        })
+    }
 }
 
 impl ToTokens for ItemTraitAlias {

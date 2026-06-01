@@ -1,8 +1,9 @@
 use super::emit_attrs;
 use crate::ast::{Attribute, FieldsNamed, Generics, Ident, Visibility};
+use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
 use crate::token::keyword::Union;
-use crate::{Span, TokenStream};
+use crate::{Parse, Span, TokenStream};
 
 #[doc = "A union item (`union Name<T> { field: Type, ... }`)."]
 #[derive(Debug, Clone)]
@@ -14,6 +15,25 @@ pub struct ItemUnion {
     pub ident: Ident,
     pub generics: Generics,
     pub fields: FieldsNamed,
+}
+
+impl Parse for ItemUnion {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        let _ = stream.parse::<Union>()?;
+        let ident = stream.parse::<Ident>()?;
+        let generics = stream.parse::<Generics>()?;
+        let fields = stream.parse::<FieldsNamed>()?;
+        Ok(ItemUnion {
+            span: Span::default(),
+            attrs,
+            vis,
+            ident,
+            generics,
+            fields,
+        })
+    }
 }
 
 impl ToTokens for ItemUnion {

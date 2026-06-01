@@ -1,7 +1,8 @@
 use super::{emit_attrs, emit_brace_items};
 use crate::ast::{Abi, Attribute, ForeignItem, Unsafety};
-use crate::token::ToTokens;
-use crate::{Span, TokenStream};
+use crate::parse::{ParseError, ParseStream};
+use crate::token::{Delim, ToTokens};
+use crate::{Parse, Span, TokenStream};
 
 #[doc = "An `extern` block (`extern \"C\" { ... }`)."]
 #[derive(Debug, Clone)]
@@ -12,6 +13,24 @@ pub struct ItemForeignMod {
     pub unsafety: Unsafety,
     pub abi: Abi,
     pub items: Vec<ForeignItem>,
+}
+
+impl Parse for ItemForeignMod {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let unsafety = stream.parse::<Unsafety>()?;
+        let abi = stream.parse::<Abi>()?;
+        let group = stream.parse_group(Delim::Brace)?;
+        let mut inner = group.parse();
+        let items = inner.parse_vec::<ForeignItem>()?;
+        Ok(ItemForeignMod {
+            span: Span::default(),
+            attrs,
+            unsafety,
+            abi,
+            items,
+        })
+    }
 }
 
 impl ToTokens for ItemForeignMod {

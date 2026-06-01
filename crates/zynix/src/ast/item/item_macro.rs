@@ -1,8 +1,9 @@
 use super::emit_attrs;
 use crate::ast::{Attribute, Ident, MacroCall};
+use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
 use crate::token::punct::Semi;
-use crate::{Span, TokenStream};
+use crate::{Parse, Span, TokenStream};
 
 #[doc = "A macro invocation used as an item (`name!(...);`)."]
 #[derive(Debug, Clone)]
@@ -13,6 +14,26 @@ pub struct ItemMacro {
     pub ident: Option<Ident>,
     pub mac: MacroCall,
     pub semi: bool,
+}
+
+impl Parse for ItemMacro {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let mac = stream.parse::<MacroCall>()?;
+        let semi = if stream.peek::<Semi>().is_some() {
+            let _ = stream.parse::<Semi>()?;
+            true
+        } else {
+            false
+        };
+        Ok(ItemMacro {
+            span: Span::default(),
+            attrs,
+            ident: None,
+            mac,
+            semi,
+        })
+    }
 }
 
 impl ToTokens for ItemMacro {

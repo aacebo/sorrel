@@ -1,7 +1,7 @@
 use crate::ast::precedence::Precedence;
 use crate::ast::{
     AngleArgs, AssignOp, Asyncness, Attribute, BinOp, BoundLifetimes, ClosureParam, Constness, FieldValue, Ident, Label, Lit,
-    MacroCall, Member, Movability, Mutability, Path, Pattern, Punctuated, QSelf, RangeLimits, ReturnType, StmtBlock, Type, UnOp,
+    Member, Movability, Mutability, Path, Pattern, Punctuated, QSelf, RangeLimits, ReturnType, StmtBlock, Type, UnOp,
 };
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{
@@ -73,6 +73,7 @@ pub use expr_index::*;
 pub use expr_let::*;
 pub use expr_lit::*;
 pub use expr_loop::*;
+pub use expr_macro::*;
 pub use expr_match::*;
 pub use expr_method_call::*;
 pub use expr_paren::*;
@@ -131,7 +132,7 @@ pub enum Expr {
     Array(ExprArray),
     Repeat(ExprRepeat),
     Range(ExprRange),
-    Macro(MacroCall),
+    Macro(ExprMacro),
     Group(ExprGroup),
     Paren(ExprParen),
     Infer,
@@ -164,7 +165,7 @@ impl_from! {
     Reference => ExprReference, Unary => ExprUnary, Binary => ExprBinary,
     Assign => ExprAssign, AssignOp => ExprAssignOp, Cast => ExprCast, Type => ExprType,
     Let => ExprLet, Struct => ExprStruct, Tuple => ExprTuple, Array => ExprArray,
-    Repeat => ExprRepeat, Range => ExprRange, Macro => MacroCall, Group => ExprGroup,
+    Repeat => ExprRepeat, Range => ExprRange, Macro => ExprMacro, Group => ExprGroup,
     Paren => ExprParen,
 }
 
@@ -658,8 +659,12 @@ fn parse_primary(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, P
         }));
     }
 
-    if let Some(mac) = stream.parse_opt::<MacroCall>() {
-        return Ok(Expr::Macro(mac));
+    if let Some(mac) = stream.parse_opt::<crate::ast::MacroCall>() {
+        return Ok(Expr::Macro(ExprMacro {
+            span: crate::Span::default(),
+            attrs: Vec::new(),
+            mac,
+        }));
     }
 
     // Qualified path `<T as Trait>::assoc` in expression position.

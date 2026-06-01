@@ -6,13 +6,11 @@ mod field_def;
 mod field_value;
 mod fields_named;
 mod fields_unnamed;
-mod variant;
 
 pub use field_def::*;
 pub use field_value::*;
 pub use fields_named::*;
 pub use fields_unnamed::*;
-pub use variant::*;
 
 #[doc = "The fields of a struct/enum variant (named, unnamed, or unit)."]
 #[derive(Debug, Clone)]

@@ -1,5 +1,6 @@
 #![allow(unused)]
 
+mod _crate;
 pub mod args;
 pub mod expr;
 pub mod fields;
@@ -23,12 +24,13 @@ pub mod ty;
 pub mod use_tree;
 pub mod vis;
 
+pub use _crate::Crate;
 pub use args::{AngleArgs, GenericArgument};
-pub use expr::Expr;
-pub use fields::{FieldValue, Fields, FieldsNamed, Variant};
+pub use expr::{Expr, MatchArm};
+pub use fields::{FieldValue, Fields, FieldsNamed};
 pub use generics::{Generics, TraitRef, TypeBound, WhereClause, WherePredicate};
 pub use ident::*;
-pub use item::Item;
+pub use item::{Item, Variant};
 pub use label::*;
 pub use leaf::*;
 pub use lit::Lit;

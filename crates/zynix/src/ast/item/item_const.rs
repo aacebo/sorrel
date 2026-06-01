@@ -1,9 +1,10 @@
 use super::emit_attrs;
 use crate::ast::{Attribute, Expr, Generics, Ident, Type, Visibility};
+use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
 use crate::token::keyword::Const;
 use crate::token::punct::{Colon, Eq, Semi};
-use crate::{Span, TokenStream};
+use crate::{Parse, Span, TokenStream};
 
 #[doc = "A constant item (`const NAME: Type = expr;`)."]
 #[derive(Debug, Clone)]
@@ -16,6 +17,30 @@ pub struct ItemConst {
     pub generics: Generics,
     pub ty: Type,
     pub expr: Expr,
+}
+
+impl Parse for ItemConst {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        let _ = stream.parse::<Const>()?;
+        let ident = stream.parse::<Ident>()?;
+        let generics = stream.parse::<Generics>()?;
+        let _ = stream.parse::<Colon>()?;
+        let ty = stream.parse::<Type>()?;
+        let _ = stream.parse::<Eq>()?;
+        let expr = stream.parse::<Expr>()?;
+        let _ = stream.parse::<Semi>();
+        Ok(ItemConst {
+            span: Span::default(),
+            attrs,
+            vis,
+            ident,
+            generics,
+            ty,
+            expr,
+        })
+    }
 }
 
 impl ToTokens for ItemConst {
