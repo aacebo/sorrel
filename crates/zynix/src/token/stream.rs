@@ -126,25 +126,6 @@ impl From<TokenStream> for proc_macro::TokenStream {
     }
 }
 
-/// Push the token sequence for a doc comment: `#[doc = "text"]` (outer) or
-/// `#![doc = "text"]` (inner).
-fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Span) {
-    use crate::token::punct::{Eq, Not, Pound};
-    use crate::token::{Delim, Group, Ident, Literal, Punctuation};
-
-    tokens.push(crate::Token::Punct(Punctuation::Pound(Pound::new(span))).into());
-    if inner {
-        tokens.push(crate::Token::Punct(Punctuation::Not(Not::new(span))).into());
-    }
-
-    let mut body = TokenStream::new();
-    body.extend_one(crate::Token::Ident(Ident::new("doc", span)).into());
-    body.extend_one(crate::Token::Punct(Punctuation::Eq(Eq::new(span))).into());
-    body.extend_one(crate::Token::Literal(Literal::string(text)).into());
-
-    tokens.push(TokenTree::Group(Group::new(Delim::Bracket, body)));
-}
-
 impl Scan for TokenStream {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         let mut tokens = Vec::new();
@@ -264,6 +245,24 @@ impl serde::Serialize for TokenStream {
     {
         self.0.serialize(s)
     }
+}
+
+fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Span) {
+    use crate::token::punct::{Eq, Not, Pound};
+    use crate::token::{Delim, Group, Ident, Literal, Punctuation};
+
+    tokens.push(crate::Token::Punct(Punctuation::Pound(Pound::new(span))).into());
+
+    if inner {
+        tokens.push(crate::Token::Punct(Punctuation::Not(Not::new(span))).into());
+    }
+
+    let mut body = TokenStream::new();
+    body.extend_one(crate::Token::Ident(Ident::new("doc", span)).into());
+    body.extend_one(crate::Token::Punct(Punctuation::Eq(Eq::new(span))).into());
+    body.extend_one(crate::Token::Literal(Literal::string(text)).into());
+
+    tokens.push(TokenTree::Group(Group::new(Delim::Bracket, body)));
 }
 
 #[cfg(test)]

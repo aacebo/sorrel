@@ -70,7 +70,6 @@ impl Scan for Group {
         let ch = cursor.first().ok_or(cursor.error())?;
         let delim = Delim::from_open(ch).ok_or(cursor.error())?;
         let c = cursor.advance(ch.len_utf8());
-        // Scan inner tokens until matching close delimiter
         let (c, inner) = TokenStream::scan(c)?;
         let close_ch = c.first().ok_or_else(|| {
             cursor
@@ -149,6 +148,7 @@ mod tests {
             let TokenTree::Group(g) = tree else {
                 panic!("expected group");
             };
+
             assert_eq!(
                 serde_json::to_value(&g).unwrap(),
                 serde_json::json!({ "delim": "bracket", "tokens": ["a", ",", "b"] })
