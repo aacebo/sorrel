@@ -71,21 +71,6 @@ pub enum Token {
     Literal(Literal),
 }
 
-#[cfg(feature = "serde")]
-impl serde::Serialize for Token {
-    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match self {
-            Self::Ident(v) => v.serialize(s),
-            Self::Keyword(v) => v.serialize(s),
-            Self::Punct(v) => v.serialize(s),
-            Self::Literal(v) => v.serialize(s),
-        }
-    }
-}
-
 impl Token {
     pub fn span(&self) -> Span {
         match self {
@@ -138,23 +123,25 @@ impl ToTokens for Token {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum TokenTree {
-    Token(Token),
-    Group(Group),
-}
-
 #[cfg(feature = "serde")]
-impl serde::Serialize for TokenTree {
+impl serde::Serialize for Token {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
         match self {
-            Self::Token(v) => v.serialize(s),
-            Self::Group(v) => v.serialize(s),
+            Self::Ident(v) => v.serialize(s),
+            Self::Keyword(v) => v.serialize(s),
+            Self::Punct(v) => v.serialize(s),
+            Self::Literal(v) => v.serialize(s),
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum TokenTree {
+    Token(Token),
+    Group(Group),
 }
 
 impl TokenTree {
@@ -289,24 +276,6 @@ impl ToTokens<proc_macro::TokenStream> for TokenStream {
     }
 }
 
-fn scan_puncts(s: &str, tokens: &mut TokenStream) {
-    use crate::source::SourceMap;
-    use crate::token::lex::{Cursor, Scan};
-
-    let span = SourceMap::with_mut(|sm| sm.push(s));
-    let mut cursor = Cursor::new(s, span.byte_range().start as u32);
-
-    while !cursor.is_empty() {
-        match <Punctuation as Scan>::scan(cursor) {
-            Ok((next, op)) => {
-                tokens.extend_one(Token::Punct(op).into());
-                cursor = next;
-            }
-            Err(_) => break,
-        }
-    }
-}
-
 impl IntoIterator for TokenTree {
     type Item = TokenTree;
     type IntoIter = std::iter::Once<TokenTree>;
@@ -337,6 +306,37 @@ impl ToTokens for &str {
 
         if let Ok(ts) = TokenStream::from_str(self) {
             ts.to_tokens(tokens);
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for TokenTree {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Token(v) => v.serialize(s),
+            Self::Group(v) => v.serialize(s),
+        }
+    }
+}
+
+fn scan_puncts(s: &str, tokens: &mut TokenStream) {
+    use crate::source::SourceMap;
+    use crate::token::lex::{Cursor, Scan};
+
+    let span = SourceMap::with_mut(|sm| sm.push(s));
+    let mut cursor = Cursor::new(s, span.byte_range().start as u32);
+
+    while !cursor.is_empty() {
+        match <Punctuation as Scan>::scan(cursor) {
+            Ok((next, op)) => {
+                tokens.extend_one(Token::Punct(op).into());
+                cursor = next;
+            }
+            Err(_) => break,
         }
     }
 }
