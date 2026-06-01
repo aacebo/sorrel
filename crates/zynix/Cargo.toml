@@ -35,3 +35,11 @@ unicode-ident = "1"
 
 [dev-dependencies]
 serde_json = "1"
+syn = { version = "2", features = ["full", "parsing", "extra-traits"] }
+proc-macro2 = { version = "1", features = ["span-locations"] }
+quote = "1"
+criterion = "0.5"
+
+[[bench]]
+name = "vs_syn"
+harness = false

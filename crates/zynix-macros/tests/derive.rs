@@ -74,6 +74,11 @@ struct Wrapped {
 }
 
 #[derive(Parse, ToTokens)]
+struct Many {
+    names: Vec<Ident>,
+}
+
+#[derive(Parse, ToTokens)]
 enum Choice {
     #[parse(peek = Lt)]
     Angled {
@@ -117,6 +122,16 @@ fn option_present_and_absent() {
     let none: Maybe = parse("a");
     assert!(none.rest.is_none());
     assert_eq!(render(&none), "a");
+}
+
+#[test]
+fn vec_greedy() {
+    let m: Many = parse("a b c");
+    assert_eq!(m.names.len(), 3);
+    assert_eq!(render(&m), "a b c");
+
+    let empty: Many = parse("");
+    assert_eq!(empty.names.len(), 0);
 }
 
 #[test]

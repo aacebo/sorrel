@@ -126,6 +126,25 @@ impl From<TokenStream> for proc_macro::TokenStream {
     }
 }
 
+/// Push the token sequence for a doc comment: `#[doc = "text"]` (outer) or
+/// `#![doc = "text"]` (inner).
+fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Span) {
+    use crate::token::punct::{Eq, Not, Pound};
+    use crate::token::{Delim, Group, Ident, Literal, Punctuation};
+
+    tokens.push(crate::Token::Punct(Punctuation::Pound(Pound::new(span))).into());
+    if inner {
+        tokens.push(crate::Token::Punct(Punctuation::Not(Not::new(span))).into());
+    }
+
+    let mut body = TokenStream::new();
+    body.extend_one(crate::Token::Ident(Ident::new("doc", span)).into());
+    body.extend_one(crate::Token::Punct(Punctuation::Eq(Eq::new(span))).into());
+    body.extend_one(crate::Token::Literal(Literal::string(text)).into());
+
+    tokens.push(TokenTree::Group(Group::new(Delim::Bracket, body)));
+}
+
 impl Scan for TokenStream {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         let mut tokens = Vec::new();
@@ -136,6 +155,13 @@ impl Scan for TokenStream {
 
             if c.is_empty() {
                 break;
+            }
+
+            // Doc comment → `#[doc = "..."]` (outer) / `#![doc = "..."]` (inner).
+            if let Some((next, inner, text)) = c.doc_comment() {
+                push_doc_attr(&mut tokens, inner, &text, c.span_to(&next));
+                c = next;
+                continue;
             }
 
             // Check for closing delimiter — return to caller (Group::scan handles matching)
@@ -305,6 +331,30 @@ mod tests {
 
         fn trees(src: &str) -> Vec<TokenTree> {
             TokenStream::from_str(src).unwrap().into_iter().collect()
+        }
+
+        #[test]
+        fn doc_comment_becomes_attr() {
+            // `/// x` → `# [doc = "x"]`; plain `//` is still skipped.
+            let t = trees("/// hello\nfn f() {}");
+            assert!(matches!(
+                t[0],
+                TokenTree::Token(Token::Punct(Punctuation::Pound(_)))
+            ));
+            assert!(matches!(t[1], TokenTree::Group(_)));
+            // inner doc `//!`
+            let inner = trees("//! crate doc\n");
+            assert!(matches!(
+                inner[1],
+                TokenTree::Token(Token::Punct(Punctuation::Not(_)))
+            ));
+            // plain comment still skipped
+            assert_eq!(trees("// plain\nx").len(), 1);
+            // block doc
+            assert!(matches!(
+                trees("/** b */ x")[0],
+                TokenTree::Token(Token::Punct(Punctuation::Pound(_)))
+            ));
         }
 
         #[test]

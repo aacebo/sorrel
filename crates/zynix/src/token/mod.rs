@@ -55,6 +55,14 @@ impl<T: ToTokens> ToTokens for Option<T> {
     }
 }
 
+impl<T: ToTokens> ToTokens for Vec<T> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        for v in self {
+            v.to_tokens(tokens);
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Token {
     Ident(Ident),

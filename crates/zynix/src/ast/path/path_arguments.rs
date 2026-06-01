@@ -1,58 +1,72 @@
+use crate::ast::{AngleArgs, Punctuated, ReturnType, Type};
 use crate::parse::{ParseError, ParseStream};
-use crate::token::punct::{Gt, Lt};
-use crate::token::{LexError, ToTokens};
-use crate::{Parse, TokenStream};
+use crate::token::punct::{Comma, Lt, PathSep};
+use crate::token::{Delim, Group, ToTokens};
+use crate::{Parse, Span, TokenStream, TokenTree};
 
-#[doc = "Path segment arguments. `Parenthesized` and full generic-argument parsing are deferred to a later phase; angle-bracketed contents are kept as a raw token stream for now."]
+#[doc = "Parenthesized path arguments (`Fn(A, B) -> C`)."]
+#[derive(Debug, Clone)]
+pub struct ParenthesizedArgs {
+    pub span: Span,
+    pub inputs: Punctuated<Type, Comma>,
+    pub output: ReturnType,
+}
+
+#[doc = "The arguments of a path segment: none, angle-bracketed (`<T>`), or parenthesized (`Fn(A) -> B`)."]
 #[derive(Debug, Clone)]
 pub enum PathArguments {
     None,
-    AngleBracketed(TokenStream),
+    AngleBracketed(AngleArgs),
+    Parenthesized(ParenthesizedArgs),
 }
 
-// `AngleBracketed` wraps a raw `TokenStream` — the generic token container, not
-// a node — and its delimiters are contextual, so there is no meaningful
-// `Parse for TokenStream`. `PathArguments` therefore parses/emits by hand
-// rather than delegating to a variant's `Parse`.
-impl From<TokenStream> for PathArguments {
-    fn from(value: TokenStream) -> Self {
-        PathArguments::AngleBracketed(value)
+impl From<AngleArgs> for PathArguments {
+    fn from(v: AngleArgs) -> Self {
+        PathArguments::AngleBracketed(v)
+    }
+}
+
+impl From<ParenthesizedArgs> for PathArguments {
+    fn from(v: ParenthesizedArgs) -> Self {
+        PathArguments::Parenthesized(v)
     }
 }
 
 impl Parse for PathArguments {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Lt>().is_none() {
-            return Ok(PathArguments::None);
-        }
-
-        let _ = stream.parse::<Lt>()?;
-        let mut inner = TokenStream::new();
-        let mut depth = 0usize;
-
-        loop {
-            if depth == 0 && stream.peek::<Gt>().is_some() {
-                let _ = stream.parse::<Gt>()?;
-                break;
-            }
-
-            if stream.peek::<Lt>().is_some() {
-                depth += 1;
-            } else if stream.peek::<Gt>().is_some() {
-                depth = depth.saturating_sub(1);
-            }
-
-            match stream.advance() {
-                Some(tt) => inner.extend_one(tt.clone()),
-                None => {
-                    return Err(LexError::new(stream.span())
-                        .message("unterminated `<...>` in path arguments")
-                        .into());
-                }
+        // Turbofish `::<...>` — an optional leading `::` before the `<`.
+        let mut fork = stream.fork();
+        if fork.peek::<PathSep>().is_some() {
+            let _ = fork.parse::<PathSep>()?;
+            if fork.peek::<Lt>().is_some() {
+                stream.seek(&fork);
             }
         }
 
-        Ok(PathArguments::AngleBracketed(inner))
+        if stream.peek::<Lt>().is_some() {
+            return Ok(PathArguments::AngleBracketed(stream.parse()?));
+        }
+
+        // Parenthesized args (`Fn(A) -> B`) are only valid in type/trait paths and
+        // are consumed there explicitly (see `parse_parenthesized`), never here —
+        // in expression position `path(args)` is a call, not path arguments.
+        Ok(PathArguments::None)
+    }
+}
+
+impl PathArguments {
+    /// Parse a parenthesized argument list (`(A, B) -> C`) for `Fn`-family paths.
+    /// Used by type/bound parsing, not by expression paths.
+    pub fn parse_parenthesized(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let group = stream.parse_group(Delim::Paren)?;
+        let mut inner = group.parse();
+        let inputs = Punctuated::parse_terminated(&mut inner)?;
+        let output = stream.parse::<ReturnType>()?;
+        Ok(PathArguments::Parenthesized(ParenthesizedArgs {
+            span: Span::default(),
+            inputs,
+            output,
+        }))
     }
 }
 
@@ -60,10 +74,12 @@ impl ToTokens for PathArguments {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             PathArguments::None => {}
-            PathArguments::AngleBracketed(inner) => {
-                Lt::default().to_tokens(tokens);
-                inner.to_tokens(tokens);
-                Gt::default().to_tokens(tokens);
+            PathArguments::AngleBracketed(args) => args.to_tokens(tokens),
+            PathArguments::Parenthesized(p) => {
+                let mut inner = TokenStream::new();
+                p.inputs.to_tokens(&mut inner);
+                tokens.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
+                p.output.to_tokens(tokens);
             }
         }
     }

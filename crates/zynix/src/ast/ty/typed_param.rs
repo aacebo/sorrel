@@ -1,10 +1,17 @@
-#[allow(unused)]
-use crate::ast::*;
+use zynix_macros::{Parse, ToTokens};
 
-#[derive(Debug, Clone)]
+use super::Type;
+use crate::Span;
+use crate::ast::{Attribute, Pattern};
+use crate::token::punct::Colon;
+
+#[doc = "A typed function parameter (`pat: Type`)."]
+#[derive(Debug, Clone, Parse, ToTokens)]
 pub struct TypedParam {
-    pub span: crate::Span,
+    #[parse(skip)]
+    pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub pat: Pattern,
-    pub ty: Type,
+    pub pat: Box<Pattern>,
+    #[parse(prefix = Colon)]
+    pub ty: Box<Type>,
 }

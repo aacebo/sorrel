@@ -1,6 +1,7 @@
-use crate::ast::{MacroCall, Punctuated};
+use crate::ast::{MacroCall, Punctuated, TypeBound};
 use crate::parse::{ParseError, ParseStream};
-use crate::token::punct::{And, Comma, Star};
+use crate::token::keyword::{Dyn, Impl};
+use crate::token::punct::{And, Comma, Plus, Star};
 use crate::token::{Delim, ToTokens};
 use crate::{Parse, Span, TokenStream};
 
@@ -9,11 +10,9 @@ mod type_array;
 mod type_bare_fn;
 mod type_group;
 mod type_impl_trait;
-mod type_param;
 mod type_paren;
 mod type_path;
 mod type_pointer;
-mod type_predicate;
 mod type_reference;
 mod type_slice;
 mod type_trait_object;
@@ -25,16 +24,30 @@ pub use type_array::*;
 pub use type_bare_fn::*;
 pub use type_group::*;
 pub use type_impl_trait::*;
-pub use type_param::*;
 pub use type_paren::*;
 pub use type_path::*;
 pub use type_pointer::*;
-pub use type_predicate::*;
 pub use type_reference::*;
 pub use type_slice::*;
 pub use type_trait_object::*;
 pub use type_tuple::*;
 pub use typed_param::*;
+
+/// Parse `Bound + Bound + ...` for `impl`/`dyn` types.
+pub(crate) fn parse_plus_bounds(
+    stream: &mut ParseStream,
+) -> Result<Punctuated<TypeBound, Plus>, ParseError> {
+    let mut bounds = Punctuated::new();
+    loop {
+        bounds.push_value(stream.parse::<TypeBound>()?);
+        if stream.peek::<Plus>().is_some() {
+            bounds.push_punct(stream.parse::<Plus>()?);
+        } else {
+            break;
+        }
+    }
+    Ok(bounds)
+}
 
 #[doc = "A Rust type expression. Covers all positions where a type can appear in source code."]
 #[derive(Debug, Clone)]
@@ -74,6 +87,9 @@ impl_from! {
     Tuple => TypeTuple,
     Paren => TypeParen,
     Slice => TypeSlice,
+    ImplTrait => TypeImplTrait,
+    TraitObject => TypeTraitObject,
+    BareFn => TypeBareFn,
 }
 
 impl Parse for Type {
@@ -88,8 +104,50 @@ impl Parse for Type {
             return Ok(Type::Pointer(stream.parse()?));
         }
 
+        // Never `!` and infer `_`.
+        if stream.peek::<crate::token::punct::Not>().is_some() {
+            let _ = stream.parse::<crate::token::punct::Not>()?;
+            return Ok(Type::Never);
+        }
+        if matches!(stream.curr(), Some(tt) if is_named(tt, "_")) {
+            stream.advance();
+            return Ok(Type::Infer);
+        }
+
+        // `[T]` slice or `[T; N]` array — decided by a `;` inside the brackets.
         if matches!(stream.curr(), Some(tt) if is_group(tt, Delim::Bracket)) {
-            return Ok(Type::Slice(stream.parse()?));
+            let group = stream.parse_group(Delim::Bracket)?;
+            let mut inner = group.parse();
+            let elem = Box::new(inner.parse::<Type>()?);
+            if inner.peek::<crate::token::punct::Semi>().is_some() {
+                let _ = inner.parse::<crate::token::punct::Semi>()?;
+                let len = inner.parse::<crate::ast::Expr>()?;
+                return Ok(Type::Array(TypeArray {
+                    span: Span::default(),
+                    elem,
+                    len,
+                }));
+            }
+            return Ok(Type::Slice(TypeSlice {
+                span: Span::default(),
+                elem,
+            }));
+        }
+
+        // `impl Trait` / `dyn Trait`.
+        if stream.peek::<Impl>().is_some() {
+            return Ok(Type::ImplTrait(stream.parse()?));
+        }
+        if stream.peek::<Dyn>().is_some() {
+            return Ok(Type::TraitObject(stream.parse()?));
+        }
+
+        // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
+        if stream.peek::<crate::token::keyword::Fn>().is_some()
+            || stream.peek::<crate::token::keyword::Extern>().is_some()
+            || (stream.peek::<crate::token::keyword::Unsafe>().is_some())
+        {
+            return Ok(Type::BareFn(stream.parse()?));
         }
 
         // `(...)` — one element with no trailing comma is a parenthesized type;
@@ -112,9 +170,22 @@ impl Parse for Type {
             };
         }
 
+        // Macro type `m!(...)` — a path followed by `!`.
+        if let Some(mac) = stream.parse_opt::<MacroCall>() {
+            return Ok(Type::Macro(mac));
+        }
+
         // Otherwise a path type: `T`, `std::vec::Vec`, or a qualified
         // `<T as Trait>::Item` (which begins with `<`).
         Ok(Type::Path(stream.parse()?))
+    }
+}
+
+fn is_named(tt: &crate::TokenTree, name: &str) -> bool {
+    match tt {
+        crate::TokenTree::Token(crate::Token::Ident(id)) => id.name() == name,
+        crate::TokenTree::Token(crate::Token::Keyword(kw)) => kw.as_str() == name,
+        _ => false,
     }
 }
 
@@ -127,8 +198,15 @@ impl ToTokens for Type {
             Type::Tuple(value) => value.to_tokens(tokens),
             Type::Paren(value) => value.to_tokens(tokens),
             Type::Slice(value) => value.to_tokens(tokens),
-            // Variants below are not yet produced by `Type::parse`.
-            _ => {}
+            Type::ImplTrait(value) => value.to_tokens(tokens),
+            Type::TraitObject(value) => value.to_tokens(tokens),
+            Type::BareFn(value) => value.to_tokens(tokens),
+            Type::Array(value) => value.to_tokens(tokens),
+            Type::Macro(value) => value.to_tokens(tokens),
+            Type::Never => crate::token::punct::Not::default().to_tokens(tokens),
+            Type::Infer => crate::token::Ident::new("_", Span::default()).to_tokens(tokens),
+            // `Group` is only produced via the proc-macro bridge, never `from_str`.
+            Type::Group(_) => {}
         }
     }
 }
@@ -150,6 +228,24 @@ mod tests {
 
     fn roundtrip(src: &str) -> String {
         parse(src).to_token_stream().to_string()
+    }
+
+    #[test]
+    fn never_infer_array_macro() {
+        assert!(matches!(parse("!"), Type::Never));
+        assert!(matches!(parse("_"), Type::Infer));
+        assert!(matches!(parse("[u8; 4]"), Type::Array(_)));
+        assert!(matches!(parse("[u8]"), Type::Slice(_)));
+        assert!(matches!(parse("m!(x)"), Type::Macro(_)));
+        assert_eq!(roundtrip("[u8 ; 4]"), "[u8 ; 4]");
+    }
+
+    #[test]
+    fn fn_trait_bounds() {
+        assert!(matches!(parse("Fn(u8) -> bool"), Type::Path(_)));
+        // `Box<dyn Fn(u8) -> bool>` and `dyn FnMut()` should parse.
+        assert!(matches!(parse("Box<dyn Fn(u8) -> bool>"), Type::Path(_)));
+        assert!(matches!(parse("dyn FnMut()"), Type::TraitObject(_)));
     }
 
     #[test]

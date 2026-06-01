@@ -15,10 +15,33 @@ pub struct QSelf {
     pub position: usize,
 }
 
+/// Parse a qualified path `<T as Trait>::a::b`, returning the `QSelf` plus the
+/// full merged path (trait segments followed by the trailing segments). Shared
+/// by `TypePath` and expression-path parsing.
+pub(crate) fn parse_qualified_path(stream: &mut ParseStream) -> Result<(QSelf, Path), ParseError> {
+    let (qself, trait_path) = QSelf::parse_with_trait(stream)?;
+    let _ = stream.parse::<crate::token::punct::PathSep>()?;
+    let rest = stream.parse::<Path>()?;
+
+    let mut segments = trait_path.map(|p| p.segments).unwrap_or_default();
+    for seg in rest.segments {
+        segments.push(seg);
+    }
+
+    Ok((
+        qself,
+        Path {
+            span: Span::default(),
+            leading_colon: false,
+            segments,
+        },
+    ))
+}
+
 impl QSelf {
     /// Parse `< Type ( as Path )? >`, returning the qself plus the trait path
     /// segments (if any) that the enclosing `TypePath` must prepend to its path.
-    pub(super) fn parse_with_trait(
+    pub(crate) fn parse_with_trait(
         stream: &mut ParseStream,
     ) -> Result<(Self, Option<Path>), ParseError> {
         let _ = stream.parse::<Lt>()?;
@@ -31,7 +54,7 @@ impl QSelf {
             None
         };
 
-        let _ = stream.parse::<Gt>()?;
+        stream.eat_angle_close()?;
 
         let position = trait_path.as_ref().map(|p| p.segments.len()).unwrap_or(0);
 

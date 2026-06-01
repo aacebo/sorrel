@@ -178,6 +178,19 @@ fn value_expr(opts: &ParseOptions, ty: &Type, stream: &syn::Ident) -> proc_macro
                 Err(_) => None,
             }
         }}
+    } else if type_is(ty, "Vec") {
+        // Greedily parse elements until one stops matching.
+        quote! {{
+            let mut items = ::std::vec::Vec::new();
+            loop {
+                let mut fork = #stream.fork();
+                match ::zynix::Parse::parse(&mut fork) {
+                    Ok(v) => { #stream.seek(&fork); items.push(v); }
+                    Err(_) => break,
+                }
+            }
+            items
+        }}
     } else if type_is(ty, "Box") {
         quote! { ::std::boxed::Box::new(#stream.parse()?) }
     } else {

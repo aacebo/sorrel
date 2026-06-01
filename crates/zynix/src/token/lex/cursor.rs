@@ -86,8 +86,8 @@ impl<'a> Cursor<'a> {
                 continue;
             }
 
-            // Line comment
-            if self.starts_with("//") {
+            // Line comment — skip plain `//` and `////+`, but NOT doc `///`/`//!`.
+            if self.starts_with("//") && !self.is_line_doc() {
                 self = self.skip_while(|ch| ch != '\n');
 
                 if self.starts_with("\n") {
@@ -97,8 +97,8 @@ impl<'a> Cursor<'a> {
                 continue;
             }
 
-            // Block comment (nested)
-            if self.starts_with("/*") {
+            // Block comment (nested) — skip plain `/*`, but NOT doc `/**`/`/*!`.
+            if self.starts_with("/*") && !self.is_block_doc() {
                 match self.skip_comment() {
                     None => break, // unterminated — let the main parser deal with it
                     Some(next) => {
@@ -112,6 +112,56 @@ impl<'a> Cursor<'a> {
         }
 
         self
+    }
+
+    /// True at a line doc comment: `///...` (but not `////...`) or `//!...`.
+    pub fn is_line_doc(&self) -> bool {
+        (self.starts_with("///") && !self.starts_with("////")) || self.starts_with("//!")
+    }
+
+    /// True at a block doc comment: `/**...` (but not `/***`/`/**/`) or `/*!...`.
+    pub fn is_block_doc(&self) -> bool {
+        self.starts_with("/*!")
+            || (self.starts_with("/**") && !self.starts_with("/***") && !self.starts_with("/**/"))
+    }
+
+    /// If positioned at a doc comment, return `(cursor after it, is_inner, text)`.
+    pub fn doc_comment(&self) -> Option<(Self, bool, String)> {
+        if self.is_line_doc() {
+            let inner = self.starts_with("//!");
+            let body = self.advance(3); // skip /// or //!
+            let end = body.skip_while(|ch| ch != '\n');
+            let text: String = body.rest()[..(end.offset() - body.offset()) as usize].to_string();
+            let next = if end.starts_with("\n") {
+                end.advance(1)
+            } else {
+                end
+            };
+            return Some((next, inner, text.trim().to_string()));
+        }
+        if self.is_block_doc() {
+            let inner = self.starts_with("/*!");
+            let body = self.advance(3); // skip /** or /*!
+            let close = body.skip_comment_to_close()?;
+            // close is positioned just after `*/`; text is between body and `*/`.
+            let len = (close.offset() - body.offset()) as usize - 2;
+            let text: String = body.rest()[..len].to_string();
+            return Some((close, inner, text.trim().to_string()));
+        }
+        None
+    }
+
+    /// Skip to just past the matching `*/` of a (non-nested) block comment body.
+    fn skip_comment_to_close(&self) -> Option<Self> {
+        let mut cur = *self;
+        while !cur.is_empty() {
+            if cur.starts_with("*/") {
+                return Some(cur.advance(2));
+            }
+            let ch = cur.first().unwrap();
+            cur = cur.advance(ch.len_utf8());
+        }
+        None
     }
 
     pub fn skip_comment(&self) -> Option<Self> {

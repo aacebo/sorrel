@@ -25,6 +25,22 @@ pub struct Path {
     pub segments: Punctuated<PathSegment, PathSep>,
 }
 
+impl From<crate::ast::Ident> for Path {
+    fn from(ident: crate::ast::Ident) -> Self {
+        let mut segments = Punctuated::new();
+        segments.push_value(PathSegment {
+            span: Span::default(),
+            ident,
+            args: PathArguments::None,
+        });
+        Path {
+            span: Span::default(),
+            leading_colon: false,
+            segments,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -87,11 +103,30 @@ mod tests {
     }
 
     #[test]
-    fn path_arguments_from_token_stream() {
-        let ts = TokenStream::from_str("T").unwrap();
+    fn nested_generics_shr() {
+        // `Vec<Box<T>>` closes with a single `>>` token; structured parsing must split it.
+        let p: Path = parse("Vec<Box<T>>");
+        assert_eq!(p.segments.len(), 1);
         assert!(matches!(
-            PathArguments::from(ts),
+            p.segments.first().unwrap().args,
             PathArguments::AngleBracketed(_)
         ));
+
+        let deep: Path = parse("A<B<C<D>>>");
+        assert_eq!(deep.segments.len(), 1);
+    }
+
+    #[test]
+    fn assoc_type_arg() {
+        let p: Path = parse("Iterator<Item = u8>");
+        match &p.segments.first().unwrap().args {
+            PathArguments::AngleBracketed(a) => {
+                assert!(matches!(
+                    a.args.first().unwrap(),
+                    crate::ast::GenericArgument::AssocType(_)
+                ));
+            }
+            _ => panic!("expected angle-bracketed"),
+        }
     }
 }

@@ -17,24 +17,11 @@ pub struct TypePath {
 impl Parse for TypePath {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<Lt>().is_some() {
-            let (qself, trait_path) = QSelf::parse_with_trait(stream)?;
-            let _ = stream.parse::<PathSep>()?;
-            let rest = Path::parse(stream)?;
-
-            // The full path is the trait segments followed by the rest.
-            let mut segments = trait_path.map(|p| p.segments).unwrap_or_default();
-            for seg in rest.segments {
-                segments.push(seg);
-            }
-
+            let (qself, path) = super::parse_qualified_path(stream)?;
             return Ok(Self {
                 span: Span::default(),
                 qself: Some(qself),
-                path: Path {
-                    span: Span::default(),
-                    leading_colon: false,
-                    segments,
-                },
+                path,
             });
         }
 
