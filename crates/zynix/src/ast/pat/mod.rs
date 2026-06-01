@@ -1,8 +1,8 @@
-use crate::ast::{Attribute, Expr, Ident, Member, Mutability, Path, Punctuated, QSelf, RangeLimits, Type};
+use crate::ast::{Attribute, Expr, Ident, Member, Mutability, Path, Punctuated, RangeLimits, Type};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{Mut, Ref};
 use crate::token::punct::{And, At, Colon, Comma, DotDot, Or as OrPunct};
-use crate::token::{Delim, Group, LexError, Punctuation, ToTokens};
+use crate::token::{Delim, LexError, Punctuation, ToTokens};
 use crate::{Parse, Span, Token, TokenStream, TokenTree};
 
 mod pat_field;
@@ -59,16 +59,82 @@ pub enum Pattern {
     Const(crate::ast::StmtBlock),
 }
 
-macro_rules! impl_from {
-    ($($variant:ident => $ty:ty),+ $(,)?) => {
-        $(impl From<$ty> for Pattern { fn from(value: $ty) -> Self { Pattern::$variant(value) } })+
-    };
+impl From<PatIdent> for Pattern {
+    fn from(value: PatIdent) -> Self {
+        Pattern::Ident(value)
+    }
 }
 
-impl_from! {
-    Ident => PatIdent, Path => PatPath, Tuple => PatTuple, TupleStruct => PatTupleStruct,
-    Struct => PatStruct, Slice => PatSlice, Reference => PatReference, Or => PatOr,
-    Lit => PatLit, Range => PatRange, Type => PatType, Group => PatGroup, Paren => PatParen,
+impl From<PatPath> for Pattern {
+    fn from(value: PatPath) -> Self {
+        Pattern::Path(value)
+    }
+}
+
+impl From<PatTuple> for Pattern {
+    fn from(value: PatTuple) -> Self {
+        Pattern::Tuple(value)
+    }
+}
+
+impl From<PatTupleStruct> for Pattern {
+    fn from(value: PatTupleStruct) -> Self {
+        Pattern::TupleStruct(value)
+    }
+}
+
+impl From<PatStruct> for Pattern {
+    fn from(value: PatStruct) -> Self {
+        Pattern::Struct(value)
+    }
+}
+
+impl From<PatSlice> for Pattern {
+    fn from(value: PatSlice) -> Self {
+        Pattern::Slice(value)
+    }
+}
+
+impl From<PatReference> for Pattern {
+    fn from(value: PatReference) -> Self {
+        Pattern::Reference(value)
+    }
+}
+
+impl From<PatOr> for Pattern {
+    fn from(value: PatOr) -> Self {
+        Pattern::Or(value)
+    }
+}
+
+impl From<PatLit> for Pattern {
+    fn from(value: PatLit) -> Self {
+        Pattern::Lit(value)
+    }
+}
+
+impl From<PatRange> for Pattern {
+    fn from(value: PatRange) -> Self {
+        Pattern::Range(value)
+    }
+}
+
+impl From<PatType> for Pattern {
+    fn from(value: PatType) -> Self {
+        Pattern::Type(value)
+    }
+}
+
+impl From<PatGroup> for Pattern {
+    fn from(value: PatGroup) -> Self {
+        Pattern::Group(value)
+    }
+}
+
+impl From<PatParen> for Pattern {
+    fn from(value: PatParen) -> Self {
+        Pattern::Paren(value)
+    }
 }
 
 impl Parse for Pattern {
@@ -101,7 +167,7 @@ impl Parse for Pattern {
 impl Pattern {
     /// Parse a single pattern alternative (no top-level `|` or-collection).
     /// Used where `|` is a delimiter (closure params), not an or-pattern.
-    pub(crate) fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
+    pub fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
         parse_single(stream)
     }
 }
@@ -139,248 +205,228 @@ impl ToTokens for Pattern {
     }
 }
 
-pub(super) fn emit_attrs(attrs: &[Attribute], t: &mut TokenStream) {
-    for a in attrs {
-        a.to_tokens(t);
+impl PatIdent {
+    pub fn parse_from(stream: &mut ParseStream, attrs: Vec<Attribute>) -> Result<Self, ParseError> {
+        let by_ref = if stream.peek::<Ref>().is_some() {
+            let _ = stream.parse::<Ref>()?;
+            true
+        } else {
+            false
+        };
+        let mutability = stream.parse::<Mutability>()?;
+        let ident = stream.parse::<Ident>()?;
+        let subpat = if stream.peek::<At>().is_some() {
+            let _ = stream.parse::<At>()?;
+            Some(Box::new(Pattern::parse(stream)?))
+        } else {
+            None
+        };
+        Ok(Self {
+            span: Span::default(),
+            attrs,
+            by_ref,
+            mutability,
+            ident,
+            subpat,
+        })
     }
 }
 
-pub(super) fn emit_group(delim: Delim, inner: TokenStream, t: &mut TokenStream) {
-    t.extend_one(TokenTree::Group(Group::new(delim, inner)));
+impl PatStruct {
+    pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<PatField, Comma>, bool), ParseError> {
+        let mut fields = Punctuated::new();
+        let mut rest = false;
+
+        while !stream.is_empty() {
+            if stream.peek::<DotDot>().is_some() {
+                let _ = stream.parse::<DotDot>()?;
+                rest = true;
+                break;
+            }
+            let member = stream.parse::<Member>()?;
+            let (pat, shorthand) = if stream.peek::<Colon>().is_some() {
+                let _ = stream.parse::<Colon>()?;
+                (stream.parse::<Pattern>()?, false)
+            } else {
+                // shorthand `{ field }`
+                let ident = match &member {
+                    Member::Named(id) => id.clone(),
+                    Member::Unnamed(_) => {
+                        return Err(LexError::new(stream.span()).message("tuple index needs a pattern").into());
+                    }
+                };
+                (
+                    Pattern::Ident(PatIdent {
+                        span: Span::default(),
+                        attrs: Vec::new(),
+                        by_ref: false,
+                        mutability: Mutability::Immutable,
+                        ident,
+                        subpat: None,
+                    }),
+                    true,
+                )
+            };
+            fields.push_value(PatField {
+                span: Span::default(),
+                attrs: Vec::new(),
+                member,
+                pat,
+                shorthand,
+            });
+            if stream.peek::<Comma>().is_some() {
+                fields.push_punct(stream.parse::<Comma>()?);
+            } else {
+                break;
+            }
+        }
+
+        Ok((fields, rest))
+    }
 }
 
 fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
-    {
-        let at = stream.span();
-        let attrs = stream.parse_vec::<Attribute>()?;
+    let at = stream.span();
+    let attrs = stream.parse_vec::<Attribute>()?;
 
-        // Wildcard `_`
-        if matches!(stream.curr(), Some(tt) if is_named(tt, "_")) {
-            stream.advance();
-            return Ok(Pattern::Wild);
-        }
-        // Rest `..`
-        if stream.peek::<DotDot>().is_some() {
-            let _ = stream.parse::<DotDot>()?;
-            return Ok(Pattern::Rest);
-        }
-        // `box pat`
-        if matches!(stream.curr(), Some(tt) if is_named(tt, "box")) {
-            stream.advance();
-            return Ok(Pattern::Box(Box::new(parse_single(stream)?)));
-        }
-        // `const { ... }` block pattern
-        if matches!(stream.curr(), Some(tt) if is_named(tt, "const"))
-            && matches!(stream.nth(1), Some(crate::TokenTree::Group(g)) if g.delim() == Delim::Brace)
-        {
-            stream.advance();
-            return Ok(Pattern::Const(stream.parse::<crate::ast::StmtBlock>()?));
-        }
-        // Reference `&`/`&mut`
-        if stream.peek::<And>().is_some() {
-            let _ = stream.parse::<And>()?;
-            let mutability = stream.parse::<Mutability>()?;
-            let pat = Box::new(Pattern::parse(stream)?);
-            return Ok(Pattern::Reference(PatReference {
-                span: Span::default(),
-                attrs,
-                mutability,
-                pat,
-            }));
-        }
-        // Tuple/paren `(...)`
-        if matches!(stream.curr(), Some(tt) if is_group(tt, Delim::Paren)) {
+    // Wildcard `_`
+    if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("_")) {
+        stream.advance();
+        return Ok(Pattern::Wild);
+    }
+    // Rest `..`
+    if stream.peek::<DotDot>().is_some() {
+        let _ = stream.parse::<DotDot>()?;
+        return Ok(Pattern::Rest);
+    }
+    // `box pat`
+    if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("box")) {
+        stream.advance();
+        return Ok(Pattern::Box(Box::new(parse_single(stream)?)));
+    }
+    // `const { ... }` block pattern
+    if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("const"))
+        && matches!(stream.nth(1), Some(crate::TokenTree::Group(g)) if g.delim() == Delim::Brace)
+    {
+        stream.advance();
+        return Ok(Pattern::Const(stream.parse::<crate::ast::StmtBlock>()?));
+    }
+    // Reference `&`/`&mut`
+    if stream.peek::<And>().is_some() {
+        let _ = stream.parse::<And>()?;
+        let mutability = stream.parse::<Mutability>()?;
+        let pat = Box::new(Pattern::parse(stream)?);
+        return Ok(Pattern::Reference(PatReference {
+            span: Span::default(),
+            attrs,
+            mutability,
+            pat,
+        }));
+    }
+    // Tuple/paren `(...)`
+    if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+        let group = stream.parse_group(Delim::Paren)?;
+        let mut inner = group.parse();
+        let elems = Punctuated::parse_terminated(&mut inner)?;
+        return Ok(Pattern::Tuple(PatTuple {
+            span: Span::default(),
+            attrs,
+            elems,
+        }));
+    }
+    // Slice `[...]`
+    if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
+        let group = stream.parse_group(Delim::Bracket)?;
+        let mut inner = group.parse();
+        let elems = Punctuated::parse_terminated(&mut inner)?;
+        return Ok(Pattern::Slice(PatSlice {
+            span: Span::default(),
+            attrs,
+            elems,
+        }));
+    }
+    // `ref`/`mut`-led binding
+    if stream.peek::<Ref>().is_some() || stream.peek::<Mut>().is_some() {
+        return Ok(Pattern::Ident(PatIdent::parse_from(stream, attrs)?));
+    }
+    // Literal pattern
+    if matches!(stream.curr(), Some(tt) if matches!(tt, TokenTree::Token(Token::Literal(_)))) {
+        let expr = stream.parse::<Expr>()?;
+        return Ok(Pattern::Lit(PatLit {
+            span: Span::default(),
+            attrs,
+            expr,
+        }));
+    }
+
+    // Path-led: ident binding, path, tuple-struct, or struct pattern.
+    if matches!(
+        stream.curr(),
+        Some(
+            TokenTree::Token(Token::Ident(_))
+                | TokenTree::Token(Token::Keyword(_))
+                | TokenTree::Token(Token::Punct(Punctuation::PathSep(_)))
+        )
+    ) {
+        // Single bare ident with no `::`/`(`/`{` → binding.
+        let mut fork = stream.fork();
+        let path = fork.parse::<Path>()?;
+
+        if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+            stream.seek(&fork);
             let group = stream.parse_group(Delim::Paren)?;
             let mut inner = group.parse();
             let elems = Punctuated::parse_terminated(&mut inner)?;
-            return Ok(Pattern::Tuple(PatTuple {
-                span: Span::default(),
-                attrs,
-                elems,
-            }));
-        }
-        // Slice `[...]`
-        if matches!(stream.curr(), Some(tt) if is_group(tt, Delim::Bracket)) {
-            let group = stream.parse_group(Delim::Bracket)?;
-            let mut inner = group.parse();
-            let elems = Punctuated::parse_terminated(&mut inner)?;
-            return Ok(Pattern::Slice(PatSlice {
-                span: Span::default(),
-                attrs,
-                elems,
-            }));
-        }
-        // `ref`/`mut`-led binding
-        if stream.peek::<Ref>().is_some() || stream.peek::<Mut>().is_some() {
-            return Ok(Pattern::Ident(parse_pat_ident(stream, attrs)?));
-        }
-        // Literal pattern
-        if matches!(stream.curr(), Some(tt) if matches!(tt, TokenTree::Token(Token::Literal(_)))) {
-            let expr = stream.parse::<Expr>()?;
-            return Ok(Pattern::Lit(PatLit {
-                span: Span::default(),
-                attrs,
-                expr,
-            }));
-        }
-
-        // Path-led: ident binding, path, tuple-struct, or struct pattern.
-        if matches!(
-            stream.curr(),
-            Some(
-                TokenTree::Token(Token::Ident(_))
-                    | TokenTree::Token(Token::Keyword(_))
-                    | TokenTree::Token(Token::Punct(Punctuation::PathSep(_)))
-            )
-        ) {
-            // Single bare ident with no `::`/`(`/`{` → binding.
-            let mut fork = stream.fork();
-            let path = fork.parse::<Path>()?;
-
-            if matches!(fork.curr(), Some(tt) if is_group(tt, Delim::Paren)) {
-                stream.seek(&fork);
-                let group = stream.parse_group(Delim::Paren)?;
-                let mut inner = group.parse();
-                let elems = Punctuated::parse_terminated(&mut inner)?;
-                return Ok(Pattern::TupleStruct(PatTupleStruct {
-                    span: Span::default(),
-                    attrs,
-                    qself: None,
-                    path,
-                    elems,
-                }));
-            }
-            if matches!(fork.curr(), Some(tt) if is_group(tt, Delim::Brace)) {
-                stream.seek(&fork);
-                let group = stream.parse_group(Delim::Brace)?;
-                let mut inner = group.parse();
-                let (fields, rest) = parse_struct_pat_body(&mut inner)?;
-                return Ok(Pattern::Struct(PatStruct {
-                    span: Span::default(),
-                    attrs,
-                    qself: None,
-                    path,
-                    fields,
-                    rest,
-                }));
-            }
-
-            // Bare single-segment path with no leading colon → binding ident.
-            if !path.leading_colon && path.segments.len() == 1 {
-                stream.seek(&fork);
-                let ident = match path.segments.into_iter().next() {
-                    Some(seg) => seg.ident,
-                    None => return Err(LexError::new(at).message("expected pattern").into()),
-                };
-                return Ok(Pattern::Ident(PatIdent {
-                    span: Span::default(),
-                    attrs,
-                    by_ref: false,
-                    mutability: Mutability::Immutable,
-                    ident,
-                    subpat: None,
-                }));
-            }
-
-            stream.seek(&fork);
-            return Ok(Pattern::Path(PatPath {
+            return Ok(Pattern::TupleStruct(PatTupleStruct {
                 span: Span::default(),
                 attrs,
                 qself: None,
                 path,
+                elems,
+            }));
+        }
+        if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
+            stream.seek(&fork);
+            let group = stream.parse_group(Delim::Brace)?;
+            let mut inner = group.parse();
+            let (fields, rest) = PatStruct::parse_body(&mut inner)?;
+            return Ok(Pattern::Struct(PatStruct {
+                span: Span::default(),
+                attrs,
+                qself: None,
+                path,
+                fields,
+                rest,
             }));
         }
 
-        Err(LexError::new(at).message("expected pattern").into())
-    }
-}
-
-fn parse_pat_ident(stream: &mut ParseStream, attrs: Vec<Attribute>) -> Result<PatIdent, ParseError> {
-    let by_ref = if stream.peek::<Ref>().is_some() {
-        let _ = stream.parse::<Ref>()?;
-        true
-    } else {
-        false
-    };
-    let mutability = stream.parse::<Mutability>()?;
-    let ident = stream.parse::<Ident>()?;
-    let subpat = if stream.peek::<At>().is_some() {
-        let _ = stream.parse::<At>()?;
-        Some(Box::new(Pattern::parse(stream)?))
-    } else {
-        None
-    };
-    Ok(PatIdent {
-        span: Span::default(),
-        attrs,
-        by_ref,
-        mutability,
-        ident,
-        subpat,
-    })
-}
-
-fn parse_struct_pat_body(stream: &mut ParseStream) -> Result<(Punctuated<PatField, Comma>, bool), ParseError> {
-    let mut fields = Punctuated::new();
-    let mut rest = false;
-
-    while !stream.is_empty() {
-        if stream.peek::<DotDot>().is_some() {
-            let _ = stream.parse::<DotDot>()?;
-            rest = true;
-            break;
-        }
-        let member = stream.parse::<Member>()?;
-        let (pat, shorthand) = if stream.peek::<Colon>().is_some() {
-            let _ = stream.parse::<Colon>()?;
-            (stream.parse::<Pattern>()?, false)
-        } else {
-            // shorthand `{ field }`
-            let ident = match &member {
-                Member::Named(id) => id.clone(),
-                Member::Unnamed(_) => {
-                    return Err(LexError::new(stream.span()).message("tuple index needs a pattern").into());
-                }
+        // Bare single-segment path with no leading colon → binding ident.
+        if !path.leading_colon && path.segments.len() == 1 {
+            stream.seek(&fork);
+            let ident = match path.segments.into_iter().next() {
+                Some(seg) => seg.ident,
+                None => return Err(LexError::new(at).message("expected pattern").into()),
             };
-            (
-                Pattern::Ident(PatIdent {
-                    span: Span::default(),
-                    attrs: Vec::new(),
-                    by_ref: false,
-                    mutability: Mutability::Immutable,
-                    ident,
-                    subpat: None,
-                }),
-                true,
-            )
-        };
-        fields.push_value(PatField {
-            span: Span::default(),
-            attrs: Vec::new(),
-            member,
-            pat,
-            shorthand,
-        });
-        if stream.peek::<Comma>().is_some() {
-            fields.push_punct(stream.parse::<Comma>()?);
-        } else {
-            break;
+            return Ok(Pattern::Ident(PatIdent {
+                span: Span::default(),
+                attrs,
+                by_ref: false,
+                mutability: Mutability::Immutable,
+                ident,
+                subpat: None,
+            }));
         }
+
+        stream.seek(&fork);
+        return Ok(Pattern::Path(PatPath {
+            span: Span::default(),
+            attrs,
+            qself: None,
+            path,
+        }));
     }
 
-    Ok((fields, rest))
-}
-
-fn is_named(tt: &TokenTree, name: &str) -> bool {
-    match tt {
-        TokenTree::Token(Token::Ident(id)) => id.name() == name,
-        TokenTree::Token(Token::Keyword(kw)) => kw.as_str() == name,
-        _ => false,
-    }
-}
-
-fn is_group(tt: &TokenTree, delim: Delim) -> bool {
-    matches!(tt, TokenTree::Group(g) if g.delim() == delim)
+    Err(LexError::new(at).message("expected pattern").into())
 }
 
 #[cfg(test)]

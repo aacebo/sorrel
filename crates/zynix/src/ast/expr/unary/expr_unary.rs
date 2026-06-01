@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::parse::ParseStream;
 use crate::token::ToTokens;
@@ -17,16 +16,16 @@ pub struct ExprUnary {
 
 impl ExprUnary {
     /// Returns `true` if the stream starts with a prefix unary operator (`!`, `-`, `*`).
-    pub(crate) fn is_prefix(stream: &mut ParseStream) -> bool {
-        stream.peek::<Not>().is_some()
-            || stream.peek::<crate::token::punct::Minus>().is_some()
-            || stream.peek::<Star>().is_some()
+    pub fn is_prefix(stream: &mut ParseStream) -> bool {
+        stream.peek::<Not>().is_some() || stream.peek::<crate::token::punct::Minus>().is_some() || stream.peek::<Star>().is_some()
     }
 }
 
 impl ToTokens for ExprUnary {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.op.to_tokens(t);
         self.expr.to_tokens(t);
     }

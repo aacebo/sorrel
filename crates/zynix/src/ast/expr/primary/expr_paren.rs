@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::Attribute;
 use crate::token::{Delim, Group, ToTokens};
 use crate::{Span, TokenStream, TokenTree};
@@ -14,7 +13,9 @@ pub struct ExprParen {
 
 impl ToTokens for ExprParen {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         let mut inner = TokenStream::new();
         self.expr.to_tokens(&mut inner);
         t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));

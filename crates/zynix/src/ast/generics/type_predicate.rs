@@ -1,4 +1,4 @@
-use super::{TypeBound, parse_type_bounds};
+use super::TypeBound;
 use crate::ast::{BoundLifetimes, Punctuated, Type};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -20,7 +20,7 @@ impl Parse for TypePredicate {
         let lifetimes = stream.parse_opt::<BoundLifetimes>();
         let bounded_ty = stream.parse::<Type>()?;
         let _ = stream.parse::<Colon>()?;
-        let bounds = parse_type_bounds(stream)?;
+        let bounds = TypeBound::parse_bounds(stream)?;
         Ok(Self {
             span: Span::default(),
             lifetimes,

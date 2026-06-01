@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::keyword::Let;
@@ -17,7 +16,9 @@ pub struct ExprLet {
 
 impl ToTokens for ExprLet {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         Let::default().to_tokens(t);
         self.pat.to_tokens(t);
         Eq::default().to_tokens(t);

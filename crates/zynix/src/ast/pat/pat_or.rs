@@ -1,4 +1,3 @@
-use super::{emit_attrs, emit_group};
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::punct::Or as OrPunct;
@@ -15,7 +14,9 @@ pub struct PatOr {
 
 impl ToTokens for PatOr {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.cases.to_tokens(t);
     }
 }

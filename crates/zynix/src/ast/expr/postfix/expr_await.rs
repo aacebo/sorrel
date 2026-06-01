@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::Attribute;
 use crate::token::ToTokens;
 use crate::token::keyword::Await as KwAwait;
@@ -16,7 +15,9 @@ pub struct ExprAwait {
 
 impl ToTokens for ExprAwait {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.base.to_tokens(t);
         Dot::default().to_tokens(t);
         KwAwait::default().to_tokens(t);

@@ -1,8 +1,7 @@
-use super::parse_bounds;
 use crate::ast::{Lifetime, Punctuated};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
-use crate::token::punct::Plus;
+use crate::token::punct::{Colon, Plus};
 use crate::{Parse, Span, TokenStream};
 
 #[doc = "A predicate in a `where` clause."]
@@ -17,7 +16,7 @@ pub struct LifetimePredicate {
 impl Parse for LifetimePredicate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let lifetime = stream.parse::<Lifetime>()?;
-        let bounds = parse_bounds(stream)?;
+        let bounds = Lifetime::parse_bounds(stream)?;
         Ok(Self {
             span: Span::default(),
             lifetime,
@@ -29,6 +28,9 @@ impl Parse for LifetimePredicate {
 impl ToTokens for LifetimePredicate {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.lifetime.to_tokens(t);
-        super::emit_bounds(&self.bounds, t);
+        if !self.bounds.is_empty() {
+            Colon::default().to_tokens(t);
+            self.bounds.to_tokens(t);
+        }
     }
 }

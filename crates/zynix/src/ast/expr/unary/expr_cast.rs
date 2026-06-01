@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::keyword::As;
@@ -16,7 +15,9 @@ pub struct ExprCast {
 
 impl ToTokens for ExprCast {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.expr.to_tokens(t);
         As::default().to_tokens(t);
         self.ty.to_tokens(t);

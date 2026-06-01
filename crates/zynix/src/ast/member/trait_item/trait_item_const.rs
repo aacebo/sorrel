@@ -22,7 +22,7 @@ impl Parse for TraitItemConst {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
         let attrs = stream.parse_vec::<Attribute>()?;
-        if !crate::ast::member::is_kw(stream.curr(), "const") {
+        if stream.curr().and_then(|t| t.name()).as_deref() != Some("const") {
             return Err(LexError::new(at).message("expected trait const").into());
         }
         let _ = stream.parse::<Const>()?;
@@ -50,7 +50,9 @@ impl Parse for TraitItemConst {
 
 impl ToTokens for TraitItemConst {
     fn to_tokens(&self, t: &mut TokenStream) {
-        super::super::emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         Const::default().to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);

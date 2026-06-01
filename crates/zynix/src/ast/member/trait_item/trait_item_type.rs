@@ -22,7 +22,7 @@ impl Parse for TraitItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
         let attrs = stream.parse_vec::<Attribute>()?;
-        if !crate::ast::member::is_kw(stream.curr(), "type") {
+        if stream.curr().and_then(|t| t.name()).as_deref() != Some("type") {
             return Err(LexError::new(at).message("expected trait type").into());
         }
         let _ = stream.parse::<KwType>()?;
@@ -30,7 +30,7 @@ impl Parse for TraitItemType {
         let generics = stream.parse::<Generics>()?;
         let bounds = if stream.peek::<Colon>().is_some() {
             let _ = stream.parse::<Colon>()?;
-            crate::ast::member::parse_plus_bounds(stream)?
+            crate::ast::TypeBound::parse_bounds(stream)?
         } else {
             Punctuated::new()
         };
@@ -54,7 +54,9 @@ impl Parse for TraitItemType {
 
 impl ToTokens for TraitItemType {
     fn to_tokens(&self, t: &mut TokenStream) {
-        super::super::emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         KwType::default().to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);

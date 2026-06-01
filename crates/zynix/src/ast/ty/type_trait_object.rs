@@ -22,7 +22,7 @@ impl Parse for TypeTraitObject {
         } else {
             false
         };
-        let bounds = super::parse_plus_bounds(stream)?;
+        let bounds = crate::ast::TypeBound::parse_bounds(stream)?;
         Ok(Self {
             span: Span::default(),
             dyn_token,

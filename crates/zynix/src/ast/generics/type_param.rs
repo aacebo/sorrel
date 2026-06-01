@@ -1,4 +1,4 @@
-use super::{TypeBound, parse_type_bounds};
+use super::TypeBound;
 use crate::ast::{Attribute, Ident, Punctuated, Type};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -22,7 +22,7 @@ impl Parse for TypeParam {
         let ident = stream.parse::<Ident>()?;
         let bounds = if stream.peek::<Colon>().is_some() {
             let _ = stream.parse::<Colon>()?;
-            parse_type_bounds(stream)?
+            TypeBound::parse_bounds(stream)?
         } else {
             Punctuated::new()
         };

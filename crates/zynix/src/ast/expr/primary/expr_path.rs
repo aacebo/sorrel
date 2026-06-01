@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::{Span, TokenStream};
@@ -15,7 +14,9 @@ pub struct ExprPath {
 
 impl ToTokens for ExprPath {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.path.to_tokens(t);
     }
 }

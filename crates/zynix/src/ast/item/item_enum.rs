@@ -43,7 +43,9 @@ impl Parse for ItemEnum {
 
 impl ToTokens for ItemEnum {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs { a.to_tokens(t); }
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.vis.to_tokens(t);
         Enum::default().to_tokens(t);
         self.ident.to_tokens(t);

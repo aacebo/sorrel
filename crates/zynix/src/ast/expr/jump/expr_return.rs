@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::Attribute;
 use crate::token::ToTokens;
 use crate::token::keyword::Return;
@@ -15,7 +14,9 @@ pub struct ExprReturn {
 
 impl ToTokens for ExprReturn {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         Return::default().to_tokens(t);
         if let Some(e) = &self.expr {
             e.to_tokens(t);

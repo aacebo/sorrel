@@ -30,7 +30,7 @@ impl Parse for ItemTraitAlias {
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let _ = stream.parse::<Eq>()?;
-        let bounds = crate::ast::member::parse_plus_bounds(stream)?;
+        let bounds = crate::ast::TypeBound::parse_bounds(stream)?;
         let _ = stream.parse::<Semi>();
         Ok(ItemTraitAlias {
             span: Span::default(),
@@ -45,7 +45,9 @@ impl Parse for ItemTraitAlias {
 
 impl ToTokens for ItemTraitAlias {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs { a.to_tokens(t); }
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.vis.to_tokens(t);
         Trait::default().to_tokens(t);
         self.ident.to_tokens(t);

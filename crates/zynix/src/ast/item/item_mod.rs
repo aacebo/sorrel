@@ -46,14 +46,18 @@ impl Parse for ItemMod {
 
 impl ToTokens for ItemMod {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs { a.to_tokens(t); }
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.vis.to_tokens(t);
         Mod::default().to_tokens(t);
         self.ident.to_tokens(t);
         match &self.content {
             Some(items) => {
                 let mut inner = TokenStream::new();
-                for it in items { it.to_tokens(&mut inner); }
+                for it in items {
+                    it.to_tokens(&mut inner);
+                }
                 t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
             }
             None => Semi::default().to_tokens(t),

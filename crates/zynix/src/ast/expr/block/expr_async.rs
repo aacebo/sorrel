@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use super::ExprBrace;
 use crate::ast::*;
 use crate::parse::ParseStream;
@@ -19,18 +18,20 @@ pub struct ExprAsync {
 impl ExprAsync {
     /// Returns `true` when the current async keyword is followed by a block
     /// (`async { }` or `async move { }`), as opposed to an async closure.
-    pub(crate) fn is_block(stream: &ParseStream) -> bool {
+    pub fn is_block(stream: &ParseStream) -> bool {
         if ExprBrace::is_next(stream) {
             return true;
         }
-        matches!(stream.nth(1), Some(tt) if super::super::is_named(tt, "move"))
+        matches!(stream.nth(1), Some(tt) if tt.name().as_deref() == Some("move"))
             && matches!(stream.nth(2), Some(crate::token::TokenTree::Group(g)) if g.delim() == crate::token::Delim::Brace)
     }
 }
 
 impl ToTokens for ExprAsync {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         Async::default().to_tokens(t);
         if self.capture {
             Move::default().to_tokens(t);

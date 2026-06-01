@@ -36,16 +36,19 @@ impl From<ExprReturn> for JumpExpr {
         JumpExpr::Return(v)
     }
 }
+
 impl From<ExprBreak> for JumpExpr {
     fn from(v: ExprBreak) -> Self {
         JumpExpr::Break(v)
     }
 }
+
 impl From<ExprContinue> for JumpExpr {
     fn from(v: ExprContinue) -> Self {
         JumpExpr::Continue(v)
     }
 }
+
 impl From<ExprYield> for JumpExpr {
     fn from(v: ExprYield) -> Self {
         JumpExpr::Yield(v)

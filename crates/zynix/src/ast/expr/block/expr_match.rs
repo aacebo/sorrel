@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::{Attribute, Expr, Pattern};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{If, Match};
@@ -18,7 +17,9 @@ pub struct ExprMatch {
 
 impl ToTokens for ExprMatch {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         Match::default().to_tokens(t);
         self.expr.to_tokens(t);
         let mut inner = TokenStream::new();

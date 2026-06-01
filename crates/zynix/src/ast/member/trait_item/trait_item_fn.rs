@@ -19,7 +19,7 @@ impl Parse for TraitItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
         let attrs = stream.parse_vec::<Attribute>()?;
-        if !crate::ast::member::is_fn_start(stream) {
+        if !crate::ast::sig::Signature::is_start(stream) {
             return Err(LexError::new(at).message("expected trait fn").into());
         }
         let sig = stream.parse::<Signature>()?;
@@ -40,7 +40,9 @@ impl Parse for TraitItemFn {
 
 impl ToTokens for TraitItemFn {
     fn to_tokens(&self, t: &mut TokenStream) {
-        super::super::emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.sig.to_tokens(t);
         match &self.default_body {
             Some(b) => b.to_tokens(t),

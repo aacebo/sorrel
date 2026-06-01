@@ -1,4 +1,3 @@
-use super::{emit_attrs, emit_group};
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::keyword::{Mut, Ref};
@@ -19,7 +18,9 @@ pub struct PatIdent {
 
 impl ToTokens for PatIdent {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         if self.by_ref {
             Ref::default().to_tokens(t);
         }

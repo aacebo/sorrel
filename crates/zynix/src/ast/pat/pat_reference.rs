@@ -1,4 +1,3 @@
-use super::{emit_attrs, emit_group};
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::punct::And;
@@ -16,7 +15,9 @@ pub struct PatReference {
 
 impl ToTokens for PatReference {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         And::default().to_tokens(t);
         self.mutability.to_tokens(t);
         self.pat.to_tokens(t);

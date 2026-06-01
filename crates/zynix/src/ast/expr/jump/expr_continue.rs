@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::keyword::Continue;
@@ -15,7 +14,9 @@ pub struct ExprContinue {
 
 impl ToTokens for ExprContinue {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         Continue::default().to_tokens(t);
         if let Some(l) = &self.label {
             l.name.to_tokens(t);

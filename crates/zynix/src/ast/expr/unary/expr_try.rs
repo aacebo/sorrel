@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::Attribute;
 use crate::token::ToTokens;
 use crate::token::punct::Question;
@@ -15,7 +14,9 @@ pub struct ExprTry {
 
 impl ToTokens for ExprTry {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.expr.to_tokens(t);
         Question::default().to_tokens(t);
     }

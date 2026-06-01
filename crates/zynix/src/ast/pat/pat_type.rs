@@ -1,4 +1,3 @@
-use super::{emit_attrs, emit_group};
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::punct::Colon;
@@ -16,7 +15,9 @@ pub struct PatType {
 
 impl ToTokens for PatType {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.pat.to_tokens(t);
         Colon::default().to_tokens(t);
         self.ty.to_tokens(t);

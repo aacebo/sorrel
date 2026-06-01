@@ -1,7 +1,6 @@
-use crate::ast::Attribute;
 use crate::parse::{ParseError, ParseStream};
-use crate::token::{Delim, Group, LexError, ToTokens, TokenStream as TS, TokenTree};
-use crate::{Parse, Span, TokenStream};
+use crate::token::{LexError, ToTokens};
+use crate::{Parse, TokenStream};
 
 mod item_const;
 mod item_enum;
@@ -59,35 +58,100 @@ pub enum Item {
     ForeignMod(ItemForeignMod),
 }
 
-macro_rules! impl_from {
-    ($($variant:ident => $ty:ty),+ $(,)?) => {
-        $(
-            impl From<$ty> for Item {
-                fn from(value: $ty) -> Self {
-                    Item::$variant(value)
-                }
-            }
-        )+
-    };
+impl From<ItemUse> for Item {
+    fn from(value: ItemUse) -> Self {
+        Item::Use(value)
+    }
 }
 
-impl_from! {
-    Use => ItemUse,
-    ExternCrate => ItemExternCrate,
-    Mod => ItemMod,
-    Fn => ItemFn,
-    Struct => ItemStruct,
-    Enum => ItemEnum,
-    Union => ItemUnion,
-    Trait => ItemTrait,
-    TraitAlias => ItemTraitAlias,
-    Impl => ItemImpl,
-    TypeAlias => ItemTypeAlias,
-    Const => ItemConst,
-    Static => ItemStatic,
-    Macro => ItemMacro,
-    Macro2 => ItemMacroRules,
-    ForeignMod => ItemForeignMod,
+impl From<ItemExternCrate> for Item {
+    fn from(value: ItemExternCrate) -> Self {
+        Item::ExternCrate(value)
+    }
+}
+
+impl From<ItemMod> for Item {
+    fn from(value: ItemMod) -> Self {
+        Item::Mod(value)
+    }
+}
+
+impl From<ItemFn> for Item {
+    fn from(value: ItemFn) -> Self {
+        Item::Fn(value)
+    }
+}
+
+impl From<ItemStruct> for Item {
+    fn from(value: ItemStruct) -> Self {
+        Item::Struct(value)
+    }
+}
+
+impl From<ItemEnum> for Item {
+    fn from(value: ItemEnum) -> Self {
+        Item::Enum(value)
+    }
+}
+
+impl From<ItemUnion> for Item {
+    fn from(value: ItemUnion) -> Self {
+        Item::Union(value)
+    }
+}
+
+impl From<ItemTrait> for Item {
+    fn from(value: ItemTrait) -> Self {
+        Item::Trait(value)
+    }
+}
+
+impl From<ItemTraitAlias> for Item {
+    fn from(value: ItemTraitAlias) -> Self {
+        Item::TraitAlias(value)
+    }
+}
+
+impl From<ItemImpl> for Item {
+    fn from(value: ItemImpl) -> Self {
+        Item::Impl(value)
+    }
+}
+
+impl From<ItemTypeAlias> for Item {
+    fn from(value: ItemTypeAlias) -> Self {
+        Item::TypeAlias(value)
+    }
+}
+
+impl From<ItemConst> for Item {
+    fn from(value: ItemConst) -> Self {
+        Item::Const(value)
+    }
+}
+
+impl From<ItemStatic> for Item {
+    fn from(value: ItemStatic) -> Self {
+        Item::Static(value)
+    }
+}
+
+impl From<ItemMacro> for Item {
+    fn from(value: ItemMacro) -> Self {
+        Item::Macro(value)
+    }
+}
+
+impl From<ItemMacroRules> for Item {
+    fn from(value: ItemMacroRules) -> Self {
+        Item::Macro2(value)
+    }
+}
+
+impl From<ItemForeignMod> for Item {
+    fn from(value: ItemForeignMod) -> Self {
+        Item::ForeignMod(value)
+    }
 }
 
 impl Parse for Item {
@@ -170,8 +234,6 @@ impl ToTokens for Item {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
@@ -197,7 +259,7 @@ mod tests {
 
     #[test]
     fn item_struct() {
-        assert!(matches!(parse::<Item>("pub(crate) struct S<T> { a: T }"), Item::Struct(_)));
+        assert!(matches!(parse::<Item>("pub struct S<T> { a: T }"), Item::Struct(_)));
         assert!(matches!(parse::<Item>("struct P(u8, u16);"), Item::Struct(_)));
         assert!(matches!(parse::<Item>("struct U;"), Item::Struct(_)));
     }

@@ -13,6 +13,24 @@ pub enum TypeBound {
     Use(UseBound),
 }
 
+impl TypeBound {
+    pub fn parse_bounds(
+        stream: &mut crate::parse::ParseStream,
+    ) -> Result<crate::ast::Punctuated<Self, crate::token::punct::Plus>, crate::parse::ParseError> {
+        use crate::token::punct::Plus;
+        let mut bounds = crate::ast::Punctuated::new();
+        loop {
+            bounds.push_value(stream.parse::<TypeBound>()?);
+            if stream.peek::<Plus>().is_some() {
+                bounds.push_punct(stream.parse::<Plus>()?);
+            } else {
+                break;
+            }
+        }
+        Ok(bounds)
+    }
+}
+
 impl From<TraitBound> for TypeBound {
     fn from(v: TraitBound) -> Self {
         TypeBound::Trait(v)

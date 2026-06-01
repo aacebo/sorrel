@@ -18,7 +18,7 @@ pub struct ImplItemMacro {
 impl Parse for ImplItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
-        let (mac, semi) = crate::ast::member::parse_semi_macro(stream, Vec::new())?;
+        let (mac, semi) = crate::ast::MacroCall::parse_semi(stream)?;
         Ok(ImplItemMacro {
             span: Span::default(),
             attrs,
@@ -30,7 +30,9 @@ impl Parse for ImplItemMacro {
 
 impl ToTokens for ImplItemMacro {
     fn to_tokens(&self, t: &mut TokenStream) {
-        super::super::emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.mac.to_tokens(t);
         if self.semi {
             Semi::default().to_tokens(t);

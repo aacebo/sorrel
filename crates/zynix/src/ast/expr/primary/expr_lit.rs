@@ -1,8 +1,6 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::parse::ParseStream;
-use crate::token::ToTokens;
-use crate::token::{Token, TokenTree};
+use crate::token::{ToTokens, Token, TokenTree};
 use crate::{Span, TokenStream};
 
 #[doc = "A literal expression: `1`, `\"hello\"`, `true`."]
@@ -16,19 +14,21 @@ pub struct ExprLit {
 
 impl ExprLit {
     /// Returns `true` when the stream is positioned at an identifier `true` or `false`.
-    pub(crate) fn is_bool_ident(stream: &mut ParseStream) -> bool {
-        matches!(stream.curr(), Some(tt) if super::super::is_named(tt, "true") || super::super::is_named(tt, "false"))
+    pub fn is_bool_ident(stream: &mut ParseStream) -> bool {
+        matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("true") || tt.name().as_deref() == Some("false"))
     }
 
     /// Returns `true` when the given token tree is a literal token.
-    pub(crate) fn is_literal(tt: &TokenTree) -> bool {
+    pub fn is_literal(tt: &TokenTree) -> bool {
         matches!(tt, TokenTree::Token(Token::Literal(_)))
     }
 }
 
 impl ToTokens for ExprLit {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.lit.to_tokens(t);
     }
 }

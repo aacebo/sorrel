@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::Attribute;
 use crate::token::ToTokens;
 use crate::token::punct::Eq;
@@ -16,7 +15,9 @@ pub struct ExprAssign {
 
 impl ToTokens for ExprAssign {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.left.to_tokens(t);
         Eq::default().to_tokens(t);
         self.right.to_tokens(t);

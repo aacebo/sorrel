@@ -4,7 +4,7 @@ use crate::token::keyword::{Crate, In, Pub, SelfValue, Super};
 use crate::token::{Delim, Group, ToTokens};
 use crate::{Parse, TokenStream, TokenTree};
 
-#[doc = "The visibility of an item (`pub`, `pub(crate)`, `pub(in path)`, or inherited)."]
+#[doc = "The visibility of an item (`pub`, `pub`, `pub(in path)`, or inherited)."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Visibility {
@@ -59,31 +59,31 @@ impl ToTokens for Visibility {
             Visibility::Public => Pub::default().to_tokens(t),
             Visibility::Crate => {
                 Pub::default().to_tokens(t);
-                wrap_paren(t, |inner| Crate::default().to_tokens(inner));
+                let mut inner = TokenStream::new();
+                Crate::default().to_tokens(&mut inner);
+                t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
             }
             Visibility::SelfValue => {
                 Pub::default().to_tokens(t);
-                wrap_paren(t, |inner| SelfValue::default().to_tokens(inner));
+                let mut inner = TokenStream::new();
+                SelfValue::default().to_tokens(&mut inner);
+                t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
             }
             Visibility::Super => {
                 Pub::default().to_tokens(t);
-                wrap_paren(t, |inner| Super::default().to_tokens(inner));
+                let mut inner = TokenStream::new();
+                Super::default().to_tokens(&mut inner);
+                t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
             }
             Visibility::Restricted { in_token, path } => {
                 Pub::default().to_tokens(t);
-                wrap_paren(t, |inner| {
-                    if *in_token {
-                        In::default().to_tokens(inner);
-                    }
-                    path.to_tokens(inner);
-                });
+                let mut inner = TokenStream::new();
+                if *in_token {
+                    In::default().to_tokens(&mut inner);
+                }
+                path.to_tokens(&mut inner);
+                t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
             }
         }
     }
-}
-
-fn wrap_paren(t: &mut TokenStream, f: impl FnOnce(&mut TokenStream)) {
-    let mut inner = TokenStream::new();
-    f(&mut inner);
-    t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
 }

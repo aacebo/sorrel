@@ -5,7 +5,6 @@ use crate::token::keyword::For;
 use crate::token::punct::{Colon, Comma, Gt, Lt, RArrow};
 use crate::{Parse, Span, TokenStream};
 
-// --- ClosureParam: `pat` or `pat: ty` ---
 
 #[doc = "A closure parameter, either type-annotated (`pat: ty`) or inferred (`pat`)."]
 #[derive(Debug, Clone)]
@@ -41,7 +40,6 @@ impl ToTokens for ClosureParam {
     }
 }
 
-// --- ReturnType: `(-> Type)?` ---
 
 #[doc = "The optional return type of a function (`-> Type` or nothing)."]
 #[derive(Debug, Clone)]
@@ -71,7 +69,6 @@ impl ToTokens for ReturnType {
     }
 }
 
-// --- BoundLifetimes: `for<'a, 'b>` ---
 
 #[doc = "A `for<'a, 'b>` higher-ranked lifetime binder."]
 #[derive(Debug, Clone)]

@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::punct::{Comma, DotDot};
 use crate::token::{Delim, Group, ToTokens};
@@ -18,7 +17,9 @@ pub struct ExprStruct {
 
 impl ToTokens for ExprStruct {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.path.to_tokens(t);
         let mut inner = TokenStream::new();
         self.fields.to_tokens(&mut inner);

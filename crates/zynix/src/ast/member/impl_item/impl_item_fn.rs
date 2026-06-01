@@ -22,7 +22,7 @@ impl Parse for ImplItemFn {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
-        if !crate::ast::member::is_fn_start(stream) {
+        if !crate::ast::sig::Signature::is_start(stream) {
             return Err(LexError::new(at).message("expected impl fn").into());
         }
         let sig = stream.parse::<Signature>()?;
@@ -40,7 +40,9 @@ impl Parse for ImplItemFn {
 
 impl ToTokens for ImplItemFn {
     fn to_tokens(&self, t: &mut TokenStream) {
-        super::super::emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.vis.to_tokens(t);
         self.defaultness.to_tokens(t);
         self.sig.to_tokens(t);

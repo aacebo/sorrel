@@ -81,7 +81,9 @@ impl Parse for ItemImpl {
 
 impl ToTokens for ItemImpl {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs { a.to_tokens(t); }
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.defaultness.to_tokens(t);
         self.unsafety.to_tokens(t);
         Impl::default().to_tokens(t);
@@ -91,6 +93,13 @@ impl ToTokens for ItemImpl {
             For::default().to_tokens(t);
         }
         self.self_ty.to_tokens(t);
-        let mut inner = TokenStream::new(); for it in &self.items { it.to_tokens(&mut inner); } t.extend_one(crate::TokenTree::Group(crate::token::Group::new(crate::token::Delim::Brace, inner)));
+        let mut inner = TokenStream::new();
+        for it in &self.items {
+            it.to_tokens(&mut inner);
+        }
+        t.extend_one(crate::TokenTree::Group(crate::token::Group::new(
+            crate::token::Delim::Brace,
+            inner,
+        )));
     }
 }

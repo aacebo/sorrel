@@ -20,13 +20,12 @@ pub use expr_try_block::*;
 pub use expr_unsafe::*;
 pub use expr_while::*;
 
+use super::Expr;
+use crate::Span;
 use crate::ast::{Label, Lifetime, Pattern, StmtBlock};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{For, If, In, Loop, Match, While};
 use crate::token::{Delim, Punctuation, ToTokens, Token, TokenStream, TokenTree};
-use crate::Span;
-
-use super::Expr;
 
 #[doc = "Block-like expressions (braced blocks, if, while, for, loop, match, async, unsafe, const, try)."]
 #[derive(Debug, Clone)]
@@ -66,146 +65,156 @@ impl From<ExprBrace> for BlockExpr {
         BlockExpr::Brace(v)
     }
 }
+
 impl From<ExprIf> for BlockExpr {
     fn from(v: ExprIf) -> Self {
         BlockExpr::If(v)
     }
 }
+
 impl From<ExprWhile> for BlockExpr {
     fn from(v: ExprWhile) -> Self {
         BlockExpr::While(v)
     }
 }
+
 impl From<ExprForLoop> for BlockExpr {
     fn from(v: ExprForLoop) -> Self {
         BlockExpr::ForLoop(v)
     }
 }
+
 impl From<ExprLoop> for BlockExpr {
     fn from(v: ExprLoop) -> Self {
         BlockExpr::Loop(v)
     }
 }
+
 impl From<ExprMatch> for BlockExpr {
     fn from(v: ExprMatch) -> Self {
         BlockExpr::Match(v)
     }
 }
+
 impl From<ExprAsync> for BlockExpr {
     fn from(v: ExprAsync) -> Self {
         BlockExpr::Async(v)
     }
 }
+
 impl From<ExprUnsafe> for BlockExpr {
     fn from(v: ExprUnsafe) -> Self {
         BlockExpr::Unsafe(v)
     }
 }
+
 impl From<ExprConst> for BlockExpr {
     fn from(v: ExprConst) -> Self {
         BlockExpr::Const(v)
     }
 }
+
 impl From<ExprTryBlock> for BlockExpr {
     fn from(v: ExprTryBlock) -> Self {
         BlockExpr::TryBlock(v)
     }
 }
 
-// ===========================================================================
 // Parser helpers
-// ===========================================================================
 
-/// Parse a bare lifetime label (no trailing `:`) for `break`/`continue`.
-pub(super) fn parse_opt_break_label(stream: &mut ParseStream) -> Option<Label> {
-    if !matches!(stream.curr(), Some(TokenTree::Token(Token::Punct(Punctuation::Quote(_))))) {
-        return None;
+impl ExprIf {
+    pub fn parse_from(stream: &mut ParseStream) -> Result<Expr, ParseError> {
+        let _ = stream.parse::<If>()?;
+        let cond = Box::new(super::parse_expr(stream, false)?);
+        let then_branch = stream.parse::<StmtBlock>()?;
+        let else_branch = if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("else")) {
+            stream.advance();
+            Some(Box::new(super::primary::PrimaryExpr::parse_from(stream, true)?))
+        } else {
+            None
+        };
+        Ok(Expr::Block(BlockExpr::If(ExprIf {
+            span: Span::default(),
+            attrs: Vec::new(),
+            cond,
+            then_branch,
+            else_branch,
+        })))
     }
-    let name = stream.parse_opt::<Lifetime>()?;
-    Some(Label {
-        span: Span::default(),
-        name,
-    })
 }
 
-pub(super) fn parse_if(stream: &mut ParseStream) -> Result<Expr, ParseError> {
-    let _ = stream.parse::<If>()?;
-    let cond = Box::new(super::parse_expr(stream, false)?);
-    let then_branch = stream.parse::<StmtBlock>()?;
-    let else_branch = if matches!(stream.curr(), Some(tt) if super::is_named(tt, "else")) {
-        stream.advance();
-        Some(Box::new(super::primary::parse_primary(stream, true)?))
-    } else {
-        None
-    };
-    Ok(Expr::Block(BlockExpr::If(ExprIf {
-        span: Span::default(),
-        attrs: Vec::new(),
-        cond,
-        then_branch,
-        else_branch,
-    })))
+impl ExprWhile {
+    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>) -> Result<Self, ParseError> {
+        let _ = stream.parse::<While>()?;
+        let cond = Box::new(super::parse_expr(stream, false)?);
+        let body = stream.parse::<StmtBlock>()?;
+        Ok(Self {
+            span: Span::default(),
+            attrs: Vec::new(),
+            label,
+            cond,
+            body,
+        })
+    }
 }
 
-pub(super) fn parse_while(
-    stream: &mut ParseStream,
-    label: Option<Label>,
-) -> Result<ExprWhile, ParseError> {
-    let _ = stream.parse::<While>()?;
-    let cond = Box::new(super::parse_expr(stream, false)?);
-    let body = stream.parse::<StmtBlock>()?;
-    Ok(ExprWhile {
-        span: Span::default(),
-        attrs: Vec::new(),
-        label,
-        cond,
-        body,
-    })
+impl ExprForLoop {
+    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>) -> Result<Self, ParseError> {
+        let _ = stream.parse::<For>()?;
+        let pat = Box::new(stream.parse::<Pattern>()?);
+        let _ = stream.parse::<In>()?;
+        let expr = Box::new(super::parse_expr(stream, false)?);
+        let body = stream.parse::<StmtBlock>()?;
+        Ok(Self {
+            span: Span::default(),
+            attrs: Vec::new(),
+            label,
+            pat,
+            expr,
+            body,
+        })
+    }
 }
 
-pub(super) fn parse_for(
-    stream: &mut ParseStream,
-    label: Option<Label>,
-) -> Result<ExprForLoop, ParseError> {
-    let _ = stream.parse::<For>()?;
-    let pat = Box::new(stream.parse::<Pattern>()?);
-    let _ = stream.parse::<In>()?;
-    let expr = Box::new(super::parse_expr(stream, false)?);
-    let body = stream.parse::<StmtBlock>()?;
-    Ok(ExprForLoop {
-        span: Span::default(),
-        attrs: Vec::new(),
-        label,
-        pat,
-        expr,
-        body,
-    })
+impl ExprLoop {
+    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>) -> Result<Self, ParseError> {
+        let _ = stream.parse::<Loop>()?;
+        let body = stream.parse::<StmtBlock>()?;
+        Ok(Self {
+            span: Span::default(),
+            attrs: Vec::new(),
+            label,
+            body,
+        })
+    }
 }
 
-pub(super) fn parse_loop(
-    stream: &mut ParseStream,
-    label: Option<Label>,
-) -> Result<ExprLoop, ParseError> {
-    let _ = stream.parse::<Loop>()?;
-    let body = stream.parse::<StmtBlock>()?;
-    Ok(ExprLoop {
-        span: Span::default(),
-        attrs: Vec::new(),
-        label,
-        body,
-    })
+impl ExprMatch {
+    pub fn parse_from(stream: &mut ParseStream) -> Result<Expr, ParseError> {
+        let _ = stream.parse::<Match>()?;
+        let expr = Box::new(super::parse_expr(stream, false)?);
+        let group = stream.parse_group(Delim::Brace)?;
+        let mut inner = group.parse();
+        let arms = inner.parse_vec::<crate::ast::MatchArm>()?;
+        Ok(Expr::Block(BlockExpr::Match(ExprMatch {
+            span: Span::default(),
+            attrs: Vec::new(),
+            expr,
+            arms,
+        })))
+    }
 }
 
-pub(super) fn parse_match(stream: &mut ParseStream) -> Result<Expr, ParseError> {
-    let _ = stream.parse::<Match>()?;
-    let expr = Box::new(super::parse_expr(stream, false)?);
-    let group = stream.parse_group(Delim::Brace)?;
-    let mut inner = group.parse();
-    let arms = inner.parse_vec::<crate::ast::MatchArm>()?;
-    Ok(Expr::Block(BlockExpr::Match(ExprMatch {
-        span: Span::default(),
-        attrs: Vec::new(),
-        expr,
-        arms,
-    })))
+impl Label {
+    /// Parse a bare lifetime label (no trailing `:`) for `break`/`continue`.
+    pub fn parse_opt_break(stream: &mut ParseStream) -> Option<Self> {
+        if !matches!(stream.curr(), Some(TokenTree::Token(Token::Punct(Punctuation::Quote(_))))) {
+            return None;
+        }
+        let name = stream.parse_opt::<Lifetime>()?;
+        Some(Label {
+            span: Span::default(),
+            name,
+        })
+    }
 }

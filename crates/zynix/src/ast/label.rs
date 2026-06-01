@@ -20,7 +20,7 @@ pub struct Label {
 impl Label {
     /// Returns `true` when the stream is positioned at a lifetime (`'a`) directly
     /// followed by `:`, which signals a loop/block label.
-    pub(crate) fn is_prefix(stream: &mut ParseStream) -> bool {
+    pub fn is_prefix(stream: &mut ParseStream) -> bool {
         matches!(stream.curr(), Some(TokenTree::Token(Token::Punct(Punctuation::Quote(_)))))
             && matches!(stream.nth(2), Some(TokenTree::Token(Token::Punct(Punctuation::Colon(_)))))
     }

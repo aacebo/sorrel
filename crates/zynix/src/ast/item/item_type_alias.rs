@@ -40,7 +40,9 @@ impl Parse for ItemTypeAlias {
 
 impl ToTokens for ItemTypeAlias {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs { a.to_tokens(t); }
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.vis.to_tokens(t);
         KwType::default().to_tokens(t);
         self.ident.to_tokens(t);

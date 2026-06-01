@@ -80,6 +80,14 @@ impl Token {
             Self::Literal(v) => v.span(),
         }
     }
+
+    pub fn name(&self) -> Option<std::borrow::Cow<'_, str>> {
+        match self {
+            Self::Ident(v) => Some(v.name()),
+            Self::Keyword(v) => Some(std::borrow::Cow::Borrowed(v.as_str())),
+            _ => None,
+        }
+    }
 }
 
 impl From<Ident> for Token {
@@ -149,6 +157,20 @@ impl TokenTree {
         match self {
             Self::Token(v) => v.span(),
             Self::Group(v) => v.span().into(),
+        }
+    }
+
+    pub fn name(&self) -> Option<std::borrow::Cow<'_, str>> {
+        match self {
+            Self::Token(t) => t.name(),
+            Self::Group(_) => None,
+        }
+    }
+
+    pub fn delim(&self) -> Option<Delim> {
+        match self {
+            Self::Group(g) => Some(g.delim()),
+            Self::Token(_) => None,
         }
     }
 }

@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::keyword::Const;
@@ -15,7 +14,9 @@ pub struct ExprConst {
 
 impl ToTokens for ExprConst {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         Const::default().to_tokens(t);
         self.block.to_tokens(t);
     }

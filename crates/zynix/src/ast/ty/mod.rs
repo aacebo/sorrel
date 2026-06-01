@@ -1,7 +1,7 @@
-use crate::ast::{Punctuated, TypeBound};
+use crate::ast::Punctuated;
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{Dyn, Impl};
-use crate::token::punct::{And, Comma, Plus, Star};
+use crate::token::punct::{And, Comma, Star};
 use crate::token::{Delim, ToTokens};
 use crate::{Parse, Span, TokenStream};
 
@@ -35,20 +35,6 @@ pub use type_trait_object::*;
 pub use type_tuple::*;
 pub use typed_param::*;
 
-/// Parse `Bound + Bound + ...` for `impl`/`dyn` types.
-pub(crate) fn parse_plus_bounds(stream: &mut ParseStream) -> Result<Punctuated<TypeBound, Plus>, ParseError> {
-    let mut bounds = Punctuated::new();
-    loop {
-        bounds.push_value(stream.parse::<TypeBound>()?);
-        if stream.peek::<Plus>().is_some() {
-            bounds.push_punct(stream.parse::<Plus>()?);
-        } else {
-            break;
-        }
-    }
-    Ok(bounds)
-}
-
 #[doc = "A Rust type expression. Covers all positions where a type can appear in source code."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -69,28 +55,58 @@ pub enum Type {
     Macro(TypeMacro),
 }
 
-macro_rules! impl_from {
-    ($($variant:ident => $ty:ty),+ $(,)?) => {
-        $(
-            impl From<$ty> for Type {
-                fn from(value: $ty) -> Self {
-                    Type::$variant(value)
-                }
-            }
-        )+
-    };
+impl From<TypePath> for Type {
+    fn from(value: TypePath) -> Self {
+        Type::Path(value)
+    }
 }
 
-impl_from! {
-    Path => TypePath,
-    Reference => TypeReference,
-    Pointer => TypePointer,
-    Tuple => TypeTuple,
-    Paren => TypeParen,
-    Slice => TypeSlice,
-    ImplTrait => TypeImplTrait,
-    TraitObject => TypeTraitObject,
-    BareFn => TypeBareFn,
+impl From<TypeReference> for Type {
+    fn from(value: TypeReference) -> Self {
+        Type::Reference(value)
+    }
+}
+
+impl From<TypePointer> for Type {
+    fn from(value: TypePointer) -> Self {
+        Type::Pointer(value)
+    }
+}
+
+impl From<TypeTuple> for Type {
+    fn from(value: TypeTuple) -> Self {
+        Type::Tuple(value)
+    }
+}
+
+impl From<TypeParen> for Type {
+    fn from(value: TypeParen) -> Self {
+        Type::Paren(value)
+    }
+}
+
+impl From<TypeSlice> for Type {
+    fn from(value: TypeSlice) -> Self {
+        Type::Slice(value)
+    }
+}
+
+impl From<TypeImplTrait> for Type {
+    fn from(value: TypeImplTrait) -> Self {
+        Type::ImplTrait(value)
+    }
+}
+
+impl From<TypeTraitObject> for Type {
+    fn from(value: TypeTraitObject) -> Self {
+        Type::TraitObject(value)
+    }
+}
+
+impl From<TypeBareFn> for Type {
+    fn from(value: TypeBareFn) -> Self {
+        Type::BareFn(value)
+    }
 }
 
 impl Parse for Type {
@@ -112,7 +128,7 @@ impl Parse for Type {
         }
 
         // Infer `_`.
-        if matches!(stream.curr(), Some(tt) if is_named(tt, "_")) {
+        if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("_")) {
             stream.advance();
             return Ok(Type::Infer);
         }
@@ -121,7 +137,7 @@ impl Parse for Type {
         // Both share the same `[` token so we disambiguate inline after peeking
         // inside the group rather than calling `TypeArray::parse` or
         // `TypeSlice::parse` individually (which would each consume the group).
-        if matches!(stream.curr(), Some(tt) if is_group(tt, Delim::Bracket)) {
+        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
             let group = stream.parse_group(Delim::Bracket)?;
             let mut inner = group.parse();
             let elem = Box::new(inner.parse::<Type>()?);
@@ -161,7 +177,7 @@ impl Parse for Type {
         // `(...)` — one element with no trailing comma is a parenthesized type;
         // anything else (empty, multiple, or trailing comma) is a tuple.
         // Both variants share the same `(` token so we disambiguate inline.
-        if matches!(stream.curr(), Some(tt) if is_group(tt, Delim::Paren)) {
+        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
             let group = stream.parse_group(Delim::Paren)?;
             let mut inner = group.parse();
             let elems: Punctuated<Type, Comma> = Punctuated::parse_terminated(&mut inner)?;
@@ -190,14 +206,6 @@ impl Parse for Type {
     }
 }
 
-fn is_named(tt: &crate::TokenTree, name: &str) -> bool {
-    match tt {
-        crate::TokenTree::Token(crate::Token::Ident(id)) => id.name() == name,
-        crate::TokenTree::Token(crate::Token::Keyword(kw)) => kw.as_str() == name,
-        _ => false,
-    }
-}
-
 impl ToTokens for Type {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
@@ -218,10 +226,6 @@ impl ToTokens for Type {
             Type::Group(_) => {}
         }
     }
-}
-
-fn is_group(tt: &crate::TokenTree, delim: Delim) -> bool {
-    matches!(tt, crate::TokenTree::Group(g) if g.delim() == delim)
 }
 
 #[cfg(test)]

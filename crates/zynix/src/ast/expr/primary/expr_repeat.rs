@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::Attribute;
 use crate::token::punct::Semi;
 use crate::token::{Delim, Group, ToTokens};
@@ -16,7 +15,9 @@ pub struct ExprRepeat {
 
 impl ToTokens for ExprRepeat {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         let mut inner = TokenStream::new();
         self.elem.to_tokens(&mut inner);
         Semi::default().to_tokens(&mut inner);

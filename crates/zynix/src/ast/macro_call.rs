@@ -15,6 +15,20 @@ pub struct MacroCall {
     pub tokens: TokenStream,
 }
 
+impl MacroCall {
+    pub fn parse_semi(stream: &mut ParseStream) -> Result<(Self, bool), ParseError> {
+        use crate::token::punct::Semi;
+        let mac = stream.parse::<MacroCall>()?;
+        let semi = if stream.peek::<Semi>().is_some() {
+            let _ = stream.parse::<Semi>()?;
+            true
+        } else {
+            false
+        };
+        Ok((mac, semi))
+    }
+}
+
 impl Parse for MacroCall {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec()?;

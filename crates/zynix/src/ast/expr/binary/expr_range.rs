@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -17,22 +16,16 @@ pub struct ExprRange {
 
 impl ExprRange {
     /// Parse an optional range end — `None` if the next token cannot begin an expression.
-    pub(crate) fn maybe_end(
-        stream: &mut ParseStream,
-        allow_struct: bool,
-    ) -> Result<Option<Box<super::super::Expr>>, ParseError> {
+    pub fn maybe_end(stream: &mut ParseStream, allow_struct: bool) -> Result<Option<Box<super::super::Expr>>, ParseError> {
         use crate::token::punct::{Comma, Semi};
-        if stream.is_empty()
-            || stream.peek::<Semi>().is_some()
-            || stream.peek::<Comma>().is_some()
-        {
+        if stream.is_empty() || stream.peek::<Semi>().is_some() || stream.peek::<Comma>().is_some() {
             return Ok(None);
         }
         let mut fork = stream.fork();
-        match super::super::unary::parse_unary(&mut fork, allow_struct) {
+        match super::super::unary::UnaryExpr::parse_from(&mut fork, allow_struct) {
             Ok(e) => {
                 use crate::ast::precedence::Precedence;
-                let e = super::parse_binary(&mut fork, e, Precedence::Range.next(), allow_struct)?;
+                let e = super::BinaryExpr::parse_from(&mut fork, e, Precedence::Range.next(), allow_struct)?;
                 stream.seek(&fork);
                 Ok(Some(Box::new(e)))
             }
@@ -43,7 +36,9 @@ impl ExprRange {
 
 impl ToTokens for ExprRange {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         if let Some(s) = &self.start {
             s.to_tokens(t);
         }

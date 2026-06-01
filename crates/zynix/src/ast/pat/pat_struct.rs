@@ -1,4 +1,3 @@
-use super::{emit_attrs, emit_group};
 use crate::ast::pat::PatField;
 use crate::ast::*;
 use crate::token::punct::{Comma, DotDot};
@@ -19,13 +18,18 @@ pub struct PatStruct {
 
 impl ToTokens for PatStruct {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.path.to_tokens(t);
         let mut inner = TokenStream::new();
         self.fields.to_tokens(&mut inner);
         if self.rest {
             DotDot::default().to_tokens(&mut inner);
         }
-        emit_group(Delim::Brace, inner, t);
+        t.extend_one(crate::TokenTree::Group(crate::token::Group::new(
+            crate::token::Delim::Brace,
+            inner,
+        )));
     }
 }

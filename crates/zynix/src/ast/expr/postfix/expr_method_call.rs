@@ -1,5 +1,5 @@
-use super::super::emit_attrs;
 use crate::ast::*;
+use crate::parse::{ParseError, ParseStream};
 use crate::token::punct::{Comma, Dot};
 use crate::token::{Delim, Group, ToTokens};
 use crate::{Span, TokenStream, TokenTree};
@@ -16,9 +16,28 @@ pub struct ExprMethodCall {
     pub args: Punctuated<super::super::Expr, Comma>,
 }
 
+impl ExprMethodCall {
+    /// Parse an optional turbofish `::<...>` (method-call generic args).
+    pub fn parse_turbofish(stream: &mut ParseStream) -> Result<Option<AngleArgs>, ParseError> {
+        let mut fork = stream.fork();
+        if fork.peek::<crate::token::punct::PathSep>().is_none() {
+            return Ok(None);
+        }
+        let _ = fork.parse::<crate::token::punct::PathSep>()?;
+        if fork.peek::<crate::token::punct::Lt>().is_none() {
+            return Ok(None);
+        }
+        let args = fork.parse::<AngleArgs>()?;
+        stream.seek(&fork);
+        Ok(Some(args))
+    }
+}
+
 impl ToTokens for ExprMethodCall {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.receiver.to_tokens(t);
         Dot::default().to_tokens(t);
         self.method.to_tokens(t);

@@ -18,7 +18,7 @@ pub struct TypePath {
 impl Parse for TypePath {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<Lt>().is_some() {
-            let (qself, path) = super::parse_qualified_path(stream)?;
+            let (qself, path) = super::QSelf::parse_qualified(stream)?;
             return Ok(Self {
                 span: Span::default(),
                 qself: Some(qself),
@@ -31,6 +31,17 @@ impl Parse for TypePath {
             qself: None,
             path: stream.parse()?,
         })
+    }
+}
+
+impl TypePath {
+    pub fn emit_segments(segs: &[&PathSegment], tokens: &mut TokenStream) {
+        for (i, seg) in segs.iter().enumerate() {
+            if i > 0 {
+                PathSep::default().to_tokens(tokens);
+            }
+            seg.to_tokens(tokens);
+        }
     }
 }
 
@@ -48,7 +59,7 @@ impl ToTokens for TypePath {
 
                 if qself.position > 0 {
                     As::default().to_tokens(tokens);
-                    emit_segments(&segs[..qself.position], tokens);
+                    TypePath::emit_segments(&segs[..qself.position], tokens);
                 }
 
                 Gt::default().to_tokens(tokens);
@@ -59,14 +70,5 @@ impl ToTokens for TypePath {
                 }
             }
         }
-    }
-}
-
-fn emit_segments(segs: &[&PathSegment], tokens: &mut TokenStream) {
-    for (i, seg) in segs.iter().enumerate() {
-        if i > 0 {
-            PathSep::default().to_tokens(tokens);
-        }
-        seg.to_tokens(tokens);
     }
 }

@@ -35,37 +35,58 @@ pub enum Lit {
     Verbatim(token::Literal),
 }
 
-fn is_float(repr: &str) -> bool {
-    // Hex/oct/bin integers never count as floats.
-    if repr.starts_with("0x") || repr.starts_with("0o") || repr.starts_with("0b") {
-        return false;
+impl From<LitStr> for Lit {
+    fn from(value: LitStr) -> Self {
+        Lit::Str(value)
     }
-
-    repr.contains('.') || repr.contains('e') || repr.contains('E')
 }
 
-macro_rules! impl_from {
-    ($($variant:ident => $ty:ty),+ $(,)?) => {
-        $(
-            impl From<$ty> for Lit {
-                fn from(value: $ty) -> Self {
-                    Lit::$variant(value)
-                }
-            }
-        )+
-    };
+impl From<LitByteStr> for Lit {
+    fn from(value: LitByteStr) -> Self {
+        Lit::ByteStr(value)
+    }
 }
 
-impl_from! {
-    Str => LitStr,
-    ByteStr => LitByteStr,
-    CStr => LitCStr,
-    Byte => LitByte,
-    Char => LitChar,
-    Int => LitInt,
-    Float => LitFloat,
-    Bool => LitBool,
-    Verbatim => token::Literal,
+impl From<LitCStr> for Lit {
+    fn from(value: LitCStr) -> Self {
+        Lit::CStr(value)
+    }
+}
+
+impl From<LitByte> for Lit {
+    fn from(value: LitByte) -> Self {
+        Lit::Byte(value)
+    }
+}
+
+impl From<LitChar> for Lit {
+    fn from(value: LitChar) -> Self {
+        Lit::Char(value)
+    }
+}
+
+impl From<LitInt> for Lit {
+    fn from(value: LitInt) -> Self {
+        Lit::Int(value)
+    }
+}
+
+impl From<LitFloat> for Lit {
+    fn from(value: LitFloat) -> Self {
+        Lit::Float(value)
+    }
+}
+
+impl From<LitBool> for Lit {
+    fn from(value: LitBool) -> Self {
+        Lit::Bool(value)
+    }
+}
+
+impl From<token::Literal> for Lit {
+    fn from(value: token::Literal) -> Self {
+        Lit::Verbatim(value)
+    }
 }
 
 impl Parse for Lit {
@@ -89,7 +110,11 @@ impl Parse for Lit {
                         Lit::Str(LitStr { span, repr })
                     } else if repr.starts_with('\'') {
                         Lit::Char(LitChar { span, repr })
-                    } else if is_float(&repr) {
+                    } else if !repr.starts_with("0x")
+                        && !repr.starts_with("0o")
+                        && !repr.starts_with("0b")
+                        && (repr.contains('.') || repr.contains('e') || repr.contains('E'))
+                    {
                         Lit::Float(LitFloat { span, repr })
                     } else if repr.starts_with(|c: char| c.is_ascii_digit()) {
                         Lit::Int(LitInt { span, repr })

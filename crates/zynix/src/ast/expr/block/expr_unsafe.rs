@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::keyword::Unsafe;
@@ -15,7 +14,9 @@ pub struct ExprUnsafe {
 
 impl ToTokens for ExprUnsafe {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         Unsafe::default().to_tokens(t);
         self.block.to_tokens(t);
     }

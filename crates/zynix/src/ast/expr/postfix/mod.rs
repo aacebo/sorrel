@@ -10,14 +10,13 @@ pub use expr_field::*;
 pub use expr_index::*;
 pub use expr_method_call::*;
 
-use crate::ast::{AngleArgs, Member, Punctuated};
+use super::unary::ExprTry;
+use super::{Expr, UnaryExpr};
+use crate::Span;
+use crate::ast::{Member, Punctuated};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::punct::{Dot, Question};
 use crate::token::{Delim, ToTokens, TokenStream};
-use crate::Span;
-
-use super::unary::ExprTry;
-use super::{Expr, UnaryExpr};
 
 #[doc = "Postfix/suffix expressions (calls, field access, indexing, await, try-propagation)."]
 #[derive(Debug, Clone)]
@@ -47,129 +46,118 @@ impl From<ExprCall> for PostfixExpr {
         PostfixExpr::Call(v)
     }
 }
+
 impl From<ExprMethodCall> for PostfixExpr {
     fn from(v: ExprMethodCall) -> Self {
         PostfixExpr::MethodCall(v)
     }
 }
+
 impl From<ExprField> for PostfixExpr {
     fn from(v: ExprField) -> Self {
         PostfixExpr::Field(v)
     }
 }
+
 impl From<ExprIndex> for PostfixExpr {
     fn from(v: ExprIndex) -> Self {
         PostfixExpr::Index(v)
     }
 }
+
 impl From<ExprAwait> for PostfixExpr {
     fn from(v: ExprAwait) -> Self {
         PostfixExpr::Await(v)
     }
 }
 
-// ===========================================================================
-// Parser helpers
-// ===========================================================================
+// Parser
 
-/// Parse an optional turbofish `::<...>` (method-call generic args).
-pub(super) fn parse_turbofish(stream: &mut ParseStream) -> Result<Option<AngleArgs>, ParseError> {
-    let mut fork = stream.fork();
-    if fork.peek::<crate::token::punct::PathSep>().is_none() {
-        return Ok(None);
-    }
-    let _ = fork.parse::<crate::token::punct::PathSep>()?;
-    if fork.peek::<crate::token::punct::Lt>().is_none() {
-        return Ok(None);
-    }
-    let args = fork.parse::<AngleArgs>()?;
-    stream.seek(&fork);
-    Ok(Some(args))
-}
+impl PostfixExpr {
+    pub fn parse_from(stream: &mut ParseStream, mut expr: Expr) -> Result<Expr, ParseError> {
+        loop {
+            if stream.peek::<Dot>().is_some() {
+                let _ = stream.parse::<Dot>()?;
 
-pub(super) fn parse_postfix(stream: &mut ParseStream, mut expr: Expr) -> Result<Expr, ParseError> {
-    loop {
-        if stream.peek::<Dot>().is_some() {
-            let _ = stream.parse::<Dot>()?;
+                if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("await")) {
+                    stream.advance();
+                    expr = Expr::Postfix(PostfixExpr::Await(ExprAwait {
+                        span: Span::default(),
+                        attrs: Vec::new(),
+                        base: Box::new(expr),
+                    }));
+                    continue;
+                }
 
-            if matches!(stream.curr(), Some(tt) if super::is_named(tt, "await")) {
-                stream.advance();
-                expr = Expr::Postfix(PostfixExpr::Await(ExprAwait {
+                let member = stream.parse::<Member>()?;
+                if let Member::Named(method) = &member {
+                    // Optional turbofish `::<...>` before the call parens.
+                    let turbofish = ExprMethodCall::parse_turbofish(stream)?;
+                    if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+                        let method = method.clone();
+                        let group = stream.parse_group(Delim::Paren)?;
+                        let mut inner = group.parse();
+                        let args = Punctuated::parse_terminated(&mut inner)?;
+                        expr = Expr::Postfix(PostfixExpr::MethodCall(ExprMethodCall {
+                            span: Span::default(),
+                            attrs: Vec::new(),
+                            receiver: Box::new(expr),
+                            method,
+                            turbofish,
+                            args,
+                        }));
+                        continue;
+                    }
+                }
+
+                expr = Expr::Postfix(PostfixExpr::Field(ExprField {
                     span: Span::default(),
                     attrs: Vec::new(),
                     base: Box::new(expr),
+                    member,
                 }));
                 continue;
             }
 
-            let member = stream.parse::<Member>()?;
-            if let Member::Named(method) = &member {
-                // Optional turbofish `::<...>` before the call parens.
-                let turbofish = parse_turbofish(stream)?;
-                if matches!(stream.curr(), Some(tt) if super::is_group(tt, Delim::Paren)) {
-                    let method = method.clone();
-                    let group = stream.parse_group(Delim::Paren)?;
-                    let mut inner = group.parse();
-                    let args = Punctuated::parse_terminated(&mut inner)?;
-                    expr = Expr::Postfix(PostfixExpr::MethodCall(ExprMethodCall {
-                        span: Span::default(),
-                        attrs: Vec::new(),
-                        receiver: Box::new(expr),
-                        method,
-                        turbofish,
-                        args,
-                    }));
-                    continue;
-                }
+            if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+                let group = stream.parse_group(Delim::Paren)?;
+                let mut inner = group.parse();
+                let args = Punctuated::parse_terminated(&mut inner)?;
+                expr = Expr::Postfix(PostfixExpr::Call(ExprCall {
+                    span: Span::default(),
+                    attrs: Vec::new(),
+                    func: Box::new(expr),
+                    args,
+                }));
+                continue;
             }
 
-            expr = Expr::Postfix(PostfixExpr::Field(ExprField {
-                span: Span::default(),
-                attrs: Vec::new(),
-                base: Box::new(expr),
-                member,
-            }));
-            continue;
+            if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
+                let group = stream.parse_group(Delim::Bracket)?;
+                let mut inner = group.parse();
+                let index = Box::new(super::parse_expr(&mut inner, true)?);
+                expr = Expr::Postfix(PostfixExpr::Index(ExprIndex {
+                    span: Span::default(),
+                    attrs: Vec::new(),
+                    base: Box::new(expr),
+                    index,
+                }));
+                continue;
+            }
+
+            if stream.peek::<Question>().is_some() {
+                let _ = stream.parse::<Question>()?;
+                expr = Expr::Unary(UnaryExpr::Try(ExprTry {
+                    span: Span::default(),
+                    attrs: Vec::new(),
+                    expr: Box::new(expr),
+                }));
+                continue;
+            }
+
+            break;
         }
 
-        if matches!(stream.curr(), Some(tt) if super::is_group(tt, Delim::Paren)) {
-            let group = stream.parse_group(Delim::Paren)?;
-            let mut inner = group.parse();
-            let args = Punctuated::parse_terminated(&mut inner)?;
-            expr = Expr::Postfix(PostfixExpr::Call(ExprCall {
-                span: Span::default(),
-                attrs: Vec::new(),
-                func: Box::new(expr),
-                args,
-            }));
-            continue;
-        }
-
-        if matches!(stream.curr(), Some(tt) if super::is_group(tt, Delim::Bracket)) {
-            let group = stream.parse_group(Delim::Bracket)?;
-            let mut inner = group.parse();
-            let index = Box::new(super::parse_expr(&mut inner, true)?);
-            expr = Expr::Postfix(PostfixExpr::Index(ExprIndex {
-                span: Span::default(),
-                attrs: Vec::new(),
-                base: Box::new(expr),
-                index,
-            }));
-            continue;
-        }
-
-        if stream.peek::<Question>().is_some() {
-            let _ = stream.parse::<Question>()?;
-            expr = Expr::Unary(UnaryExpr::Try(ExprTry {
-                span: Span::default(),
-                attrs: Vec::new(),
-                expr: Box::new(expr),
-            }));
-            continue;
-        }
-
-        break;
+        Ok(expr)
     }
-
-    Ok(expr)
 }

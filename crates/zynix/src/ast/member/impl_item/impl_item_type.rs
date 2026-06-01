@@ -25,7 +25,7 @@ impl Parse for ImplItemType {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
-        if !crate::ast::member::is_kw(stream.curr(), "type") {
+        if stream.curr().and_then(|t| t.name()).as_deref() != Some("type") {
             return Err(LexError::new(at).message("expected impl type").into());
         }
         let _ = stream.parse::<KwType>()?;
@@ -48,7 +48,9 @@ impl Parse for ImplItemType {
 
 impl ToTokens for ImplItemType {
     fn to_tokens(&self, t: &mut TokenStream) {
-        super::super::emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.vis.to_tokens(t);
         self.defaultness.to_tokens(t);
         KwType::default().to_tokens(t);

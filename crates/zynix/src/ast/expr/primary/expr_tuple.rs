@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::punct::Comma;
 use crate::token::{Delim, Group, ToTokens};
@@ -15,7 +14,9 @@ pub struct ExprTuple {
 
 impl ToTokens for ExprTuple {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         let mut inner = TokenStream::new();
         self.elems.to_tokens(&mut inner);
         t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));

@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::token::keyword::{For, In};
@@ -18,7 +17,9 @@ pub struct ExprForLoop {
 
 impl ToTokens for ExprForLoop {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         if let Some(l) = &self.label {
             l.to_tokens(t);
         }

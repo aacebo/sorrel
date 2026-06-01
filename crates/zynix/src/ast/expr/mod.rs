@@ -1,7 +1,6 @@
-use crate::ast::Attribute;
 use crate::parse::{ParseError, ParseStream};
-use crate::token::{Delim, Group, Punctuation, ToTokens};
-use crate::{Parse, Span, Token, TokenStream, TokenTree};
+use crate::token::ToTokens;
+use crate::{Parse, TokenStream};
 
 pub mod binary;
 pub mod block;
@@ -17,16 +16,6 @@ pub use postfix::*;
 pub use primary::*;
 pub use unary::*;
 
-pub(super) fn emit_attrs(attrs: &[Attribute], tokens: &mut TokenStream) {
-    for a in attrs {
-        a.to_tokens(tokens);
-    }
-}
-
-pub(super) fn emit_group(expr: &Expr, tokens: &mut TokenStream) {
-    expr.to_tokens(tokens);
-}
-
 #[doc = "A Rust expression. The primary recursive node covering all expression forms."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -41,103 +30,273 @@ pub enum Expr {
     Verbatim(TokenStream),
 }
 
-macro_rules! impl_from_sub {
-    ($variant:ident, $sub:ty, $($inner:ident => $ty:ty),+ $(,)?) => {
-        $(
-            impl From<$ty> for Expr {
-                fn from(value: $ty) -> Self {
-                    Expr::$variant(<$sub>::from(value))
-                }
-            }
-        )+
-    };
-}
-
-impl_from_sub!(Unary, UnaryExpr,
-    Reference => ExprReference,
-    Unary => ExprUnary,
-    Cast => ExprCast,
-    Try => ExprTry,
-);
-
-impl_from_sub!(Binary, BinaryExpr,
-    Binary => ExprBinary,
-    Assign => ExprAssign,
-    AssignOp => ExprAssignOp,
-    Range => ExprRange,
-    Type => ExprType,
-);
-
-impl_from_sub!(Postfix, PostfixExpr,
-    Call => ExprCall,
-    MethodCall => ExprMethodCall,
-    Field => ExprField,
-    Index => ExprIndex,
-    Await => ExprAwait,
-);
-
-impl_from_sub!(Block, BlockExpr,
-    Brace => ExprBrace,
-    If => ExprIf,
-    While => ExprWhile,
-    ForLoop => ExprForLoop,
-    Loop => ExprLoop,
-    Match => ExprMatch,
-    Async => ExprAsync,
-    Unsafe => ExprUnsafe,
-    Const => ExprConst,
-    TryBlock => ExprTryBlock,
-);
-
-impl_from_sub!(Jump, JumpExpr,
-    Return => ExprReturn,
-    Break => ExprBreak,
-    Continue => ExprContinue,
-    Yield => ExprYield,
-);
-
-impl_from_sub!(Primary, PrimaryExpr,
-    Lit => ExprLit,
-    Path => ExprPath,
-    Struct => ExprStruct,
-    Closure => ExprClosure,
-    Tuple => ExprTuple,
-    Array => ExprArray,
-    Repeat => ExprRepeat,
-    Let => ExprLet,
-    Paren => ExprParen,
-    Group => ExprGroup,
-    Macro => ExprMacro,
-);
-
 impl From<UnaryExpr> for Expr {
     fn from(v: UnaryExpr) -> Self {
         Expr::Unary(v)
     }
 }
+
 impl From<BinaryExpr> for Expr {
     fn from(v: BinaryExpr) -> Self {
         Expr::Binary(v)
     }
 }
+
 impl From<PostfixExpr> for Expr {
     fn from(v: PostfixExpr) -> Self {
         Expr::Postfix(v)
     }
 }
+
 impl From<BlockExpr> for Expr {
     fn from(v: BlockExpr) -> Self {
         Expr::Block(v)
     }
 }
+
 impl From<JumpExpr> for Expr {
     fn from(v: JumpExpr) -> Self {
         Expr::Jump(v)
     }
 }
+
 impl From<PrimaryExpr> for Expr {
     fn from(v: PrimaryExpr) -> Self {
         Expr::Primary(v)
+    }
+}
+
+impl From<ExprReference> for Expr {
+    fn from(value: ExprReference) -> Self {
+        Expr::Unary(UnaryExpr::from(value))
+    }
+}
+
+impl From<ExprUnary> for Expr {
+    fn from(value: ExprUnary) -> Self {
+        Expr::Unary(UnaryExpr::from(value))
+    }
+}
+
+impl From<ExprCast> for Expr {
+    fn from(value: ExprCast) -> Self {
+        Expr::Unary(UnaryExpr::from(value))
+    }
+}
+
+impl From<ExprTry> for Expr {
+    fn from(value: ExprTry) -> Self {
+        Expr::Unary(UnaryExpr::from(value))
+    }
+}
+
+impl From<ExprBinary> for Expr {
+    fn from(value: ExprBinary) -> Self {
+        Expr::Binary(BinaryExpr::from(value))
+    }
+}
+
+impl From<ExprAssign> for Expr {
+    fn from(value: ExprAssign) -> Self {
+        Expr::Binary(BinaryExpr::from(value))
+    }
+}
+
+impl From<ExprAssignOp> for Expr {
+    fn from(value: ExprAssignOp) -> Self {
+        Expr::Binary(BinaryExpr::from(value))
+    }
+}
+
+impl From<ExprRange> for Expr {
+    fn from(value: ExprRange) -> Self {
+        Expr::Binary(BinaryExpr::from(value))
+    }
+}
+
+impl From<ExprType> for Expr {
+    fn from(value: ExprType) -> Self {
+        Expr::Binary(BinaryExpr::from(value))
+    }
+}
+
+impl From<ExprCall> for Expr {
+    fn from(value: ExprCall) -> Self {
+        Expr::Postfix(PostfixExpr::from(value))
+    }
+}
+
+impl From<ExprMethodCall> for Expr {
+    fn from(value: ExprMethodCall) -> Self {
+        Expr::Postfix(PostfixExpr::from(value))
+    }
+}
+
+impl From<ExprField> for Expr {
+    fn from(value: ExprField) -> Self {
+        Expr::Postfix(PostfixExpr::from(value))
+    }
+}
+
+impl From<ExprIndex> for Expr {
+    fn from(value: ExprIndex) -> Self {
+        Expr::Postfix(PostfixExpr::from(value))
+    }
+}
+
+impl From<ExprAwait> for Expr {
+    fn from(value: ExprAwait) -> Self {
+        Expr::Postfix(PostfixExpr::from(value))
+    }
+}
+
+impl From<ExprBrace> for Expr {
+    fn from(value: ExprBrace) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprIf> for Expr {
+    fn from(value: ExprIf) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprWhile> for Expr {
+    fn from(value: ExprWhile) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprForLoop> for Expr {
+    fn from(value: ExprForLoop) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprLoop> for Expr {
+    fn from(value: ExprLoop) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprMatch> for Expr {
+    fn from(value: ExprMatch) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprAsync> for Expr {
+    fn from(value: ExprAsync) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprUnsafe> for Expr {
+    fn from(value: ExprUnsafe) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprConst> for Expr {
+    fn from(value: ExprConst) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprTryBlock> for Expr {
+    fn from(value: ExprTryBlock) -> Self {
+        Expr::Block(BlockExpr::from(value))
+    }
+}
+
+impl From<ExprReturn> for Expr {
+    fn from(value: ExprReturn) -> Self {
+        Expr::Jump(JumpExpr::from(value))
+    }
+}
+
+impl From<ExprBreak> for Expr {
+    fn from(value: ExprBreak) -> Self {
+        Expr::Jump(JumpExpr::from(value))
+    }
+}
+
+impl From<ExprContinue> for Expr {
+    fn from(value: ExprContinue) -> Self {
+        Expr::Jump(JumpExpr::from(value))
+    }
+}
+
+impl From<ExprYield> for Expr {
+    fn from(value: ExprYield) -> Self {
+        Expr::Jump(JumpExpr::from(value))
+    }
+}
+
+impl From<ExprLit> for Expr {
+    fn from(value: ExprLit) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprPath> for Expr {
+    fn from(value: ExprPath) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprStruct> for Expr {
+    fn from(value: ExprStruct) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprClosure> for Expr {
+    fn from(value: ExprClosure) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprTuple> for Expr {
+    fn from(value: ExprTuple) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprArray> for Expr {
+    fn from(value: ExprArray) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprRepeat> for Expr {
+    fn from(value: ExprRepeat) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprLet> for Expr {
+    fn from(value: ExprLet) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprParen> for Expr {
+    fn from(value: ExprParen) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprGroup> for Expr {
+    fn from(value: ExprGroup) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl From<ExprMacro> for Expr {
+    fn from(value: ExprMacro) -> Self {
+        Expr::Primary(PrimaryExpr::from(value))
     }
 }
 
@@ -162,28 +321,12 @@ impl ToTokens for Expr {
     }
 }
 
-// ===========================================================================
 // Parser
-// ===========================================================================
 
-pub(crate) fn parse_expr(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, ParseError> {
+pub fn parse_expr(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, ParseError> {
     use crate::ast::precedence::Precedence;
-    let lhs = unary::parse_unary(stream, allow_struct)?;
-    binary::parse_binary(stream, lhs, Precedence::Min, allow_struct)
-}
-
-// --- lookahead helpers (used by sub-modules via `super::`) ---
-
-pub(super) fn is_named(tt: &TokenTree, name: &str) -> bool {
-    match tt {
-        TokenTree::Token(Token::Ident(id)) => id.name() == name,
-        TokenTree::Token(Token::Keyword(kw)) => kw.as_str() == name,
-        _ => false,
-    }
-}
-
-pub(super) fn is_group(tt: &TokenTree, delim: Delim) -> bool {
-    matches!(tt, TokenTree::Group(g) if g.delim() == delim)
+    let lhs = unary::UnaryExpr::parse_from(stream, allow_struct)?;
+    binary::BinaryExpr::parse_from(stream, lhs, Precedence::Min, allow_struct)
 }
 
 #[cfg(test)]

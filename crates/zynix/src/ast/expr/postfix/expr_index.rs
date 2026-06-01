@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::Attribute;
 use crate::token::{Delim, Group, ToTokens};
 use crate::{Span, TokenStream, TokenTree};
@@ -15,7 +14,9 @@ pub struct ExprIndex {
 
 impl ToTokens for ExprIndex {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.base.to_tokens(t);
         let mut inner = TokenStream::new();
         self.index.to_tokens(&mut inner);

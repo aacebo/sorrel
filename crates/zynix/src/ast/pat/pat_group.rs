@@ -1,4 +1,3 @@
-use super::{emit_attrs, emit_group};
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::{Span, TokenStream};
@@ -14,7 +13,9 @@ pub struct PatGroup {
 
 impl ToTokens for PatGroup {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.pat.to_tokens(t);
     }
 }

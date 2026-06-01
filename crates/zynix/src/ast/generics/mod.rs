@@ -1,8 +1,8 @@
-use crate::ast::{Lifetime, Punctuated};
+use crate::ast::Punctuated;
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
 use crate::token::keyword::Where;
-use crate::token::punct::{Colon, Comma, Gt, Lt, Plus};
+use crate::token::punct::{Comma, Gt, Lt};
 use crate::{Parse, Span, TokenStream};
 
 mod const_param;
@@ -83,42 +83,6 @@ impl ToTokens for Generics {
         if let Some(w) = &self.where_clause {
             w.to_tokens(t);
         }
-    }
-}
-
-pub(super) fn parse_bounds(stream: &mut ParseStream) -> Result<Punctuated<Lifetime, Plus>, ParseError> {
-    let mut bounds = Punctuated::new();
-    if stream.peek::<Colon>().is_some() {
-        let _ = stream.parse::<Colon>()?;
-        loop {
-            bounds.push_value(stream.parse::<Lifetime>()?);
-            if stream.peek::<Plus>().is_some() {
-                bounds.push_punct(stream.parse::<Plus>()?);
-            } else {
-                break;
-            }
-        }
-    }
-    Ok(bounds)
-}
-
-pub(super) fn parse_type_bounds(stream: &mut ParseStream) -> Result<Punctuated<TypeBound, Plus>, ParseError> {
-    let mut bounds = Punctuated::new();
-    loop {
-        bounds.push_value(stream.parse::<TypeBound>()?);
-        if stream.peek::<Plus>().is_some() {
-            bounds.push_punct(stream.parse::<Plus>()?);
-        } else {
-            break;
-        }
-    }
-    Ok(bounds)
-}
-
-pub(super) fn emit_bounds(bounds: &Punctuated<Lifetime, Plus>, t: &mut TokenStream) {
-    if !bounds.is_empty() {
-        Colon::default().to_tokens(t);
-        bounds.to_tokens(t);
     }
 }
 

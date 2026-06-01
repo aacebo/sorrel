@@ -16,7 +16,7 @@ pub struct TypeImplTrait {
 impl Parse for TypeImplTrait {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let _ = stream.parse::<Impl>()?;
-        let bounds = super::parse_plus_bounds(stream)?;
+        let bounds = crate::ast::TypeBound::parse_bounds(stream)?;
         Ok(Self {
             span: Span::default(),
             bounds,

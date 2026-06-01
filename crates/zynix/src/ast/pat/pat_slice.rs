@@ -1,4 +1,3 @@
-use super::{emit_attrs, emit_group};
 use crate::ast::*;
 use crate::token::punct::Comma;
 use crate::token::{Delim, ToTokens};
@@ -15,9 +14,14 @@ pub struct PatSlice {
 
 impl ToTokens for PatSlice {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         let mut inner = TokenStream::new();
         self.elems.to_tokens(&mut inner);
-        emit_group(Delim::Bracket, inner, t);
+        t.extend_one(crate::TokenTree::Group(crate::token::Group::new(
+            crate::token::Delim::Bracket,
+            inner,
+        )));
     }
 }

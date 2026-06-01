@@ -23,7 +23,7 @@ impl Parse for ForeignItemStatic {
         let at = stream.span();
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
-        if !crate::ast::member::is_kw(stream.curr(), "static") {
+        if stream.curr().and_then(|t| t.name()).as_deref() != Some("static") {
             return Err(LexError::new(at).message("expected foreign static").into());
         }
         let _ = stream.parse::<Static>()?;
@@ -45,7 +45,9 @@ impl Parse for ForeignItemStatic {
 
 impl ToTokens for ForeignItemStatic {
     fn to_tokens(&self, t: &mut TokenStream) {
-        super::super::emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.vis.to_tokens(t);
         Static::default().to_tokens(t);
         self.mutability.to_tokens(t);

@@ -36,7 +36,7 @@ impl Parse for ItemTrait {
         let mut generics = stream.parse::<Generics>()?;
         let supertraits = if stream.peek::<Colon>().is_some() {
             let _ = stream.parse::<Colon>()?;
-            crate::ast::member::parse_plus_bounds(stream)?
+            crate::ast::TypeBound::parse_bounds(stream)?
         } else {
             Punctuated::new()
         };
@@ -62,7 +62,9 @@ impl Parse for ItemTrait {
 
 impl ToTokens for ItemTrait {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs { a.to_tokens(t); }
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.vis.to_tokens(t);
         if self.auto {
             Auto::default().to_tokens(t);
@@ -74,6 +76,13 @@ impl ToTokens for ItemTrait {
             Colon::default().to_tokens(t);
             self.supertraits.to_tokens(t);
         }
-        let mut inner = TokenStream::new(); for it in &self.items { it.to_tokens(&mut inner); } t.extend_one(crate::TokenTree::Group(crate::token::Group::new(crate::token::Delim::Brace, inner)));
+        let mut inner = TokenStream::new();
+        for it in &self.items {
+            it.to_tokens(&mut inner);
+        }
+        t.extend_one(crate::TokenTree::Group(crate::token::Group::new(
+            crate::token::Delim::Brace,
+            inner,
+        )));
     }
 }

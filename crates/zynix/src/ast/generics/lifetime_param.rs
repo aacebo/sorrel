@@ -1,8 +1,7 @@
-use super::parse_bounds;
 use crate::ast::{Attribute, Lifetime, Punctuated};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
-use crate::token::punct::Plus;
+use crate::token::punct::{Colon, Plus};
 use crate::{Parse, Span, TokenStream};
 
 #[doc = "A lifetime parameter (`'a: 'b + 'c`)."]
@@ -19,7 +18,7 @@ impl Parse for LifetimeParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
         let lifetime = stream.parse::<Lifetime>()?;
-        let bounds = parse_bounds(stream)?;
+        let bounds = Lifetime::parse_bounds(stream)?;
         Ok(Self {
             span: Span::default(),
             attrs,
@@ -35,6 +34,9 @@ impl ToTokens for LifetimeParam {
             a.to_tokens(t);
         }
         self.lifetime.to_tokens(t);
-        super::emit_bounds(&self.bounds, t);
+        if !self.bounds.is_empty() {
+            Colon::default().to_tokens(t);
+            self.bounds.to_tokens(t);
+        }
     }
 }

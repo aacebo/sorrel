@@ -1,4 +1,3 @@
-use super::super::emit_attrs;
 use crate::ast::*;
 use crate::token::ToTokens;
 use crate::{Span, TokenStream};
@@ -16,7 +15,9 @@ pub struct ExprAssignOp {
 
 impl ToTokens for ExprAssignOp {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs {
+            a.to_tokens(t);
+        }
         self.left.to_tokens(t);
         self.op.to_tokens(t);
         self.right.to_tokens(t);

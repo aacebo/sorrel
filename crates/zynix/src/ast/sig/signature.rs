@@ -74,6 +74,27 @@ impl Parse for Signature {
     }
 }
 
+impl Signature {
+    pub fn emit_angle_params(generics: &Generics, t: &mut TokenStream) {
+        if !generics.params.is_empty() {
+            Lt::default().to_tokens(t);
+            generics.params.to_tokens(t);
+            Gt::default().to_tokens(t);
+        }
+    }
+
+    pub fn is_start(stream: &mut crate::parse::ParseStream) -> bool {
+        let mut fork = stream.fork();
+        let _ = fork.parse::<crate::ast::Constness>();
+        let _ = fork.parse::<crate::ast::Asyncness>();
+        let _ = fork.parse::<crate::ast::Unsafety>();
+        if fork.peek::<Extern>().is_some() {
+            let _ = fork.parse::<crate::ast::sig::Abi>();
+        }
+        fork.peek::<Fn>().is_some()
+    }
+}
+
 impl ToTokens for Signature {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.constness.to_tokens(t);
@@ -85,7 +106,7 @@ impl ToTokens for Signature {
         Fn::default().to_tokens(t);
         self.ident.to_tokens(t);
         let mut params = TokenStream::new();
-        emit_angle_params(&self.generics, &mut params);
+        Signature::emit_angle_params(&self.generics, &mut params);
         t.extend(params);
         let mut inner = TokenStream::new();
         self.inputs.to_tokens(&mut inner);
@@ -100,13 +121,5 @@ impl ToTokens for Signature {
         if let Some(w) = &self.generics.where_clause {
             w.to_tokens(t);
         }
-    }
-}
-
-fn emit_angle_params(generics: &Generics, t: &mut TokenStream) {
-    if !generics.params.is_empty() {
-        Lt::default().to_tokens(t);
-        generics.params.to_tokens(t);
-        Gt::default().to_tokens(t);
     }
 }
