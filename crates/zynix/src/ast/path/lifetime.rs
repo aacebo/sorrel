@@ -22,6 +22,7 @@ impl Lifetime {
         let mut bounds = crate::ast::Punctuated::new();
         if stream.peek::<Colon>().is_some() {
             let _ = stream.parse::<Colon>()?;
+
             loop {
                 bounds.push_value(stream.parse::<Lifetime>()?);
                 if stream.peek::<Plus>().is_some() {

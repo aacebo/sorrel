@@ -19,13 +19,16 @@ impl Parse for ConstraintArg {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let mut fork = stream.fork();
         let ident = fork.parse::<Ident>()?;
+
         let generics = if fork.peek::<Lt>().is_some() {
             Some(fork.parse::<AngleArgs>()?)
         } else {
             None
         };
+
         let _ = fork.parse::<Colon>()?;
         let mut bounds = Punctuated::new();
+
         loop {
             bounds.push_value(fork.parse::<TypeBound>()?);
             if fork.peek::<Plus>().is_some() {
@@ -34,6 +37,7 @@ impl Parse for ConstraintArg {
                 break;
             }
         }
+
         stream.seek(&fork);
         Ok(Self {
             span: Span::default(),
@@ -47,9 +51,11 @@ impl Parse for ConstraintArg {
 impl ToTokens for ConstraintArg {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
+
         if let Some(g) = &self.generics {
             g.to_tokens(t);
         }
+
         Colon::default().to_tokens(t);
         self.bounds.to_tokens(t);
     }

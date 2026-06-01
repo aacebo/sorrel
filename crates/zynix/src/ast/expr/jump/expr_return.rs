@@ -18,6 +18,7 @@ impl ToTokens for ExprReturn {
             a.to_tokens(t);
         }
         Return::default().to_tokens(t);
+
         if let Some(e) = &self.expr {
             e.to_tokens(t);
         }

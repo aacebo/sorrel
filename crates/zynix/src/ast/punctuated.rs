@@ -215,7 +215,6 @@ impl<T: Parse, P: Parse> Punctuated<T, P> {
     }
 }
 
-
 impl<T: Clone, P: Clone> Clone for Punctuated<T, P> {
     fn clone(&self) -> Self {
         Self {
@@ -402,7 +401,6 @@ impl<T: ToTokens, P: ToTokens> ToTokens for Punctuated<T, P> {
     }
 }
 
-
 pub enum Pair<T, P> {
     Punctuated(T, P),
     End(T),
@@ -476,7 +474,6 @@ impl<T: ToTokens, P: ToTokens> ToTokens for Pair<T, P> {
         }
     }
 }
-
 
 pub struct IntoIter<T> {
     inner: vec::IntoIter<T>,
@@ -809,7 +806,6 @@ impl<T: serde::Serialize, P> serde::Serialize for Punctuated<T, P> {
         seq.end()
     }
 }
-
 
 #[cfg(test)]
 mod tests {

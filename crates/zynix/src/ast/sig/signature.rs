@@ -32,6 +32,7 @@ impl Parse for Signature {
         } else {
             None
         };
+
         let _ = stream.parse::<Fn>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
@@ -88,9 +89,11 @@ impl Signature {
         let _ = fork.parse::<crate::ast::Constness>();
         let _ = fork.parse::<crate::ast::Asyncness>();
         let _ = fork.parse::<crate::ast::Unsafety>();
+
         if fork.peek::<Extern>().is_some() {
             let _ = fork.parse::<crate::ast::sig::Abi>();
         }
+
         fork.peek::<Fn>().is_some()
     }
 }
@@ -110,14 +113,17 @@ impl ToTokens for Signature {
         t.extend(params);
         let mut inner = TokenStream::new();
         self.inputs.to_tokens(&mut inner);
+
         if let Some(v) = &self.variadic {
             if !self.inputs.is_empty() && !self.inputs.trailing_punct() {
                 Comma::default().to_tokens(&mut inner);
             }
             v.to_tokens(&mut inner);
         }
+
         t.extend_one(TokenTree::Group(crate::token::Group::new(Delim::Paren, inner)));
         self.output.to_tokens(t);
+
         if let Some(w) = &self.generics.where_clause {
             w.to_tokens(t);
         }

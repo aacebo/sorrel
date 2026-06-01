@@ -18,10 +18,13 @@ impl ToTokens for PatRange {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         if let Some(s) = &self.start {
             s.to_tokens(t);
         }
+
         self.limits.to_tokens(t);
+
         if let Some(e) = &self.end {
             e.to_tokens(t);
         }

@@ -35,6 +35,7 @@ impl ToTokens for TypePredicate {
         if let Some(l) = &self.lifetimes {
             l.to_tokens(t);
         }
+
         self.bounded_ty.to_tokens(t);
         Colon::default().to_tokens(t);
         self.bounds.to_tokens(t);

@@ -27,6 +27,7 @@ impl Parse for TypeBareFn {
         } else {
             None
         };
+
         let _ = stream.parse::<Fn>()?;
         let group = stream.parse_group(Delim::Paren)?;
         let mut inner = group.parse();
@@ -49,10 +50,13 @@ impl ToTokens for TypeBareFn {
         if let Some(l) = &self.lifetimes {
             l.to_tokens(t);
         }
+
         self.unsafety.to_tokens(t);
+
         if let Some(abi) = &self.abi {
             abi.to_tokens(t);
         }
+
         Fn::default().to_tokens(t);
         let mut inner = TokenStream::new();
         self.inputs.to_tokens(&mut inner);

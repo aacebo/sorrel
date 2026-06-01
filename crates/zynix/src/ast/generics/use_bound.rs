@@ -18,6 +18,7 @@ impl Parse for UseBound {
         let _ = stream.parse::<Use>()?;
         let _ = stream.parse::<Lt>()?;
         let mut lifetimes = Punctuated::new();
+
         while !stream.peek_angle_close() && !stream.is_empty() {
             lifetimes.push_value(stream.parse::<Lifetime>()?);
             if stream.peek::<Comma>().is_some() {
@@ -26,6 +27,7 @@ impl Parse for UseBound {
                 break;
             }
         }
+
         stream.eat_angle_close()?;
         Ok(Self {
             span: Span::default(),

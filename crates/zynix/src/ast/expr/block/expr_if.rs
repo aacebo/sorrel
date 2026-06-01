@@ -22,6 +22,7 @@ impl ToTokens for ExprIf {
         If::default().to_tokens(t);
         self.cond.to_tokens(t);
         self.then_branch.to_tokens(t);
+
         if let Some(e) = &self.else_branch {
             Else::default().to_tokens(t);
             e.to_tokens(t);

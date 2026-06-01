@@ -141,21 +141,25 @@ impl Parse for Pattern {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         // Optional leading `|`, then one-or-more `|`-separated alternatives.
         let leading = stream.peek::<OrPunct>().is_some();
+
         if leading {
             let _ = stream.parse::<OrPunct>()?;
         }
 
         let first = parse_single(stream)?;
+
         if !leading && stream.peek::<OrPunct>().is_none() {
             return Ok(first);
         }
 
         let mut cases = Punctuated::new();
         cases.push_value(first);
+
         while stream.peek::<OrPunct>().is_some() {
             cases.push_punct(stream.parse::<OrPunct>()?);
             cases.push_value(parse_single(stream)?);
         }
+
         Ok(Pattern::Or(PatOr {
             span: Span::default(),
             attrs: Vec::new(),
@@ -213,14 +217,17 @@ impl PatIdent {
         } else {
             false
         };
+
         let mutability = stream.parse::<Mutability>()?;
         let ident = stream.parse::<Ident>()?;
+
         let subpat = if stream.peek::<At>().is_some() {
             let _ = stream.parse::<At>()?;
             Some(Box::new(Pattern::parse(stream)?))
         } else {
             None
         };
+
         Ok(Self {
             span: Span::default(),
             attrs,
@@ -243,7 +250,9 @@ impl PatStruct {
                 rest = true;
                 break;
             }
+
             let member = stream.parse::<Member>()?;
+
             let (pat, shorthand) = if stream.peek::<Colon>().is_some() {
                 let _ = stream.parse::<Colon>()?;
                 (stream.parse::<Pattern>()?, false)
@@ -267,6 +276,7 @@ impl PatStruct {
                     true,
                 )
             };
+
             fields.push_value(PatField {
                 span: Span::default(),
                 attrs: Vec::new(),
@@ -274,6 +284,7 @@ impl PatStruct {
                 pat,
                 shorthand,
             });
+
             if stream.peek::<Comma>().is_some() {
                 fields.push_punct(stream.parse::<Comma>()?);
             } else {
@@ -294,16 +305,19 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
         stream.advance();
         return Ok(Pattern::Wild);
     }
+
     // Rest `..`
     if stream.peek::<DotDot>().is_some() {
         let _ = stream.parse::<DotDot>()?;
         return Ok(Pattern::Rest);
     }
+
     // `box pat`
     if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("box")) {
         stream.advance();
         return Ok(Pattern::Box(Box::new(parse_single(stream)?)));
     }
+
     // `const { ... }` block pattern
     if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("const"))
         && matches!(stream.nth(1), Some(crate::TokenTree::Group(g)) if g.delim() == Delim::Brace)
@@ -311,6 +325,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
         stream.advance();
         return Ok(Pattern::Const(stream.parse::<crate::ast::StmtBlock>()?));
     }
+
     // Reference `&`/`&mut`
     if stream.peek::<And>().is_some() {
         let _ = stream.parse::<And>()?;
@@ -323,6 +338,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             pat,
         }));
     }
+
     // Tuple/paren `(...)`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
         let group = stream.parse_group(Delim::Paren)?;
@@ -334,6 +350,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             elems,
         }));
     }
+
     // Slice `[...]`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
         let group = stream.parse_group(Delim::Bracket)?;
@@ -345,10 +362,12 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             elems,
         }));
     }
+
     // `ref`/`mut`-led binding
     if stream.peek::<Ref>().is_some() || stream.peek::<Mut>().is_some() {
         return Ok(Pattern::Ident(PatIdent::parse_from(stream, attrs)?));
     }
+
     // Literal pattern
     if matches!(stream.curr(), Some(tt) if matches!(tt, TokenTree::Token(Token::Literal(_)))) {
         let expr = stream.parse::<Expr>()?;
@@ -385,6 +404,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
                 elems,
             }));
         }
+
         if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
             stream.seek(&fork);
             let group = stream.parse_group(Delim::Brace)?;

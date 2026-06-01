@@ -16,6 +16,7 @@ pub struct BareFnArg {
 impl Parse for BareFnArg {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
+
         let name = {
             let mut fork = stream.fork();
             if let Ok(id) = fork.parse::<Ident>() {
@@ -30,6 +31,7 @@ impl Parse for BareFnArg {
                 None
             }
         };
+
         let ty = stream.parse::<Type>()?;
         Ok(Self {
             span: Span::default(),
@@ -45,10 +47,12 @@ impl ToTokens for BareFnArg {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         if let Some(n) = &self.name {
             n.to_tokens(t);
             crate::token::punct::Colon::default().to_tokens(t);
         }
+
         self.ty.to_tokens(t);
     }
 }

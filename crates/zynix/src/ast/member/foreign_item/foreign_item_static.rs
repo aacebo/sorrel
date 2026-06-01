@@ -23,9 +23,11 @@ impl Parse for ForeignItemStatic {
         let at = stream.span();
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
+
         if stream.curr().and_then(|t| t.name()).as_deref() != Some("static") {
             return Err(LexError::new(at).message("expected foreign static").into());
         }
+
         let _ = stream.parse::<Static>()?;
         let mutability = stream.parse::<Mutability>()?;
         let ident = stream.parse::<Ident>()?;

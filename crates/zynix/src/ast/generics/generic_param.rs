@@ -41,11 +41,14 @@ impl Parse for GenericParam {
         ) {
             return Ok(GenericParam::Lifetime(stream.parse()?));
         }
+
         let mut fork = stream.fork();
         let _ = fork.parse_vec::<crate::ast::Attribute>();
+
         if fork.peek::<Const>().is_some() {
             return Ok(GenericParam::Const(stream.parse()?));
         }
+
         Ok(GenericParam::Type(stream.parse()?))
     }
 }

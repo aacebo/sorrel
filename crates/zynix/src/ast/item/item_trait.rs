@@ -31,18 +31,22 @@ impl Parse for ItemTrait {
         } else {
             false
         };
+
         let _ = stream.parse::<Trait>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
+
         let supertraits = if stream.peek::<Colon>().is_some() {
             let _ = stream.parse::<Colon>()?;
             crate::ast::TypeBound::parse_bounds(stream)?
         } else {
             Punctuated::new()
         };
+
         if stream.peek::<crate::token::keyword::Where>().is_some() {
             generics.where_clause = Some(stream.parse()?);
         }
+
         let group = stream.parse_group(Delim::Brace)?;
         let mut inner = group.parse();
         let items = inner.parse_vec::<TraitItem>()?;
@@ -66,20 +70,26 @@ impl ToTokens for ItemTrait {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
+
         if self.auto {
             Auto::default().to_tokens(t);
         }
+
         Trait::default().to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
+
         if !self.supertraits.is_empty() {
             Colon::default().to_tokens(t);
             self.supertraits.to_tokens(t);
         }
+
         let mut inner = TokenStream::new();
+
         for it in &self.items {
             it.to_tokens(&mut inner);
         }
+
         t.extend_one(crate::TokenTree::Group(crate::token::Group::new(
             crate::token::Delim::Brace,
             inner,

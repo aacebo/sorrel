@@ -25,9 +25,11 @@ impl Parse for ImplItemType {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
+
         if stream.curr().and_then(|t| t.name()).as_deref() != Some("type") {
             return Err(LexError::new(at).message("expected impl type").into());
         }
+
         let _ = stream.parse::<KwType>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;

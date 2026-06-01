@@ -20,9 +20,11 @@ impl Parse for ForeignItemFn {
         let at = stream.span();
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
+
         if !crate::ast::sig::Signature::is_start(stream) {
             return Err(LexError::new(at).message("expected foreign fn").into());
         }
+
         let sig = stream.parse::<Signature>()?;
         let _ = stream.parse::<Semi>();
         Ok(ForeignItemFn {

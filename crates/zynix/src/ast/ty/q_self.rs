@@ -26,6 +26,7 @@ impl QSelf {
         let rest = stream.parse::<Path>()?;
 
         let mut segments = trait_path.map(|p| p.segments).unwrap_or_default();
+
         for seg in rest.segments {
             segments.push(seg);
         }

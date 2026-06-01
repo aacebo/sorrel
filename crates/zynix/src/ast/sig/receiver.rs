@@ -25,6 +25,7 @@ impl Parse for Receiver {
         } else {
             false
         };
+
         let lifetime = if reference { stream.parse_opt::<Lifetime>() } else { None };
         let mutability = stream.parse::<Mutability>()?;
         let _ = stream.parse::<SelfValue>()?;
@@ -43,12 +44,15 @@ impl ToTokens for Receiver {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         if self.reference {
             And::default().to_tokens(t);
+
             if let Some(l) = &self.lifetime {
                 l.to_tokens(t);
             }
         }
+
         self.mutability.to_tokens(t);
         SelfValue::default().to_tokens(t);
     }

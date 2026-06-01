@@ -35,6 +35,7 @@ impl Parse for UseTree {
             let _ = stream.parse::<Star>()?;
             return Ok(UseTree::Glob(UseGlob { span }));
         }
+
         if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             let group = stream.parse_group(Delim::Brace)?;
             let mut inner = group.parse();

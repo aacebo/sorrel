@@ -40,9 +40,11 @@ impl ToTokens for ItemForeignMod {
         self.unsafety.to_tokens(t);
         self.abi.to_tokens(t);
         let mut inner = TokenStream::new();
+
         for it in &self.items {
             it.to_tokens(&mut inner);
         }
+
         t.extend_one(crate::TokenTree::Group(crate::token::Group::new(
             crate::token::Delim::Brace,
             inner,

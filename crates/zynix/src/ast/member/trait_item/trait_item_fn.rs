@@ -19,16 +19,20 @@ impl Parse for TraitItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
         let attrs = stream.parse_vec::<Attribute>()?;
+
         if !crate::ast::sig::Signature::is_start(stream) {
             return Err(LexError::new(at).message("expected trait fn").into());
         }
+
         let sig = stream.parse::<Signature>()?;
+
         let default_body = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             Some(stream.parse::<StmtBlock>()?)
         } else {
             let _ = stream.parse::<Semi>();
             None
         };
+
         Ok(TraitItemFn {
             span: Span::default(),
             attrs,

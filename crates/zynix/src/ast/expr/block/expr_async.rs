@@ -22,6 +22,7 @@ impl ExprAsync {
         if ExprBrace::is_next(stream) {
             return true;
         }
+
         matches!(stream.nth(1), Some(tt) if tt.name().as_deref() == Some("move"))
             && matches!(stream.nth(2), Some(crate::token::TokenTree::Group(g)) if g.delim() == crate::token::Delim::Brace)
     }
@@ -33,9 +34,11 @@ impl ToTokens for ExprAsync {
             a.to_tokens(t);
         }
         Async::default().to_tokens(t);
+
         if self.capture {
             Move::default().to_tokens(t);
         }
+
         self.block.to_tokens(t);
     }
 }

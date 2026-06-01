@@ -5,7 +5,6 @@ use crate::token::keyword::For;
 use crate::token::punct::{Colon, Comma, Gt, Lt, RArrow};
 use crate::{Parse, Span, TokenStream};
 
-
 #[doc = "A closure parameter, either type-annotated (`pat: ty`) or inferred (`pat`)."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -40,7 +39,6 @@ impl ToTokens for ClosureParam {
     }
 }
 
-
 #[doc = "The optional return type of a function (`-> Type` or nothing)."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -69,7 +67,6 @@ impl ToTokens for ReturnType {
     }
 }
 
-
 #[doc = "A `for<'a, 'b>` higher-ranked lifetime binder."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -83,6 +80,7 @@ impl Parse for BoundLifetimes {
         let _ = stream.parse::<For>()?;
         let _ = stream.parse::<Lt>()?;
         let mut params = Punctuated::new();
+
         while stream.peek::<Gt>().is_none() && !stream.is_empty() {
             params.push_value(stream.parse::<Lifetime>()?);
             if stream.peek::<Comma>().is_some() {
@@ -91,6 +89,7 @@ impl Parse for BoundLifetimes {
                 break;
             }
         }
+
         let _ = stream.parse::<Gt>()?;
         Ok(Self {
             span: Span::default(),

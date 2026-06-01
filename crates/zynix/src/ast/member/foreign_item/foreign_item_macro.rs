@@ -34,6 +34,7 @@ impl ToTokens for ForeignItemMacro {
             a.to_tokens(t);
         }
         self.mac.to_tokens(t);
+
         if self.semi {
             Semi::default().to_tokens(t);
         }

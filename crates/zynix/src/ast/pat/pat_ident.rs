@@ -21,11 +21,14 @@ impl ToTokens for PatIdent {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         if self.by_ref {
             Ref::default().to_tokens(t);
         }
+
         self.mutability.to_tokens(t);
         self.ident.to_tokens(t);
+
         if let Some(sub) = &self.subpat {
             At::default().to_tokens(t);
             sub.to_tokens(t);

@@ -19,9 +19,11 @@ impl ToTokens for ExprWhile {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         if let Some(l) = &self.label {
             l.to_tokens(t);
         }
+
         While::default().to_tokens(t);
         self.cond.to_tokens(t);
         self.body.to_tokens(t);

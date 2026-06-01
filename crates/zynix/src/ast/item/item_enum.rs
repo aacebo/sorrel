@@ -24,9 +24,11 @@ impl Parse for ItemEnum {
         let _ = stream.parse::<Enum>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
+
         if stream.peek::<crate::token::keyword::Where>().is_some() {
             generics.where_clause = Some(stream.parse()?);
         }
+
         let group = stream.parse_group(Delim::Brace)?;
         let mut inner = group.parse();
         let variants = Punctuated::parse_terminated(&mut inner)?;
@@ -72,12 +74,14 @@ impl Parse for Variant {
         let attrs = stream.parse_vec::<Attribute>()?;
         let ident = stream.parse::<Ident>()?;
         let fields = stream.parse::<Fields>()?;
+
         let discriminant = if stream.peek::<Eq>().is_some() {
             let _ = stream.parse::<Eq>()?;
             Some(stream.parse::<Expr>()?)
         } else {
             None
         };
+
         Ok(Self {
             span: Span::default(),
             attrs,
@@ -95,6 +99,7 @@ impl ToTokens for Variant {
         }
         self.ident.to_tokens(t);
         self.fields.to_tokens(t);
+
         if let Some(d) = &self.discriminant {
             Eq::default().to_tokens(t);
             d.to_tokens(t);

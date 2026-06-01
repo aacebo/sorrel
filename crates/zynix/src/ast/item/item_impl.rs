@@ -50,6 +50,7 @@ impl Parse for ItemImpl {
 
         // `impl Trait for Type` vs `impl Type`. Parse a type; if `for` follows, it was the trait.
         let first = stream.parse::<Type>()?;
+
         let (trait_ref, self_ty) = if stream.peek::<For>().is_some() {
             let _ = stream.parse::<For>()?;
             let self_ty = stream.parse::<Type>()?;
@@ -59,6 +60,7 @@ impl Parse for ItemImpl {
         };
 
         let mut generics = generics;
+
         if stream.peek::<crate::token::keyword::Where>().is_some() {
             generics.where_clause = Some(stream.parse()?);
         }
@@ -88,15 +90,19 @@ impl ToTokens for ItemImpl {
         self.unsafety.to_tokens(t);
         Impl::default().to_tokens(t);
         self.generics.to_tokens(t);
+
         if let Some(tr) = &self.trait_ref {
             tr.to_tokens(t);
             For::default().to_tokens(t);
         }
+
         self.self_ty.to_tokens(t);
         let mut inner = TokenStream::new();
+
         for it in &self.items {
             it.to_tokens(&mut inner);
         }
+
         t.extend_one(crate::TokenTree::Group(crate::token::Group::new(
             crate::token::Delim::Brace,
             inner,

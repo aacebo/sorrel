@@ -24,9 +24,11 @@ impl ToTokens for PatStruct {
         self.path.to_tokens(t);
         let mut inner = TokenStream::new();
         self.fields.to_tokens(&mut inner);
+
         if self.rest {
             DotDot::default().to_tokens(&mut inner);
         }
+
         t.extend_one(crate::TokenTree::Group(crate::token::Group::new(
             crate::token::Delim::Brace,
             inner,

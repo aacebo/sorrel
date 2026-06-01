@@ -127,12 +127,14 @@ impl ExprIf {
         let _ = stream.parse::<If>()?;
         let cond = Box::new(super::parse_expr(stream, false)?);
         let then_branch = stream.parse::<StmtBlock>()?;
+
         let else_branch = if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("else")) {
             stream.advance();
             Some(Box::new(super::primary::PrimaryExpr::parse_from(stream, true)?))
         } else {
             None
         };
+
         Ok(Expr::Block(BlockExpr::If(ExprIf {
             span: Span::default(),
             attrs: Vec::new(),
@@ -211,6 +213,7 @@ impl Label {
         if !matches!(stream.curr(), Some(TokenTree::Token(Token::Punct(Punctuation::Quote(_))))) {
             return None;
         }
+
         let name = stream.parse_opt::<Lifetime>()?;
         Some(Label {
             span: Span::default(),

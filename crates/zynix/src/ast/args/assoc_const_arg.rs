@@ -19,11 +19,13 @@ impl Parse for AssocConstArg {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let mut fork = stream.fork();
         let ident = fork.parse::<Ident>()?;
+
         let generics = if fork.peek::<Lt>().is_some() {
             Some(fork.parse::<AngleArgs>()?)
         } else {
             None
         };
+
         let _ = fork.parse::<Eq>()?;
         let expr = fork.parse::<Expr>()?;
         stream.seek(&fork);
@@ -39,9 +41,11 @@ impl Parse for AssocConstArg {
 impl ToTokens for AssocConstArg {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
+
         if let Some(g) = &self.generics {
             g.to_tokens(t);
         }
+
         Eq::default().to_tokens(t);
         self.expr.to_tokens(t);
     }

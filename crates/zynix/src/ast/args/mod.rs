@@ -54,6 +54,7 @@ impl Parse for GenericArgument {
         // Literal or block expression const argument.
         let is_const = matches!(stream.curr(), Some(TokenTree::Token(Token::Literal(_))))
             || matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == crate::token::Delim::Brace);
+
         if is_const {
             return Ok(GenericArgument::Const(stream.parse()?));
         }

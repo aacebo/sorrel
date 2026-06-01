@@ -21,6 +21,7 @@ impl Parse for ItemMacroRules {
         let _ = stream.parse::<MacroRules>()?;
         let _ = stream.parse::<Not>()?;
         let ident = stream.parse::<Ident>()?;
+
         let rules = match stream.curr() {
             Some(TokenTree::Group(g)) => {
                 let s = g.stream();
@@ -31,6 +32,7 @@ impl Parse for ItemMacroRules {
                 return Err(LexError::new(stream.span()).message("expected macro body").into());
             }
         };
+
         Ok(ItemMacroRules {
             span: Span::default(),
             attrs,

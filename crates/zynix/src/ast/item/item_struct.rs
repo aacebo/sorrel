@@ -24,9 +24,11 @@ impl Parse for ItemStruct {
         let _ = stream.parse::<Struct>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
+
         if stream.peek::<crate::token::keyword::Where>().is_some() {
             generics.where_clause = Some(stream.parse()?);
         }
+
         let fields = stream.parse::<Fields>()?;
         let _ = stream.parse::<Semi>();
         Ok(ItemStruct {
@@ -50,6 +52,7 @@ impl ToTokens for ItemStruct {
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
         self.fields.to_tokens(t);
+
         if !matches!(self.fields, Fields::Named(_)) {
             Semi::default().to_tokens(t);
         }

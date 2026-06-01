@@ -25,6 +25,7 @@ impl Parse for ItemMod {
         let unsafety = Unsafety::Safe;
         let _ = stream.parse::<Mod>()?;
         let ident = stream.parse::<Ident>()?;
+
         let content = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             let group = stream.parse_group(Delim::Brace)?;
             let mut inner = group.parse();
@@ -33,6 +34,7 @@ impl Parse for ItemMod {
             let _ = stream.parse::<Semi>();
             None
         };
+
         Ok(ItemMod {
             span: Span::default(),
             attrs,

@@ -20,18 +20,21 @@ impl Parse for TypeParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
         let ident = stream.parse::<Ident>()?;
+
         let bounds = if stream.peek::<Colon>().is_some() {
             let _ = stream.parse::<Colon>()?;
             TypeBound::parse_bounds(stream)?
         } else {
             Punctuated::new()
         };
+
         let default = if stream.peek::<Eq>().is_some() {
             let _ = stream.parse::<Eq>()?;
             Some(stream.parse::<Type>()?)
         } else {
             None
         };
+
         Ok(Self {
             span: Span::default(),
             attrs,

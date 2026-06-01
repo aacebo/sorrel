@@ -21,6 +21,7 @@ impl Parse for FieldDef {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
         let mutability = stream.parse::<Mutability>()?;
+
         let ident = {
             let mut fork = stream.fork();
             if let Ok(id) = fork.parse::<Ident>() {
@@ -35,6 +36,7 @@ impl Parse for FieldDef {
                 None
             }
         };
+
         let ty = stream.parse::<Type>()?;
         Ok(Self {
             span: Span::default(),
@@ -54,10 +56,12 @@ impl ToTokens for FieldDef {
         }
         self.vis.to_tokens(t);
         self.mutability.to_tokens(t);
+
         if let Some(id) = &self.ident {
             id.to_tokens(t);
             Colon::default().to_tokens(t);
         }
+
         self.ty.to_tokens(t);
     }
 }

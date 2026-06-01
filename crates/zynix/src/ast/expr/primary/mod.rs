@@ -156,6 +156,7 @@ impl ExprClosure {
         } else {
             let _ = stream.parse::<Or>()?;
             let mut params = Punctuated::new();
+
             while stream.peek::<Or>().is_none() && !stream.is_empty() {
                 params.push_value(stream.parse::<ClosureParam>()?);
                 if stream.peek::<Comma>().is_some() {
@@ -164,6 +165,7 @@ impl ExprClosure {
                     break;
                 }
             }
+
             let _ = stream.parse::<Or>()?;
             params
         };
@@ -217,9 +219,11 @@ impl ExprRepeat {
         let Ok(elem) = super::parse_expr(&mut fork, true) else {
             return Ok(None);
         };
+
         if fork.peek::<Semi>().is_none() {
             return Ok(None);
         }
+
         let _ = fork.parse::<Semi>()?;
         let len = super::parse_expr(&mut fork, true)?;
         stream.seek(&fork);
@@ -238,6 +242,7 @@ impl Expr {
             return Ok(None);
         }
         let mut fork = stream.fork();
+
         match super::parse_expr(&mut fork, true) {
             Ok(e) => {
                 stream.seek(&fork);
@@ -288,15 +293,19 @@ impl PrimaryExpr {
         // Labeled block / loop: `'a: { }`, `'a: loop { }`, etc.
         if Label::is_prefix(stream) {
             let label = Some(stream.parse::<Label>()?);
+
             if stream.peek::<crate::token::keyword::While>().is_some() {
                 return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(stream, label)?)));
             }
+
             if stream.peek::<crate::token::keyword::For>().is_some() {
                 return Ok(Expr::Block(BlockExpr::ForLoop(ExprForLoop::parse_from(stream, label)?)));
             }
+
             if stream.peek::<crate::token::keyword::Loop>().is_some() {
                 return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(stream, label)?)));
             }
+
             return Ok(Expr::Block(BlockExpr::Brace(ExprBrace {
                 span: Span::default(),
                 attrs: Vec::new(),
@@ -317,18 +326,23 @@ impl PrimaryExpr {
         if stream.peek::<crate::token::keyword::If>().is_some() {
             return ExprIf::parse_from(stream);
         }
+
         if stream.peek::<crate::token::keyword::While>().is_some() {
             return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(stream, None)?)));
         }
+
         if stream.peek::<crate::token::keyword::For>().is_some() {
             return Ok(Expr::Block(BlockExpr::ForLoop(ExprForLoop::parse_from(stream, None)?)));
         }
+
         if stream.peek::<crate::token::keyword::Loop>().is_some() {
             return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(stream, None)?)));
         }
+
         if stream.peek::<crate::token::keyword::Match>().is_some() {
             return ExprMatch::parse_from(stream);
         }
+
         if stream.peek::<Unsafe>().is_some() {
             let _ = stream.parse::<Unsafe>()?;
             return Ok(Expr::Block(BlockExpr::Unsafe(ExprUnsafe {
@@ -337,6 +351,7 @@ impl PrimaryExpr {
                 block: stream.parse()?,
             })));
         }
+
         // `const { }` block (vs `const` closure, which has `|`/`move` next).
         if stream.peek::<Const>().is_some() && ExprBrace::is_next(stream) {
             let _ = stream.parse::<Const>()?;
@@ -346,16 +361,19 @@ impl PrimaryExpr {
                 block: stream.parse()?,
             })));
         }
+
         // `async { }` / `async move { }` block (vs `async` closure).
         if stream.peek::<crate::token::keyword::Async>().is_some() && ExprAsync::is_block(stream) {
             use crate::token::keyword::Move;
             let _ = stream.parse::<crate::token::keyword::Async>()?;
+
             let capture = if stream.peek::<Move>().is_some() {
                 let _ = stream.parse::<Move>()?;
                 true
             } else {
                 false
             };
+
             return Ok(Expr::Block(BlockExpr::Async(ExprAsync {
                 span: Span::default(),
                 attrs: Vec::new(),
@@ -363,6 +381,7 @@ impl PrimaryExpr {
                 block: stream.parse()?,
             })));
         }
+
         // `try { }` block.
         if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("try")) && ExprBrace::is_next(stream) {
             stream.advance();
@@ -372,6 +391,7 @@ impl PrimaryExpr {
                 block: stream.parse()?,
             })));
         }
+
         if stream.peek::<Return>().is_some() {
             let _ = stream.parse::<Return>()?;
             return Ok(Expr::Jump(JumpExpr::Return(ExprReturn {
@@ -380,6 +400,7 @@ impl PrimaryExpr {
                 expr: Expr::parse_opt(stream)?,
             })));
         }
+
         if stream.peek::<Yield>().is_some() {
             let _ = stream.parse::<Yield>()?;
             return Ok(Expr::Jump(JumpExpr::Yield(ExprYield {
@@ -388,6 +409,7 @@ impl PrimaryExpr {
                 expr: Expr::parse_opt(stream)?,
             })));
         }
+
         if stream.peek::<Break>().is_some() {
             let _ = stream.parse::<Break>()?;
             let label = Label::parse_opt_break(stream);
@@ -398,6 +420,7 @@ impl PrimaryExpr {
                 expr: Expr::parse_opt(stream)?,
             })));
         }
+
         if stream.peek::<Continue>().is_some() {
             let _ = stream.parse::<Continue>()?;
             let label = Label::parse_opt_break(stream);
@@ -407,6 +430,7 @@ impl PrimaryExpr {
                 label,
             })));
         }
+
         if stream.peek::<Let>().is_some() {
             let _ = stream.parse::<Let>()?;
             let pat = Box::new(stream.parse::<Pattern>()?);
@@ -419,6 +443,7 @@ impl PrimaryExpr {
                 expr,
             })));
         }
+
         if ExprClosure::is_start(stream) {
             return Ok(Expr::Primary(PrimaryExpr::Closure(ExprClosure::parse_from(stream)?)));
         }
@@ -460,6 +485,7 @@ impl PrimaryExpr {
         ) {
             use crate::ast::Path;
             let path = stream.parse::<Path>()?;
+
             if allow_struct && matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
                 let group = stream.parse_group(Delim::Brace)?;
                 let mut inner = group.parse();
@@ -473,6 +499,7 @@ impl PrimaryExpr {
                     rest,
                 })));
             }
+
             return Ok(Expr::Primary(PrimaryExpr::Path(ExprPath {
                 span: Span::default(),
                 attrs: Vec::new(),

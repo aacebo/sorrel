@@ -40,6 +40,7 @@ impl TypePath {
             if i > 0 {
                 PathSep::default().to_tokens(tokens);
             }
+
             seg.to_tokens(tokens);
         }
     }

@@ -18,6 +18,7 @@ impl ToTokens for ExprYield {
             a.to_tokens(t);
         }
         Yield::default().to_tokens(t);
+
         if let Some(e) = &self.expr {
             e.to_tokens(t);
         }

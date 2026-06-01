@@ -19,14 +19,17 @@ impl TypeBound {
     ) -> Result<crate::ast::Punctuated<Self, crate::token::punct::Plus>, crate::parse::ParseError> {
         use crate::token::punct::Plus;
         let mut bounds = crate::ast::Punctuated::new();
+
         loop {
             bounds.push_value(stream.parse::<TypeBound>()?);
+
             if stream.peek::<Plus>().is_some() {
                 bounds.push_punct(stream.parse::<Plus>()?);
             } else {
                 break;
             }
         }
+
         Ok(bounds)
     }
 }
@@ -53,9 +56,11 @@ impl Parse for TypeBound {
         ) {
             return Ok(TypeBound::Lifetime(stream.parse()?));
         }
+
         if stream.peek::<crate::token::keyword::Use>().is_some() {
             return Ok(TypeBound::Use(stream.parse()?));
         }
+
         Ok(TypeBound::Trait(stream.parse()?))
     }
 }

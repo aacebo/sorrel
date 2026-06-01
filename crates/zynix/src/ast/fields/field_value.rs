@@ -60,6 +60,7 @@ impl ToTokens for FieldValue {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         if self.shorthand {
             self.member.to_tokens(t);
         } else {

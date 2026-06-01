@@ -26,9 +26,11 @@ impl Parse for ImplItemConst {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
+
         if stream.curr().and_then(|t| t.name()).as_deref() != Some("const") {
             return Err(LexError::new(at).message("expected impl const").into());
         }
+
         let _ = stream.parse::<Const>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;

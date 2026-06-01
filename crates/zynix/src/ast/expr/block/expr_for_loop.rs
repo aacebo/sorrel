@@ -20,9 +20,11 @@ impl ToTokens for ExprForLoop {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         if let Some(l) = &self.label {
             l.to_tokens(t);
         }
+
         For::default().to_tokens(t);
         self.pat.to_tokens(t);
         In::default().to_tokens(t);

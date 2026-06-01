@@ -18,6 +18,7 @@ impl Parse for WhereClause {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let _ = stream.parse::<Where>()?;
         let mut predicates = Punctuated::new();
+
         while !stream.is_empty() && !matches!(stream.curr(), Some(crate::TokenTree::Group(_))) {
             predicates.push_value(stream.parse::<WherePredicate>()?);
             if stream.peek::<Comma>().is_some() {
@@ -26,6 +27,7 @@ impl Parse for WhereClause {
                 break;
             }
         }
+
         Ok(Self {
             span: Span::default(),
             predicates,

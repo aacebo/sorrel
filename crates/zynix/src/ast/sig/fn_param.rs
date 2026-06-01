@@ -18,15 +18,18 @@ impl FnParam {
     pub fn is_receiver(stream: &mut ParseStream) -> bool {
         let mut fork = stream.fork();
         let _ = fork.parse_vec::<crate::ast::Attribute>();
+
         if fork.peek::<SelfValue>().is_some() {
             return true;
         }
+
         if fork.peek::<And>().is_some() {
             let _ = fork.parse::<And>();
             let _ = fork.parse_opt::<Lifetime>();
             let _ = fork.parse::<Mutability>();
             return fork.peek::<SelfValue>().is_some();
         }
+
         false
     }
 }
@@ -36,6 +39,7 @@ impl Parse for FnParam {
         if FnParam::is_receiver(stream) {
             return Ok(FnParam::Receiver(Box::new(stream.parse()?)));
         }
+
         Ok(FnParam::Typed(Box::new(stream.parse()?)))
     }
 }

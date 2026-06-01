@@ -17,6 +17,7 @@ impl Parse for AngleArgs {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let _ = stream.parse::<Lt>()?;
         let mut args = Punctuated::new();
+
         while !stream.peek_angle_close() && !stream.is_empty() {
             args.push_value(stream.parse::<GenericArgument>()?);
             if stream.peek::<Comma>().is_some() {
@@ -25,6 +26,7 @@ impl Parse for AngleArgs {
                 break;
             }
         }
+
         stream.eat_angle_close()?;
         Ok(Self {
             span: Span::default(),

@@ -21,6 +21,7 @@ impl Parse for WherePredicate {
         ) {
             return Ok(WherePredicate::Lifetime(stream.parse()?));
         }
+
         Ok(WherePredicate::Type(Box::new(stream.parse()?)))
     }
 }

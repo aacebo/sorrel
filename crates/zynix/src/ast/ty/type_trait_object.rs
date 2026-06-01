@@ -22,6 +22,7 @@ impl Parse for TypeTraitObject {
         } else {
             false
         };
+
         let bounds = crate::ast::TypeBound::parse_bounds(stream)?;
         Ok(Self {
             span: Span::default(),
@@ -36,6 +37,7 @@ impl ToTokens for TypeTraitObject {
         if self.dyn_token {
             Dyn::default().to_tokens(t);
         }
+
         self.bounds.to_tokens(t);
     }
 }

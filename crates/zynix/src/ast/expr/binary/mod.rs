@@ -101,6 +101,7 @@ impl BinaryExpr {
                     }));
                     continue;
                 }
+
                 if let Some(op) = stream.peek::<AssignOp>() {
                     let _ = stream.parse::<AssignOp>()?;
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);

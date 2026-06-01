@@ -29,11 +29,13 @@ impl ExprClosure {
         if stream.peek::<Or>().is_some() || stream.peek::<OrOr>().is_some() || stream.peek::<Move>().is_some() {
             return true;
         }
+
         let leads_closure = matches!(
             stream.nth(1),
             Some(TokenTree::Token(Token::Punct(Punctuation::Or(_) | Punctuation::OrOr(_))))
                 | Some(TokenTree::Token(Token::Keyword(_)))
         );
+
         (stream.peek::<Const>().is_some() || stream.peek::<crate::token::keyword::Async>().is_some())
             && leads_closure
             && !super::super::block::ExprBrace::is_next(stream)

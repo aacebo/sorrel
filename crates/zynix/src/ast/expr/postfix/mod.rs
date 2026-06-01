@@ -90,9 +90,11 @@ impl PostfixExpr {
                 }
 
                 let member = stream.parse::<Member>()?;
+
                 if let Member::Named(method) = &member {
                     // Optional turbofish `::<...>` before the call parens.
                     let turbofish = ExprMethodCall::parse_turbofish(stream)?;
+
                     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
                         let method = method.clone();
                         let group = stream.parse_group(Delim::Paren)?;

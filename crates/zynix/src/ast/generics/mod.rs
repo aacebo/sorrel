@@ -45,6 +45,7 @@ impl Parse for Generics {
         let params = if stream.peek::<Lt>().is_some() {
             let _ = stream.parse::<Lt>()?;
             let mut params = Punctuated::new();
+
             while !stream.peek_angle_close() && !stream.is_empty() {
                 params.push_value(stream.parse::<GenericParam>()?);
                 if stream.peek::<Comma>().is_some() {
@@ -53,6 +54,7 @@ impl Parse for Generics {
                     break;
                 }
             }
+
             stream.eat_angle_close()?;
             params
         } else {

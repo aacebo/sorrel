@@ -22,9 +22,11 @@ impl Parse for ImplItemFn {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
+
         if !crate::ast::sig::Signature::is_start(stream) {
             return Err(LexError::new(at).message("expected impl fn").into());
         }
+
         let sig = stream.parse::<Signature>()?;
         let body = stream.parse::<StmtBlock>()?;
         Ok(ImplItemFn {

@@ -23,12 +23,14 @@ impl Parse for ConstParam {
         let ident = stream.parse::<Ident>()?;
         let _ = stream.parse::<Colon>()?;
         let ty = stream.parse::<Type>()?;
+
         let default = if stream.peek::<Eq>().is_some() {
             let _ = stream.parse::<Eq>()?;
             Some(stream.parse::<Expr>()?)
         } else {
             None
         };
+
         Ok(Self {
             span: Span::default(),
             attrs,

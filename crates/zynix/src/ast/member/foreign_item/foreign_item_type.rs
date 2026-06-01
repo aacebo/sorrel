@@ -22,9 +22,11 @@ impl Parse for ForeignItemType {
         let at = stream.span();
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
+
         if stream.curr().and_then(|t| t.name()).as_deref() != Some("type") {
             return Err(LexError::new(at).message("expected foreign type").into());
         }
+
         let _ = stream.parse::<KwType>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;

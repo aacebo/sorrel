@@ -45,12 +45,14 @@ impl Parse for MatchArm {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
         let pat = stream.parse::<Pattern>()?;
+
         let guard = if stream.peek::<If>().is_some() {
             let _ = stream.parse::<If>()?;
             Some(Box::new(stream.parse::<Expr>()?))
         } else {
             None
         };
+
         let _ = stream.parse::<FatArrow>()?;
         let body = stream.parse::<Expr>()?;
         let _ = stream.parse::<Comma>();
@@ -70,10 +72,12 @@ impl ToTokens for MatchArm {
             a.to_tokens(t);
         }
         self.pat.to_tokens(t);
+
         if let Some(g) = &self.guard {
             If::default().to_tokens(t);
             g.to_tokens(t);
         }
+
         FatArrow::default().to_tokens(t);
         self.body.to_tokens(t);
         Comma::default().to_tokens(t);

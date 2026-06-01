@@ -16,9 +16,11 @@ impl Parse for StmtBlock {
         let group = stream.parse_group(Delim::Brace)?;
         let mut inner = group.parse();
         let mut stmts = Vec::new();
+
         while !inner.is_empty() {
             stmts.push(inner.parse::<Stmt>()?);
         }
+
         Ok(Self {
             span: Span::default(),
             stmts,
@@ -29,9 +31,11 @@ impl Parse for StmtBlock {
 impl ToTokens for StmtBlock {
     fn to_tokens(&self, t: &mut TokenStream) {
         let mut inner = TokenStream::new();
+
         for s in &self.stmts {
             s.to_tokens(&mut inner);
         }
+
         t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
     }
 }

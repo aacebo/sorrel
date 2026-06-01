@@ -34,6 +34,7 @@ impl ToTokens for LifetimeParam {
             a.to_tokens(t);
         }
         self.lifetime.to_tokens(t);
+
         if !self.bounds.is_empty() {
             Colon::default().to_tokens(t);
             self.bounds.to_tokens(t);

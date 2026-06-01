@@ -141,6 +141,7 @@ impl Parse for Type {
             let group = stream.parse_group(Delim::Bracket)?;
             let mut inner = group.parse();
             let elem = Box::new(inner.parse::<Type>()?);
+
             if inner.peek::<crate::token::punct::Semi>().is_some() {
                 let _ = inner.parse::<crate::token::punct::Semi>()?;
                 let len = inner.parse::<crate::ast::Expr>()?;
@@ -150,6 +151,7 @@ impl Parse for Type {
                     len,
                 }));
             }
+
             return Ok(Type::Slice(TypeSlice {
                 span: Span::default(),
                 elem,

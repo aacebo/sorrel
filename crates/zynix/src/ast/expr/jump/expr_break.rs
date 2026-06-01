@@ -19,9 +19,11 @@ impl ToTokens for ExprBreak {
             a.to_tokens(t);
         }
         Break::default().to_tokens(t);
+
         if let Some(l) = &self.label {
             l.name.to_tokens(t);
         }
+
         if let Some(e) = &self.expr {
             e.to_tokens(t);
         }

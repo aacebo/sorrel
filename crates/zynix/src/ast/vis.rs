@@ -31,12 +31,15 @@ impl Parse for Visibility {
             if inner.peek::<Crate>().is_some() {
                 return Ok(Visibility::Crate);
             }
+
             if inner.peek::<SelfValue>().is_some() {
                 return Ok(Visibility::SelfValue);
             }
+
             if inner.peek::<Super>().is_some() {
                 return Ok(Visibility::Super);
             }
+
             // `pub(in path)`
             let in_token = if inner.peek::<In>().is_some() {
                 let _ = inner.parse::<In>()?;
@@ -44,6 +47,7 @@ impl Parse for Visibility {
             } else {
                 false
             };
+
             let path = inner.parse::<Path>()?;
             return Ok(Visibility::Restricted { in_token, path });
         }
@@ -78,9 +82,11 @@ impl ToTokens for Visibility {
             Visibility::Restricted { in_token, path } => {
                 Pub::default().to_tokens(t);
                 let mut inner = TokenStream::new();
+
                 if *in_token {
                     In::default().to_tokens(&mut inner);
                 }
+
                 path.to_tokens(&mut inner);
                 t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
             }

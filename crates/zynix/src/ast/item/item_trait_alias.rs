@@ -22,10 +22,12 @@ impl Parse for ItemTraitAlias {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
         let _unsafety = stream.parse::<Unsafety>()?;
+
         // skip optional `auto`
         if stream.peek::<Auto>().is_some() {
             let _ = stream.parse::<Auto>()?;
         }
+
         let _ = stream.parse::<Trait>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;

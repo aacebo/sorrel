@@ -23,10 +23,12 @@ impl ToTokens for ExprStruct {
         self.path.to_tokens(t);
         let mut inner = TokenStream::new();
         self.fields.to_tokens(&mut inner);
+
         if let Some(rest) = &self.rest {
             DotDot::default().to_tokens(&mut inner);
             rest.to_tokens(&mut inner);
         }
+
         t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
     }
 }

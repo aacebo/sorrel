@@ -21,7 +21,9 @@ impl ExprRange {
         if stream.is_empty() || stream.peek::<Semi>().is_some() || stream.peek::<Comma>().is_some() {
             return Ok(None);
         }
+
         let mut fork = stream.fork();
+
         match super::super::unary::UnaryExpr::parse_from(&mut fork, allow_struct) {
             Ok(e) => {
                 use crate::ast::precedence::Precedence;
@@ -39,10 +41,13 @@ impl ToTokens for ExprRange {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         if let Some(s) = &self.start {
             s.to_tokens(t);
         }
+
         self.limits.to_tokens(t);
+
         if let Some(e) = &self.end {
             e.to_tokens(t);
         }

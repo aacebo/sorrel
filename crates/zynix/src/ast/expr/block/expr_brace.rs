@@ -25,9 +25,11 @@ impl ToTokens for ExprBrace {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         if let Some(l) = &self.label {
             l.to_tokens(t);
         }
+
         self.block.to_tokens(t);
     }
 }

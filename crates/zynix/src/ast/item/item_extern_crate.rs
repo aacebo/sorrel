@@ -23,12 +23,14 @@ impl Parse for ItemExternCrate {
         let _ = stream.parse::<Extern>()?;
         let _ = stream.parse::<Crate>()?;
         let ident = stream.parse::<Ident>()?;
+
         let rename = if stream.peek::<As>().is_some() {
             let _ = stream.parse::<As>()?;
             Some(stream.parse::<Ident>()?)
         } else {
             None
         };
+
         let _ = stream.parse::<Semi>();
         Ok(ItemExternCrate {
             span: Span::default(),
@@ -49,10 +51,12 @@ impl ToTokens for ItemExternCrate {
         Extern::default().to_tokens(t);
         Crate::default().to_tokens(t);
         self.ident.to_tokens(t);
+
         if let Some(r) = &self.rename {
             As::default().to_tokens(t);
             r.to_tokens(t);
         }
+
         Semi::default().to_tokens(t);
     }
 }

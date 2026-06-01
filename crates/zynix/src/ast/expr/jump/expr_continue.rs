@@ -18,6 +18,7 @@ impl ToTokens for ExprContinue {
             a.to_tokens(t);
         }
         Continue::default().to_tokens(t);
+
         if let Some(l) = &self.label {
             l.name.to_tokens(t);
         }

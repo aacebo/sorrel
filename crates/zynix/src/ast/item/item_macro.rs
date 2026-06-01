@@ -19,12 +19,14 @@ impl Parse for ItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
         let mac = stream.parse::<MacroCall>()?;
+
         let semi = if stream.peek::<Semi>().is_some() {
             let _ = stream.parse::<Semi>()?;
             true
         } else {
             false
         };
+
         Ok(ItemMacro {
             span: Span::default(),
             attrs,
@@ -41,6 +43,7 @@ impl ToTokens for ItemMacro {
             a.to_tokens(t);
         }
         self.mac.to_tokens(t);
+
         if self.semi {
             Semi::default().to_tokens(t);
         }

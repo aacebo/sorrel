@@ -22,20 +22,24 @@ impl Parse for TraitItemConst {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
         let attrs = stream.parse_vec::<Attribute>()?;
+
         if stream.curr().and_then(|t| t.name()).as_deref() != Some("const") {
             return Err(LexError::new(at).message("expected trait const").into());
         }
+
         let _ = stream.parse::<Const>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let _ = stream.parse::<Colon>()?;
         let ty = stream.parse::<Type>()?;
+
         let default = if stream.peek::<Eq>().is_some() {
             let _ = stream.parse::<Eq>()?;
             Some(stream.parse::<Expr>()?)
         } else {
             None
         };
+
         let _ = stream.parse::<Semi>();
         Ok(TraitItemConst {
             span: Span::default(),
@@ -58,10 +62,12 @@ impl ToTokens for TraitItemConst {
         self.generics.to_tokens(t);
         Colon::default().to_tokens(t);
         self.ty.to_tokens(t);
+
         if let Some(d) = &self.default {
             Eq::default().to_tokens(t);
             d.to_tokens(t);
         }
+
         Semi::default().to_tokens(t);
     }
 }
