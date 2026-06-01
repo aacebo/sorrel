@@ -1,8 +1,7 @@
-use crate::ast::{Lifetime, Type, TypeBound};
+use crate::ast::{Lifetime, Type};
 use crate::parse::{ParseError, ParseStream};
-use crate::token::punct::{Comma, Eq, Lt, Plus};
 use crate::token::{ToTokens, Token, TokenTree};
-use crate::{Parse, Span, TokenStream};
+use crate::{Parse, TokenStream};
 
 mod angle_args;
 mod assoc_const_arg;
@@ -28,6 +27,7 @@ pub enum GenericArgument {
 
 impl Parse for GenericArgument {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        // Lifetime: starts with `'`.
         if matches!(
             stream.curr(),
             Some(TokenTree::Token(Token::Punct(crate::token::Punctuation::Quote(_))))
@@ -35,10 +35,23 @@ impl Parse for GenericArgument {
             return Ok(GenericArgument::Lifetime(stream.parse()?));
         }
 
-        if let Some(arg) = try_assoc_or_constraint(stream)? {
-            return Ok(arg);
+        // Constraint `ident [generics] : bounds` — must come before AssocType/AssocConst
+        // because `:` is unambiguous.
+        if stream.peek::<ConstraintArg>().is_some() {
+            return Ok(GenericArgument::Constraint(stream.parse()?));
         }
 
+        // Associated type binding `ident [generics] = Type`.
+        if stream.peek::<AssocTypeArg>().is_some() {
+            return Ok(GenericArgument::AssocType(stream.parse()?));
+        }
+
+        // Associated const binding `ident [generics] = expr`.
+        if stream.peek::<AssocConstArg>().is_some() {
+            return Ok(GenericArgument::AssocConst(stream.parse()?));
+        }
+
+        // Literal or block expression const argument.
         let is_const = matches!(stream.curr(), Some(TokenTree::Token(Token::Literal(_))))
             || matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == crate::token::Delim::Brace);
         if is_const {
@@ -60,61 +73,4 @@ impl ToTokens for GenericArgument {
             GenericArgument::Constraint(v) => v.to_tokens(t),
         }
     }
-}
-
-fn try_assoc_or_constraint(stream: &mut ParseStream) -> Result<Option<GenericArgument>, ParseError> {
-    let mut fork = stream.fork();
-
-    let Ok(ident) = fork.parse::<crate::ast::Ident>() else {
-        return Ok(None);
-    };
-    let generics = if fork.peek::<Lt>().is_some() {
-        Some(fork.parse::<AngleArgs>()?)
-    } else {
-        None
-    };
-
-    if fork.peek::<Eq>().is_some() {
-        let _ = fork.parse::<Eq>()?;
-        let mut ty_fork = fork.fork();
-        if let Ok(ty) = ty_fork.parse::<Type>() {
-            stream.seek(&ty_fork);
-            return Ok(Some(GenericArgument::AssocType(AssocTypeArg {
-                span: Span::default(),
-                ident,
-                generics,
-                ty,
-            })));
-        }
-        let expr = fork.parse::<crate::ast::Expr>()?;
-        stream.seek(&fork);
-        return Ok(Some(GenericArgument::AssocConst(AssocConstArg {
-            span: Span::default(),
-            ident,
-            generics,
-            expr,
-        })));
-    }
-
-    if fork.peek::<crate::token::punct::Colon>().is_some() {
-        let _ = fork.parse::<crate::token::punct::Colon>()?;
-        let mut bounds = crate::ast::Punctuated::new();
-        loop {
-            bounds.push_value(fork.parse::<TypeBound>()?);
-            if fork.peek::<Plus>().is_some() {
-                bounds.push_punct(fork.parse::<Plus>()?);
-            } else {
-                break;
-            }
-        }
-        stream.seek(&fork);
-        return Ok(Some(GenericArgument::Constraint(ConstraintArg {
-            span: Span::default(),
-            ident,
-            generics,
-            bounds,
-        })));
-    }
-
-    Ok(None)
 }

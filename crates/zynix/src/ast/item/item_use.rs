@@ -1,4 +1,3 @@
-use super::emit_attrs;
 use crate::ast::{Attribute, UseTree, Visibility};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -34,7 +33,7 @@ impl Parse for ItemUse {
 
 impl ToTokens for ItemUse {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs { a.to_tokens(t); }
         self.vis.to_tokens(t);
         Use::default().to_tokens(t);
         self.tree.to_tokens(t);

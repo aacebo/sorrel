@@ -1,4 +1,3 @@
-use super::emit_attrs;
 use crate::ast::{Attribute, FieldsNamed, Generics, Ident, Visibility};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -38,7 +37,7 @@ impl Parse for ItemUnion {
 
 impl ToTokens for ItemUnion {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs { a.to_tokens(t); }
         self.vis.to_tokens(t);
         Union::default().to_tokens(t);
         self.ident.to_tokens(t);

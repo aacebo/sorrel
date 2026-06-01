@@ -20,10 +20,22 @@ pub struct ForeignItemType {
 impl Parse for ForeignItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        match ForeignItem::parse(stream)? {
-            ForeignItem::Type(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected foreign type").into()),
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        if !crate::ast::member::is_kw(stream.curr(), "type") {
+            return Err(LexError::new(at).message("expected foreign type").into());
         }
+        let _ = stream.parse::<KwType>()?;
+        let ident = stream.parse::<Ident>()?;
+        let generics = stream.parse::<Generics>()?;
+        let _ = stream.parse::<Semi>();
+        Ok(ForeignItemType {
+            span: Span::default(),
+            attrs,
+            vis,
+            ident,
+            generics,
+        })
     }
 }
 

@@ -1,4 +1,3 @@
-use super::emit_attrs;
 use crate::ast::{Attribute, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibility};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -46,7 +45,7 @@ impl Parse for ItemTraitAlias {
 
 impl ToTokens for ItemTraitAlias {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs { a.to_tokens(t); }
         self.vis.to_tokens(t);
         Trait::default().to_tokens(t);
         self.ident.to_tokens(t);

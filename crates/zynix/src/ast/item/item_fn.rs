@@ -1,4 +1,3 @@
-use super::emit_attrs;
 use crate::ast::{Attribute, Defaultness, Signature, StmtBlock, Visibility};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -36,7 +35,7 @@ impl Parse for ItemFn {
 
 impl ToTokens for ItemFn {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs { a.to_tokens(t); }
         self.vis.to_tokens(t);
         self.defaultness.to_tokens(t);
         self.sig.to_tokens(t);

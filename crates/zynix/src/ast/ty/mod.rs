@@ -1,4 +1,4 @@
-use crate::ast::{MacroCall, Punctuated, TypeBound};
+use crate::ast::{Punctuated, TypeBound};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::{Dyn, Impl};
 use crate::token::punct::{And, Comma, Plus, Star};
@@ -10,6 +10,7 @@ mod type_array;
 mod type_bare_fn;
 mod type_group;
 mod type_impl_trait;
+mod type_macro;
 mod type_paren;
 mod type_path;
 mod type_pointer;
@@ -24,6 +25,7 @@ pub use type_array::*;
 pub use type_bare_fn::*;
 pub use type_group::*;
 pub use type_impl_trait::*;
+pub use type_macro::*;
 pub use type_paren::*;
 pub use type_path::*;
 pub use type_pointer::*;
@@ -64,7 +66,7 @@ pub enum Type {
     TraitObject(TypeTraitObject),
     Paren(TypeParen),
     Group(TypeGroup),
-    Macro(MacroCall),
+    Macro(TypeMacro),
 }
 
 macro_rules! impl_from {
@@ -93,27 +95,32 @@ impl_from! {
 
 impl Parse for Type {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        // `&` reference, `*` raw pointer, `[` slice — disambiguated by the
-        // leading token.
+        // `&` reference.
         if stream.peek::<And>().is_some() {
             return Ok(Type::Reference(stream.parse()?));
         }
 
+        // `*` raw pointer.
         if stream.peek::<Star>().is_some() {
             return Ok(Type::Pointer(stream.parse()?));
         }
 
-        // Never `!` and infer `_`.
+        // Never `!`.
         if stream.peek::<crate::token::punct::Not>().is_some() {
             let _ = stream.parse::<crate::token::punct::Not>()?;
             return Ok(Type::Never);
         }
+
+        // Infer `_`.
         if matches!(stream.curr(), Some(tt) if is_named(tt, "_")) {
             stream.advance();
             return Ok(Type::Infer);
         }
 
         // `[T]` slice or `[T; N]` array — decided by a `;` inside the brackets.
+        // Both share the same `[` token so we disambiguate inline after peeking
+        // inside the group rather than calling `TypeArray::parse` or
+        // `TypeSlice::parse` individually (which would each consume the group).
         if matches!(stream.curr(), Some(tt) if is_group(tt, Delim::Bracket)) {
             let group = stream.parse_group(Delim::Bracket)?;
             let mut inner = group.parse();
@@ -133,10 +140,12 @@ impl Parse for Type {
             }));
         }
 
-        // `impl Trait` / `dyn Trait`.
+        // `impl Trait`.
         if stream.peek::<Impl>().is_some() {
             return Ok(Type::ImplTrait(stream.parse()?));
         }
+
+        // `dyn Trait`.
         if stream.peek::<Dyn>().is_some() {
             return Ok(Type::TraitObject(stream.parse()?));
         }
@@ -144,13 +153,14 @@ impl Parse for Type {
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
         if stream.peek::<crate::token::keyword::Fn>().is_some()
             || stream.peek::<crate::token::keyword::Extern>().is_some()
-            || (stream.peek::<crate::token::keyword::Unsafe>().is_some())
+            || stream.peek::<crate::token::keyword::Unsafe>().is_some()
         {
             return Ok(Type::BareFn(stream.parse()?));
         }
 
         // `(...)` — one element with no trailing comma is a parenthesized type;
         // anything else (empty, multiple, or trailing comma) is a tuple.
+        // Both variants share the same `(` token so we disambiguate inline.
         if matches!(stream.curr(), Some(tt) if is_group(tt, Delim::Paren)) {
             let group = stream.parse_group(Delim::Paren)?;
             let mut inner = group.parse();
@@ -170,7 +180,7 @@ impl Parse for Type {
         }
 
         // Macro type `m!(...)` — a path followed by `!`.
-        if let Some(mac) = stream.parse_opt::<MacroCall>() {
+        if let Some(mac) = stream.parse_opt::<TypeMacro>() {
             return Ok(Type::Macro(mac));
         }
 

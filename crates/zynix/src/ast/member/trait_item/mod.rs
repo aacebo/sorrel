@@ -1,9 +1,6 @@
-use crate::ast::Attribute;
 use crate::parse::{ParseError, ParseStream};
-use crate::token::keyword::{Const, Type as KwType};
-use crate::token::punct::{Colon, Eq, Semi};
-use crate::token::{Delim, ToTokens, TokenTree};
-use crate::{Parse, Span, TokenStream};
+use crate::token::ToTokens;
+use crate::{Parse, TokenStream};
 
 mod trait_item_const;
 mod trait_item_fn;
@@ -39,78 +36,16 @@ impl_from! {
 
 impl Parse for TraitItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
-
-        if super::is_kw(stream.curr(), "const") {
-            let _ = stream.parse::<Const>()?;
-            let ident = stream.parse::<crate::ast::Ident>()?;
-            let generics = stream.parse::<crate::ast::Generics>()?;
-            let _ = stream.parse::<Colon>()?;
-            let ty = stream.parse::<crate::ast::Type>()?;
-            let default = if stream.peek::<Eq>().is_some() {
-                let _ = stream.parse::<Eq>()?;
-                Some(stream.parse::<crate::ast::Expr>()?)
-            } else {
-                None
-            };
-            let _ = stream.parse::<Semi>();
-            return Ok(TraitItem::Const(TraitItemConst {
-                span: Span::default(),
-                attrs,
-                ident,
-                generics,
-                ty,
-                default,
-            }));
+        if stream.peek::<TraitItemConst>().is_some() {
+            return Ok(TraitItem::Const(stream.parse()?));
         }
-        if super::is_kw(stream.curr(), "type") {
-            let _ = stream.parse::<KwType>()?;
-            let ident = stream.parse::<crate::ast::Ident>()?;
-            let generics = stream.parse::<crate::ast::Generics>()?;
-            let bounds = if stream.peek::<Colon>().is_some() {
-                let _ = stream.parse::<Colon>()?;
-                super::parse_plus_bounds(stream)?
-            } else {
-                crate::ast::Punctuated::new()
-            };
-            let default = if stream.peek::<Eq>().is_some() {
-                let _ = stream.parse::<Eq>()?;
-                Some(stream.parse::<crate::ast::Type>()?)
-            } else {
-                None
-            };
-            let _ = stream.parse::<Semi>();
-            return Ok(TraitItem::Type(TraitItemType {
-                span: Span::default(),
-                attrs,
-                ident,
-                generics,
-                bounds,
-                default,
-            }));
+        if stream.peek::<TraitItemType>().is_some() {
+            return Ok(TraitItem::Type(stream.parse()?));
         }
-        if super::is_fn_start(stream) {
-            let sig = stream.parse::<crate::ast::Signature>()?;
-            let default_body = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-                Some(stream.parse::<crate::ast::StmtBlock>()?)
-            } else {
-                let _ = stream.parse::<Semi>();
-                None
-            };
-            return Ok(TraitItem::Fn(TraitItemFn {
-                span: Span::default(),
-                attrs,
-                sig,
-                default_body,
-            }));
+        if stream.peek::<TraitItemFn>().is_some() {
+            return Ok(TraitItem::Fn(stream.parse()?));
         }
-        let (mac, semi) = super::parse_semi_macro(stream, Vec::new())?;
-        Ok(TraitItem::Macro(TraitItemMacro {
-            span: Span::default(),
-            attrs,
-            mac,
-            semi,
-        }))
+        Ok(TraitItem::Macro(stream.parse()?))
     }
 }
 

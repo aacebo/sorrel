@@ -1,9 +1,9 @@
-use super::{Item, emit_attrs, emit_brace_items};
+use super::Item;
 use crate::ast::{Attribute, Ident, Unsafety, Visibility};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::Mod;
 use crate::token::punct::Semi;
-use crate::token::{Delim, ToTokens, TokenTree};
+use crate::token::{Delim, Group, ToTokens, TokenTree};
 use crate::{Parse, Span, TokenStream};
 
 #[doc = "A module item (`mod foo;` or `mod foo { ... }`)."]
@@ -46,12 +46,16 @@ impl Parse for ItemMod {
 
 impl ToTokens for ItemMod {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs { a.to_tokens(t); }
         self.vis.to_tokens(t);
         Mod::default().to_tokens(t);
         self.ident.to_tokens(t);
         match &self.content {
-            Some(items) => emit_brace_items(items, t),
+            Some(items) => {
+                let mut inner = TokenStream::new();
+                for it in items { it.to_tokens(&mut inner); }
+                t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
+            }
             None => Semi::default().to_tokens(t),
         }
     }

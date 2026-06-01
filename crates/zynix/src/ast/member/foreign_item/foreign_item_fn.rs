@@ -18,10 +18,19 @@ pub struct ForeignItemFn {
 impl Parse for ForeignItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        match ForeignItem::parse(stream)? {
-            ForeignItem::Fn(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected foreign fn").into()),
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        if !crate::ast::member::is_fn_start(stream) {
+            return Err(LexError::new(at).message("expected foreign fn").into());
         }
+        let sig = stream.parse::<Signature>()?;
+        let _ = stream.parse::<Semi>();
+        Ok(ForeignItemFn {
+            span: Span::default(),
+            attrs,
+            vis,
+            sig,
+        })
     }
 }
 

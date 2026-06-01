@@ -21,10 +21,34 @@ pub struct TraitItemType {
 impl Parse for TraitItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        match TraitItem::parse(stream)? {
-            TraitItem::Type(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected trait type").into()),
+        let attrs = stream.parse_vec::<Attribute>()?;
+        if !crate::ast::member::is_kw(stream.curr(), "type") {
+            return Err(LexError::new(at).message("expected trait type").into());
         }
+        let _ = stream.parse::<KwType>()?;
+        let ident = stream.parse::<Ident>()?;
+        let generics = stream.parse::<Generics>()?;
+        let bounds = if stream.peek::<Colon>().is_some() {
+            let _ = stream.parse::<Colon>()?;
+            crate::ast::member::parse_plus_bounds(stream)?
+        } else {
+            Punctuated::new()
+        };
+        let default = if stream.peek::<Eq>().is_some() {
+            let _ = stream.parse::<Eq>()?;
+            Some(stream.parse::<Type>()?)
+        } else {
+            None
+        };
+        let _ = stream.parse::<Semi>();
+        Ok(TraitItemType {
+            span: Span::default(),
+            attrs,
+            ident,
+            generics,
+            bounds,
+            default,
+        })
     }
 }
 

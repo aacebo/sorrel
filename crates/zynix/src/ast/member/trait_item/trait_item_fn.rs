@@ -2,7 +2,7 @@ use super::TraitItem;
 use crate::ast::{Attribute, Signature, StmtBlock};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::punct::Semi;
-use crate::token::{LexError, ToTokens};
+use crate::token::{Delim, LexError, ToTokens, TokenTree};
 use crate::{Parse, Span, TokenStream};
 
 #[doc = "A method declaration or default implementation inside a trait definition."]
@@ -18,10 +18,23 @@ pub struct TraitItemFn {
 impl Parse for TraitItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        match TraitItem::parse(stream)? {
-            TraitItem::Fn(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected trait fn").into()),
+        let attrs = stream.parse_vec::<Attribute>()?;
+        if !crate::ast::member::is_fn_start(stream) {
+            return Err(LexError::new(at).message("expected trait fn").into());
         }
+        let sig = stream.parse::<Signature>()?;
+        let default_body = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
+            Some(stream.parse::<StmtBlock>()?)
+        } else {
+            let _ = stream.parse::<Semi>();
+            None
+        };
+        Ok(TraitItemFn {
+            span: Span::default(),
+            attrs,
+            sig,
+            default_body,
+        })
     }
 }
 

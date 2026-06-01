@@ -1,9 +1,6 @@
-use crate::ast::Attribute;
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
-use crate::token::keyword::{Static, Type as KwType};
-use crate::token::punct::{Colon, Semi};
-use crate::{Parse, Span, TokenStream};
+use crate::{Parse, TokenStream};
 
 mod foreign_item_fn;
 mod foreign_item_macro;
@@ -39,55 +36,16 @@ impl_from! {
 
 impl Parse for ForeignItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
-        let vis = stream.parse::<crate::ast::Visibility>()?;
-
-        if super::is_kw(stream.curr(), "static") {
-            let _ = stream.parse::<Static>()?;
-            let mutability = stream.parse::<crate::ast::Mutability>()?;
-            let ident = stream.parse::<crate::ast::Ident>()?;
-            let _ = stream.parse::<Colon>()?;
-            let ty = stream.parse::<crate::ast::Type>()?;
-            let _ = stream.parse::<Semi>();
-            return Ok(ForeignItem::Static(ForeignItemStatic {
-                span: Span::default(),
-                attrs,
-                vis,
-                mutability,
-                ident,
-                ty,
-            }));
+        if stream.peek::<ForeignItemStatic>().is_some() {
+            return Ok(ForeignItem::Static(stream.parse()?));
         }
-        if super::is_kw(stream.curr(), "type") {
-            let _ = stream.parse::<KwType>()?;
-            let ident = stream.parse::<crate::ast::Ident>()?;
-            let generics = stream.parse::<crate::ast::Generics>()?;
-            let _ = stream.parse::<Semi>();
-            return Ok(ForeignItem::Type(ForeignItemType {
-                span: Span::default(),
-                attrs,
-                vis,
-                ident,
-                generics,
-            }));
+        if stream.peek::<ForeignItemType>().is_some() {
+            return Ok(ForeignItem::Type(stream.parse()?));
         }
-        if super::is_fn_start(stream) {
-            let sig = stream.parse::<crate::ast::Signature>()?;
-            let _ = stream.parse::<Semi>();
-            return Ok(ForeignItem::Fn(ForeignItemFn {
-                span: Span::default(),
-                attrs,
-                vis,
-                sig,
-            }));
+        if stream.peek::<ForeignItemFn>().is_some() {
+            return Ok(ForeignItem::Fn(stream.parse()?));
         }
-        let (mac, semi) = super::parse_semi_macro(stream, Vec::new())?;
-        Ok(ForeignItem::Macro(ForeignItemMacro {
-            span: Span::default(),
-            attrs,
-            mac,
-            semi,
-        }))
+        Ok(ForeignItem::Macro(stream.parse()?))
     }
 }
 

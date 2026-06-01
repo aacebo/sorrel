@@ -1,8 +1,8 @@
 use super::TraitItem;
 use crate::ast::{Attribute, MacroCall};
 use crate::parse::{ParseError, ParseStream};
+use crate::token::ToTokens;
 use crate::token::punct::Semi;
-use crate::token::{LexError, ToTokens};
 use crate::{Parse, Span, TokenStream};
 
 #[doc = "A macro invocation inside a trait definition."]
@@ -17,11 +17,14 @@ pub struct TraitItemMacro {
 
 impl Parse for TraitItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-        match TraitItem::parse(stream)? {
-            TraitItem::Macro(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected trait macro").into()),
-        }
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let (mac, semi) = crate::ast::member::parse_semi_macro(stream, Vec::new())?;
+        Ok(TraitItemMacro {
+            span: Span::default(),
+            attrs,
+            mac,
+            semi,
+        })
     }
 }
 

@@ -1,8 +1,8 @@
 use super::ImplItem;
 use crate::ast::{Attribute, MacroCall};
 use crate::parse::{ParseError, ParseStream};
+use crate::token::ToTokens;
 use crate::token::punct::Semi;
-use crate::token::{LexError, ToTokens};
 use crate::{Parse, Span, TokenStream};
 
 #[doc = "A macro invocation inside an `impl` block."]
@@ -17,11 +17,14 @@ pub struct ImplItemMacro {
 
 impl Parse for ImplItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-        match ImplItem::parse(stream)? {
-            ImplItem::Macro(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected impl macro").into()),
-        }
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let (mac, semi) = crate::ast::member::parse_semi_macro(stream, Vec::new())?;
+        Ok(ImplItemMacro {
+            span: Span::default(),
+            attrs,
+            mac,
+            semi,
+        })
     }
 }
 

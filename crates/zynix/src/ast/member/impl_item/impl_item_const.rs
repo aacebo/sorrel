@@ -23,10 +23,30 @@ pub struct ImplItemConst {
 impl Parse for ImplItemConst {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        match ImplItem::parse(stream)? {
-            ImplItem::Const(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected impl const").into()),
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        let defaultness = stream.parse::<Defaultness>()?;
+        if !crate::ast::member::is_kw(stream.curr(), "const") {
+            return Err(LexError::new(at).message("expected impl const").into());
         }
+        let _ = stream.parse::<Const>()?;
+        let ident = stream.parse::<Ident>()?;
+        let generics = stream.parse::<Generics>()?;
+        let _ = stream.parse::<Colon>()?;
+        let ty = stream.parse::<Type>()?;
+        let _ = stream.parse::<Eq>()?;
+        let expr = stream.parse::<Expr>()?;
+        let _ = stream.parse::<Semi>();
+        Ok(ImplItemConst {
+            span: Span::default(),
+            attrs,
+            vis,
+            defaultness,
+            ident,
+            generics,
+            ty,
+            expr,
+        })
     }
 }
 

@@ -1,8 +1,9 @@
 use super::AngleArgs;
 use crate::ast::{Ident, Type};
+use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
-use crate::token::punct::Eq;
-use crate::{Span, TokenStream};
+use crate::token::punct::{Eq, Lt};
+use crate::{Parse, Span, TokenStream};
 
 #[doc = "An associated type binding (`Item = T`)."]
 #[derive(Debug, Clone)]
@@ -12,6 +13,28 @@ pub struct AssocTypeArg {
     pub ident: Ident,
     pub generics: Option<AngleArgs>,
     pub ty: Type,
+}
+
+impl Parse for AssocTypeArg {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let mut fork = stream.fork();
+        let ident = fork.parse::<Ident>()?;
+        let generics = if fork.peek::<Lt>().is_some() {
+            Some(fork.parse::<AngleArgs>()?)
+        } else {
+            None
+        };
+        let _ = fork.parse::<Eq>()?;
+        // Try to parse a type; if it fails this is not an assoc-type binding.
+        let ty = fork.parse::<Type>()?;
+        stream.seek(&fork);
+        Ok(Self {
+            span: Span::default(),
+            ident,
+            generics,
+            ty,
+        })
+    }
 }
 
 impl ToTokens for AssocTypeArg {

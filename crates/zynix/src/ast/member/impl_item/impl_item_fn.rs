@@ -19,10 +19,22 @@ pub struct ImplItemFn {
 impl Parse for ImplItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        match ImplItem::parse(stream)? {
-            ImplItem::Fn(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected impl fn").into()),
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        let defaultness = stream.parse::<Defaultness>()?;
+        if !crate::ast::member::is_fn_start(stream) {
+            return Err(LexError::new(at).message("expected impl fn").into());
         }
+        let sig = stream.parse::<Signature>()?;
+        let body = stream.parse::<StmtBlock>()?;
+        Ok(ImplItemFn {
+            span: Span::default(),
+            attrs,
+            vis,
+            defaultness,
+            sig,
+            body,
+        })
     }
 }
 

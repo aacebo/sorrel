@@ -1,8 +1,9 @@
 use super::AngleArgs;
 use crate::ast::{Expr, Ident};
+use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
-use crate::token::punct::Eq;
-use crate::{Span, TokenStream};
+use crate::token::punct::{Eq, Lt};
+use crate::{Parse, Span, TokenStream};
 
 #[doc = "An associated const binding (`N = 8`)."]
 #[derive(Debug, Clone)]
@@ -12,6 +13,27 @@ pub struct AssocConstArg {
     pub ident: Ident,
     pub generics: Option<AngleArgs>,
     pub expr: Expr,
+}
+
+impl Parse for AssocConstArg {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let mut fork = stream.fork();
+        let ident = fork.parse::<Ident>()?;
+        let generics = if fork.peek::<Lt>().is_some() {
+            Some(fork.parse::<AngleArgs>()?)
+        } else {
+            None
+        };
+        let _ = fork.parse::<Eq>()?;
+        let expr = fork.parse::<Expr>()?;
+        stream.seek(&fork);
+        Ok(Self {
+            span: Span::default(),
+            ident,
+            generics,
+            expr,
+        })
+    }
 }
 
 impl ToTokens for AssocConstArg {

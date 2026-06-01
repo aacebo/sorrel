@@ -1,4 +1,3 @@
-use super::emit_attrs;
 use crate::ast::{Attribute, Ident, Visibility};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -43,7 +42,7 @@ impl Parse for ItemExternCrate {
 
 impl ToTokens for ItemExternCrate {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs { a.to_tokens(t); }
         self.vis.to_tokens(t);
         Extern::default().to_tokens(t);
         Crate::default().to_tokens(t);

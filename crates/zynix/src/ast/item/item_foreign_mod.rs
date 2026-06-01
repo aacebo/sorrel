@@ -1,4 +1,3 @@
-use super::{emit_attrs, emit_brace_items};
 use crate::ast::{Abi, Attribute, ForeignItem, Unsafety};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::{Delim, ToTokens};
@@ -35,9 +34,9 @@ impl Parse for ItemForeignMod {
 
 impl ToTokens for ItemForeignMod {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs { a.to_tokens(t); }
         self.unsafety.to_tokens(t);
         self.abi.to_tokens(t);
-        emit_brace_items(&self.items, t);
+        let mut inner = TokenStream::new(); for it in &self.items { it.to_tokens(&mut inner); } t.extend_one(crate::TokenTree::Group(crate::token::Group::new(crate::token::Delim::Brace, inner)));
     }
 }

@@ -1,9 +1,8 @@
-use crate::ast::{Attribute, Expr, Pattern, Type};
+use crate::ast::Expr;
 use crate::parse::{ParseError, ParseStream};
-use crate::token::keyword::{Else, Let};
-use crate::token::punct::{Eq, Semi};
-use crate::token::{Delim, ToTokens};
-use crate::{Parse, Span, TokenStream, TokenTree};
+use crate::token::ToTokens;
+use crate::token::punct::Semi;
+use crate::{Parse, TokenStream};
 
 mod stmt_block;
 mod stmt_local;
@@ -26,54 +25,20 @@ pub enum Stmt {
 
 impl Parse for Stmt {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
-
-        if stream.peek::<Let>().is_some() {
-            let _ = stream.parse::<Let>()?;
-            let pat = stream.parse::<Pattern>()?;
-            let ty = if stream.peek::<crate::token::punct::Colon>().is_some() {
-                let _ = stream.parse::<crate::token::punct::Colon>()?;
-                Some(stream.parse::<Type>()?)
-            } else {
-                None
-            };
-            let init = if stream.peek::<Eq>().is_some() {
-                let _ = stream.parse::<Eq>()?;
-                let expr = stream.parse::<Expr>()?;
-                let diverge = if stream.peek::<Else>().is_some() {
-                    let _ = stream.parse::<Else>()?;
-                    Some(Box::new(stream.parse::<Expr>()?))
-                } else {
-                    None
-                };
-                Some(StmtLocalInit {
-                    span: Span::default(),
-                    expr,
-                    diverge,
-                })
-            } else {
-                None
-            };
-            let _ = stream.parse::<Semi>();
-            return Ok(Stmt::Local(Box::new(StmtLocal {
-                span: Span::default(),
-                attrs,
-                pat,
-                ty,
-                init,
-            })));
+        if stream.peek::<StmtLocal>().is_some() {
+            return Ok(Stmt::Local(Box::new(stream.parse()?)));
         }
-
-        if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            return Ok(Stmt::Block(stream.parse::<StmtBlock>()?));
+        if stream.peek::<StmtBlock>().is_some() {
+            return Ok(Stmt::Block(stream.parse()?));
         }
-
+        if stream.peek::<crate::ast::Item>().is_some() {
+            return Ok(Stmt::Item(Box::new(stream.parse()?)));
+        }
+        if stream.peek::<StmtMacro>().is_some() {
+            return Ok(Stmt::Macro(stream.parse()?));
+        }
         let expr = stream.parse::<Expr>()?;
-        let semi = if stream.peek::<Semi>().is_some() {
-            Some(stream.parse::<Semi>()?)
-        } else {
-            None
-        };
+        let semi = stream.parse_opt::<Semi>();
         Ok(Stmt::Expr(Box::new(expr), semi))
     }
 }

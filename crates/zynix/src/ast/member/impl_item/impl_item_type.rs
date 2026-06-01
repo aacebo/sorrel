@@ -22,10 +22,27 @@ pub struct ImplItemType {
 impl Parse for ImplItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        match ImplItem::parse(stream)? {
-            ImplItem::Type(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected impl type").into()),
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        let defaultness = stream.parse::<Defaultness>()?;
+        if !crate::ast::member::is_kw(stream.curr(), "type") {
+            return Err(LexError::new(at).message("expected impl type").into());
         }
+        let _ = stream.parse::<KwType>()?;
+        let ident = stream.parse::<Ident>()?;
+        let generics = stream.parse::<Generics>()?;
+        let _ = stream.parse::<Eq>()?;
+        let ty = stream.parse::<Type>()?;
+        let _ = stream.parse::<Semi>();
+        Ok(ImplItemType {
+            span: Span::default(),
+            attrs,
+            vis,
+            defaultness,
+            ident,
+            generics,
+            ty,
+        })
     }
 }
 

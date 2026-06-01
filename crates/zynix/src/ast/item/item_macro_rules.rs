@@ -1,4 +1,3 @@
-use super::emit_attrs;
 use crate::ast::{Attribute, Ident};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::keyword::MacroRules;
@@ -43,7 +42,7 @@ impl Parse for ItemMacroRules {
 
 impl ToTokens for ItemMacroRules {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs { a.to_tokens(t); }
         MacroRules::default().to_tokens(t);
         Not::default().to_tokens(t);
         self.ident.to_tokens(t);

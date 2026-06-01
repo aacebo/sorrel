@@ -1,4 +1,3 @@
-use super::emit_attrs;
 use crate::ast::{Attribute, Ident, MacroCall};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -38,7 +37,7 @@ impl Parse for ItemMacro {
 
 impl ToTokens for ItemMacro {
     fn to_tokens(&self, t: &mut TokenStream) {
-        emit_attrs(&self.attrs, t);
+        for a in &self.attrs { a.to_tokens(t); }
         self.mac.to_tokens(t);
         if self.semi {
             Semi::default().to_tokens(t);

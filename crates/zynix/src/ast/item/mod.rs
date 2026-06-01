@@ -170,19 +170,7 @@ impl ToTokens for Item {
     }
 }
 
-pub(super) fn emit_attrs(attrs: &[Attribute], t: &mut TokenStream) {
-    for a in attrs {
-        a.to_tokens(t);
-    }
-}
 
-pub(super) fn emit_brace_items<T: ToTokens>(items: &[T], t: &mut TokenStream) {
-    let mut inner = TS::new();
-    for it in items {
-        it.to_tokens(&mut inner);
-    }
-    t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
-}
 
 #[cfg(test)]
 mod tests {

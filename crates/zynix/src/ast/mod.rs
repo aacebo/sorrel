@@ -26,7 +26,7 @@ pub mod vis;
 
 pub use _crate::Crate;
 pub use args::{AngleArgs, GenericArgument};
-pub use expr::{Expr, MatchArm};
+pub use expr::{BinaryExpr, BlockExpr, Expr, JumpExpr, MatchArm, PostfixExpr, PrimaryExpr, UnaryExpr};
 pub use fields::{FieldValue, Fields, FieldsNamed};
 pub use generics::{Generics, TraitRef, TypeBound, WhereClause, WherePredicate};
 pub use ident::*;
@@ -43,6 +43,6 @@ pub use path::{Lifetime, Path, PathSegment};
 pub use punctuated::*;
 pub use sig::{Abi, BareFnArg, Signature, Variadic};
 pub use stmt::{Stmt, StmtBlock};
-pub use ty::{QSelf, Type, TypedParam};
+pub use ty::{QSelf, Type, TypeMacro, TypedParam};
 pub use use_tree::UseTree;
 pub use vis::*;

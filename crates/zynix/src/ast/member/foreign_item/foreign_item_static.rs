@@ -21,10 +21,25 @@ pub struct ForeignItemStatic {
 impl Parse for ForeignItemStatic {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        match ForeignItem::parse(stream)? {
-            ForeignItem::Static(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected foreign static").into()),
+        let attrs = stream.parse_vec::<Attribute>()?;
+        let vis = stream.parse::<Visibility>()?;
+        if !crate::ast::member::is_kw(stream.curr(), "static") {
+            return Err(LexError::new(at).message("expected foreign static").into());
         }
+        let _ = stream.parse::<Static>()?;
+        let mutability = stream.parse::<Mutability>()?;
+        let ident = stream.parse::<Ident>()?;
+        let _ = stream.parse::<Colon>()?;
+        let ty = stream.parse::<Type>()?;
+        let _ = stream.parse::<Semi>();
+        Ok(ForeignItemStatic {
+            span: Span::default(),
+            attrs,
+            vis,
+            mutability,
+            ident,
+            ty,
+        })
     }
 }
 

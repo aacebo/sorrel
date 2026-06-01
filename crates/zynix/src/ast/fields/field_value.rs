@@ -1,4 +1,4 @@
-use crate::ast::expr::ExprPath;
+use crate::ast::expr::{ExprPath, PrimaryExpr};
 use crate::ast::{Attribute, Expr, Member};
 use crate::parse::{ParseError, ParseStream};
 use crate::token::ToTokens;
@@ -32,12 +32,12 @@ impl Parse for FieldValue {
             })
         } else {
             let expr = match &member {
-                Member::Named(id) => Expr::Path(ExprPath {
+                Member::Named(id) => Expr::Primary(PrimaryExpr::Path(ExprPath {
                     span: Span::default(),
                     attrs: Vec::new(),
                     qself: None,
                     path: id.clone().into(),
-                }),
+                })),
                 Member::Unnamed(_) => {
                     return Err(crate::token::LexError::new(stream.span())
                         .message("tuple index needs a value")
